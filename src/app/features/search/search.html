@@ -1,0 +1,47 @@
+<div class="pe-container-gallery">
+  <div class="pe-content" style="padding-top: 2rem;">
+
+    <h1 class="pe-typography-headline-xl-extrablack" style="margin-bottom: 1.5rem;">Search listings</h1>
+
+    <div class="pe-row" style="margin-bottom: 1rem;">
+      <div class="pe-col-12 pe-col-md-6">
+        <pe-input label="Search" placeholder="Search for anything..." [(value)]="query" />
+      </div>
+      <div class="pe-col-12 pe-col-md-4">
+        <pe-select label="Category" placeholder="All categories" [options]="categoryOptions" [(value)]="selectedCategory" />
+      </div>
+      <div class="pe-col-12 pe-col-md-2" style="display: flex; align-items: flex-end;">
+        <pe-button theme="fill-purple" size="md" type="button" (buttonClick)="onSearch()">Search</pe-button>
+      </div>
+    </div>
+
+    @if (selectedCategory()) {
+      <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem; align-items: center;">
+        <span class="pe-typography-caption-l-regular">Active filter:</span>
+        <pe-pill theme="fill-purple" variant="dismissible" (dismiss)="clearCategory()">
+          {{ selectedCategory() }}
+        </pe-pill>
+      </div>
+    }
+
+    @if (listingService.listings().length === 0) {
+      <p class="pe-typography-body-m-regular" style="opacity: 0.6; margin-top: 2rem;">No results found. Try a different search.</p>
+    } @else {
+      <div class="pe-row">
+        @for (listing of listingService.listings(); track listing.id) {
+          <div class="pe-col-12 pe-col-md-4 pe-col-lg-3">
+            <a [routerLink]="['/listings', createListingSlug(listing.title, listing.id)]">
+              <pe-card
+                [cardTitle]="listing.title"
+                [cardSubtitle]="'€' + listing.price"
+                [cardCaption]="listing.category"
+                cardDirection="vertical"
+              />
+            </a>
+          </div>
+        }
+      </div>
+    }
+
+  </div>
+</div>

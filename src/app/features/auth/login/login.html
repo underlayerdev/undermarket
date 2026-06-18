@@ -1,0 +1,50 @@
+<div class="pe-container-form">
+  <div class="pe-content">
+    <div class="pe-shadow-md pe-rounded-lg" style="padding: 2rem; max-width: 480px; margin: 4rem auto;">
+
+      <img src="assets/img/logo.png" alt="Undermarket" height="40" style="margin-bottom: 1.5rem; display: block;" />
+
+      <h1 class="pe-typography-headline-l-extrablack">Welcome to Undermarket</h1>
+      <p class="pe-typography-body-m-regular" style="margin-bottom: 1.5rem;">Sign in to your account or create a new one.</p>
+
+      <div style="display: flex; flex-direction: column; gap: 1rem;">
+        <pe-input
+          label="Email"
+          placeholder="you@example.com"
+          [required]="true"
+          [(value)]="emailValue"
+          [error]="!!emailError()"
+          [errorText]="emailError()"
+        />
+
+        <pe-input
+          label="Password"
+          placeholder="Min. 6 characters"
+          [required]="true"
+          [(value)]="passwordValue"
+          [error]="!!passwordError()"
+          [errorText]="passwordError()"
+        />
+
+        @if (errorMessage(); as msg) {
+          <div role="alert" class="pe-typography-caption-l-regular" style="color: red;">{{ msg }}</div>
+        }
+
+        <pe-button theme="fill-purple" size="md" type="button" [disabled]="isLoading()" (buttonClick)="onLogin()">
+          {{ isLoading() ? 'Signing in...' : 'Sign In' }}
+        </pe-button>
+
+        <pe-button theme="outline-purple" size="md" type="button" [disabled]="isLoading()" (buttonClick)="onRegister()">
+          Create Account
+        </pe-button>
+
+        <p class="pe-typography-caption-l-regular" style="text-align: center; opacity: 0.6;">or</p>
+
+        <pe-button theme="ghost-white" size="md" type="button" [disabled]="isLoading()" (buttonClick)="onGoogleLogin()">
+          Continue with Google
+        </pe-button>
+      </div>
+
+    </div>
+  </div>
+</div>

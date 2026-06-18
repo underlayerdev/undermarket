@@ -1,0 +1,30 @@
+<div class="pe-container-form">
+  <div class="pe-content" style="padding-top: 2rem;">
+
+    <h1 class="pe-typography-headline-xl-extrablack" style="margin-bottom: 2rem;">Settings</h1>
+
+    <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+
+      <pe-card cardTitle="Appearance" cardDirection="vertical">
+        <pe-select
+          label="Theme"
+          placeholder="Select theme"
+          [options]="themeOptions"
+          [(value)]="themeValue"
+          (valueChange)="onThemeChange($event)"
+        />
+      </pe-card>
+
+      <pe-card cardTitle="Language" cardDirection="vertical">
+        <pe-select
+          label="Display language"
+          placeholder="Select language"
+          [options]="languageOptions"
+          [(value)]="languageValue"
+          (valueChange)="onLanguageChange($event)"
+        />
+      </pe-card>
+
+    </div>
+  </div>
+</div>

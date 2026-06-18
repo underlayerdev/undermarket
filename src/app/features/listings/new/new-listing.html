@@ -1,0 +1,68 @@
+<div class="pe-container-form">
+  <div class="pe-content" style="padding-top: 2rem;">
+
+    <h1 class="pe-typography-headline-xl-extrablack" style="margin-bottom: 2rem;">Post a listing</h1>
+
+    <form (ngSubmit)="onSubmit()" novalidate style="display: flex; flex-direction: column; gap: 1.25rem;">
+
+      <pe-input
+        label="Title"
+        placeholder="What are you selling?"
+        [required]="true"
+        [maxLength]="100"
+        [(value)]="titleValue"
+        [error]="!!titleError()"
+        [errorText]="titleError()"
+      />
+
+      <pe-textarea
+        label="Description"
+        placeholder="Describe the item — condition, brand, size, etc."
+        [required]="true"
+        [rows]="5"
+        [maxLength]="2000"
+        [(value)]="descriptionValue"
+        [error]="!!descriptionError()"
+        [errorText]="descriptionError()"
+      />
+
+      <div class="pe-row">
+        <div class="pe-col-12 pe-col-md-6">
+          <pe-input
+            label="Price (€)"
+            placeholder="0.00"
+            [required]="true"
+            [(value)]="priceValue"
+            [error]="!!priceError()"
+            [errorText]="priceError()"
+          />
+        </div>
+        <div class="pe-col-12 pe-col-md-6">
+          <pe-select
+            label="Category"
+            placeholder="Select a category"
+            [required]="true"
+            [options]="categoryOptions"
+            [(value)]="categoryValue"
+            [error]="!!categoryError()"
+            [errorText]="categoryError()"
+          />
+        </div>
+      </div>
+
+      <pe-file-input
+        label="Photos"
+        accept="image/*"
+        [multiple]="true"
+        [(value)]="filesValue"
+      />
+
+      <div style="margin-top: 0.5rem;">
+        <pe-button type="submit" theme="fill-purple" size="lg" [disabled]="isLoading()">
+          {{ isLoading() ? 'Publishing...' : 'Publish listing' }}
+        </pe-button>
+      </div>
+
+    </form>
+  </div>
+</div>

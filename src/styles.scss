@@ -1,1 +1,15 @@
-/* You can add global styles to this file, and also import other style files */
+// foundations.css is loaded via angular.json and provides:
+// - CSS reset
+// - Font faces: UltraNunitoSans, UltraBrand, RobotoMono, UltraIcons
+// - Typography: .pe-typography-{family}-{weight}
+// - Colors: .pe-text-*, .pe-bg-*, .pe-border-*
+// - Spacing: .pe-m-*, .pe-p-*
+// - Grid: .pe-row, .pe-col-{1-12}, .pe-col-{breakpoint}-{1-12}
+// - Containers: .pe-container-fluid, .pe-container-gallery, .pe-container-form
+// - Rounded: .pe-rounded-*
+// - Shadows: .pe-shadow-sm, .pe-shadow-md, .pe-shadow-lg
+
+html,
+body {
+  min-height: 100%;
+}
