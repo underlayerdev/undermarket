@@ -82,7 +82,7 @@ export class LoginComponent implements OnInit {
     this.isLoading.set(true);
     this.errorMessage.set(null);
     try {
-      await this.authService.loginWithGoogle();
+      await this.authService.loginWithOAuth('google');
       await this.router.navigate(['/home']);
     } catch (err) {
       this.errorMessage.set(this.errorService.toUserMessage(err));

@@ -1,21 +1,21 @@
-<pe-navbar [avatarInitials]="avatarInitials()">
-  <a pe-navbar-logo routerLink="/home">
+<ul-navbar [avatarInitials]="avatarInitials()">
+  <a ul-navbar-logo routerLink="/home">
     <img src="assets/img/logo.png" alt="Undermarket" height="32" />
   </a>
 
-  <nav pe-navbar-search class="pe-typography-body-m-regular">
+  <nav ul-navbar-search class="ul-typography-body-m-regular">
     <a routerLink="/home">Home</a>
     <a routerLink="/search">Search</a>
     <a routerLink="/listings/new">New Listing</a>
     <a routerLink="/profile">Profile</a>
     <a routerLink="/settings">Settings</a>
   </nav>
-</pe-navbar>
+</ul-navbar>
 
-<main class="pe-container-fluid">
-  <div class="pe-content">
+<main class="ul-container-fluid">
+  <div class="ul-content">
     <router-outlet />
   </div>
 </main>
 
-<pe-toast-container />
+<ul-toast-container />

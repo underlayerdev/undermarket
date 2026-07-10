@@ -1,4 +1,4 @@
-<pe-hero
+<ul-hero
   title="Find your next favourite thing"
   subtitle="Browse thousands of second-hand items listed by people near you."
   [primaryAction]="heroPrimaryAction"
@@ -6,18 +6,18 @@
   alignment="left"
 />
 
-<section class="pe-container-gallery">
-  <div class="pe-content">
-    <h2 class="pe-typography-headline-m-extrabold">Latest listings</h2>
+<section class="ul-container-gallery">
+  <div class="ul-content">
+    <h2 class="ul-typography-headline-m-extrabold">Latest listings</h2>
 
     @if (listingService.listings().length === 0) {
-      <p class="pe-typography-body-m-regular">No listings yet. Be the first to post one!</p>
+      <p class="ul-typography-body-m-regular">No listings yet. Be the first to post one!</p>
     } @else {
-      <div class="pe-row">
+      <div class="ul-row">
         @for (listing of listingService.listings(); track listing.id) {
-          <div class="pe-col-12 pe-col-md-4 pe-col-lg-3">
+          <div class="ul-col-12 ul-col-md-4 ul-col-lg-3">
             <a [routerLink]="['/listings', createListingSlug(listing.title, listing.id)]">
-              <pe-card
+              <ul-card
                 [cardTitle]="listing.title"
                 [cardSubtitle]="'€' + listing.price"
                 [cardCaption]="listing.category"

@@ -1,25 +1,25 @@
 @if (isLoading()) {
-  <div class="pe-container-product">
-    <div class="pe-content" style="padding-top: 2rem;">
-      <pe-skeleton variant="rect" height="400px" [show]="true" />
-      <pe-skeleton variant="text" [lines]="5" [show]="true" />
+  <div class="ul-container-product">
+    <div class="ul-content" style="padding-top: 2rem;">
+      <ul-skeleton variant="rect" height="400px" [show]="true" />
+      <ul-skeleton variant="text" [lines]="5" [show]="true" />
     </div>
   </div>
 } @else if (errorMessage(); as msg) {
-  <div class="pe-container-fluid">
-    <div class="pe-content" role="alert">
-      <p class="pe-typography-body-m-regular" style="color: red;">{{ msg }}</p>
+  <div class="ul-container-fluid">
+    <div class="ul-content" role="alert">
+      <p class="ul-typography-body-m-regular" style="color: red;">{{ msg }}</p>
     </div>
   </div>
 } @else if (listing(); as item) {
-  <div class="pe-container-product">
-    <div class="pe-content">
+  <div class="ul-container-product">
+    <div class="ul-content">
 
-      <pe-breadcrumb [items]="breadcrumbItems()" />
+      <ul-breadcrumb [items]="breadcrumbItems()" />
 
-      <article class="pe-row" style="margin-top: 2rem;">
+      <article class="ul-row" style="margin-top: 2rem;">
 
-        <div class="pe-col-12 pe-col-md-7">
+        <div class="ul-col-12 ul-col-md-7">
           @if (item.imageUrls.length > 0) {
             <img
               [src]="item.imageUrls[activeImageIndex()]"
@@ -29,7 +29,7 @@
             @if (item.imageUrls.length > 1) {
               <div style="display: flex; gap: 0.5rem; margin-top: 0.75rem; flex-wrap: wrap;">
                 @for (url of item.imageUrls; track url; let i = $index) {
-                  <pe-button
+                  <ul-button
                     type="button"
                     [theme]="activeImageIndex() === i ? 'fill-purple' : 'ghost-white'"
                     size="sm"
@@ -37,43 +37,43 @@
                     (buttonClick)="setActiveImage(i)"
                   >
                     <img [src]="url" [alt]="'Photo ' + (i + 1)" style="width: 48px; height: 48px; object-fit: cover;" />
-                  </pe-button>
+                  </ul-button>
                 }
               </div>
             }
           } @else {
-            <div class="pe-bg-surface-secondary pe-rounded-md" style="aspect-ratio: 4/3; display: flex; align-items: center; justify-content: center;">
-              <p class="pe-typography-caption-l-regular">No photos available</p>
+            <div class="ul-bg-surface-secondary ul-rounded-md" style="aspect-ratio: 4/3; display: flex; align-items: center; justify-content: center;">
+              <p class="ul-typography-caption-l-regular">No photos available</p>
             </div>
           }
         </div>
 
-        <div class="pe-col-12 pe-col-md-5" style="display: flex; flex-direction: column; gap: 1rem;">
+        <div class="ul-col-12 ul-col-md-5" style="display: flex; flex-direction: column; gap: 1rem;">
           <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-            <pe-pill theme="outline-purple" variant="read-only">{{ item.category }}</pe-pill>
+            <ul-pill theme="outline-purple" variant="read-only">{{ item.category }}</ul-pill>
             @if (item.status === 'sold') {
-              <pe-pill theme="fill-red" variant="read-only">Sold</pe-pill>
+              <ul-pill theme="fill-red" variant="read-only">Sold</ul-pill>
             } @else {
-              <pe-pill theme="transparent-green" variant="read-only">Available</pe-pill>
+              <ul-pill theme="transparent-green" variant="read-only">Available</ul-pill>
             }
           </div>
 
-          <h1 class="pe-typography-headline-l-extrablack">{{ item.title }}</h1>
-          <p class="pe-typography-headline-m-extrabold">€{{ item.price }}</p>
+          <h1 class="ul-typography-headline-l-extrablack">{{ item.title }}</h1>
+          <p class="ul-typography-headline-m-extrabold">€{{ item.price }}</p>
 
           <div>
-            <h2 class="pe-typography-headline-s-extrabold" style="margin-bottom: 0.5rem;">Description</h2>
-            <p class="pe-typography-body-m-regular">{{ item.description }}</p>
+            <h2 class="ul-typography-headline-s-extrabold" style="margin-bottom: 0.5rem;">Description</h2>
+            <p class="ul-typography-body-m-regular">{{ item.description }}</p>
           </div>
 
-          <p class="pe-typography-caption-l-regular" style="opacity: 0.6;">
+          <p class="ul-typography-caption-l-regular" style="opacity: 0.6;">
             Listed on {{ item.createdAt | date: 'mediumDate' }}
           </p>
 
           @if (isOwner()) {
             <div style="display: flex; gap: 0.75rem;">
-              <pe-button type="button" theme="outline-purple" size="md">Edit listing</pe-button>
-              <pe-button type="button" theme="fill-red" size="md" (buttonClick)="onDeleteClick()">Delete listing</pe-button>
+              <ul-button type="button" theme="outline-purple" size="md">Edit listing</ul-button>
+              <ul-button type="button" theme="fill-red" size="md" (buttonClick)="onDeleteClick()">Delete listing</ul-button>
             </div>
           }
         </div>
@@ -83,7 +83,7 @@
     </div>
   </div>
 
-  <pe-modal
+  <ul-modal
     [(open)]="showDeleteModal"
     title="Delete listing?"
     variant="confirmation"
@@ -92,6 +92,6 @@
     (confirmed)="confirmDelete()"
     (cancelled)="showDeleteModal.set(false)"
   >
-    <p class="pe-typography-body-m-regular">Are you sure you want to delete "{{ item.title }}"? This action cannot be undone.</p>
-  </pe-modal>
+    <p class="ul-typography-body-m-regular">Are you sure you want to delete "{{ item.title }}"? This action cannot be undone.</p>
+  </ul-modal>
 }

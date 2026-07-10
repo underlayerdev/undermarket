@@ -1,41 +1,41 @@
-<div class="pe-container-gallery">
-  <div class="pe-content" style="padding-top: 2rem;">
+<div class="ul-container-gallery">
+  <div class="ul-content" style="padding-top: 2rem;">
 
     @if (isLoading()) {
       <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 2rem;">
-        <pe-skeleton variant="rect" width="80px" height="80px" [show]="true" />
-        <pe-skeleton variant="text" [lines]="2" [show]="true" />
+        <ul-skeleton variant="rect" width="80px" height="80px" [show]="true" />
+        <ul-skeleton variant="text" [lines]="2" [show]="true" />
       </div>
-      <pe-skeleton variant="rect" height="200px" [show]="true" />
+      <ul-skeleton variant="rect" height="200px" [show]="true" />
     } @else if (userService.profile(); as user) {
 
       <div style="display: flex; align-items: center; gap: 1.5rem; margin-bottom: 2.5rem;">
-        <pe-avatar [initials]="avatarInitials()" [src]="avatarSrc()" size="xl" />
+        <ul-avatar [initials]="avatarInitials()" [src]="avatarSrc()" size="xl" />
         <div>
-          <h1 class="pe-typography-headline-l-extrablack">{{ user.displayName }}</h1>
-          <p class="pe-typography-body-m-regular" style="opacity: 0.6;">{{ user.email }}</p>
+          <h1 class="ul-typography-headline-l-extrablack">{{ user.displayName }}</h1>
+          <p class="ul-typography-body-m-regular" style="opacity: 0.6;">{{ user.email }}</p>
         </div>
       </div>
 
-      <h2 class="pe-typography-headline-m-extrabold" style="margin-bottom: 1.5rem;">
+      <h2 class="ul-typography-headline-m-extrabold" style="margin-bottom: 1.5rem;">
         My listings ({{ userListings().length }})
       </h2>
 
       @if (userListings().length === 0) {
-        <p class="pe-typography-body-m-regular" style="opacity: 0.6;">You have not posted any listings yet.</p>
+        <p class="ul-typography-body-m-regular" style="opacity: 0.6;">You have not posted any listings yet.</p>
       } @else {
-        <div class="pe-row">
+        <div class="ul-row">
           @for (listing of userListings(); track listing.id) {
-            <div class="pe-col-12 pe-col-md-4 pe-col-lg-3">
+            <div class="ul-col-12 ul-col-md-4 ul-col-lg-3">
               <a [routerLink]="['/listings', createListingSlug(listing.title, listing.id)]">
-                <pe-card
+                <ul-card
                   [cardTitle]="listing.title"
                   [cardSubtitle]="'€' + listing.price"
                   [cardCaption]="listing.category"
                   cardDirection="vertical"
                 />
               </a>
-              <pe-status [status]="listing.status === 'active' ? 'confirm' : 'alert'" />
+              <ul-status [status]="listing.status === 'active' ? 'confirm' : 'alert'" />
             </div>
           }
         </div>

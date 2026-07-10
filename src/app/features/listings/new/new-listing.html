@@ -1,11 +1,11 @@
-<div class="pe-container-form">
-  <div class="pe-content" style="padding-top: 2rem;">
+<div class="ul-container-form">
+  <div class="ul-content" style="padding-top: 2rem;">
 
-    <h1 class="pe-typography-headline-xl-extrablack" style="margin-bottom: 2rem;">Post a listing</h1>
+    <h1 class="ul-typography-headline-xl-extrablack" style="margin-bottom: 2rem;">Post a listing</h1>
 
     <form (ngSubmit)="onSubmit()" novalidate style="display: flex; flex-direction: column; gap: 1.25rem;">
 
-      <pe-input
+      <ul-input
         label="Title"
         placeholder="What are you selling?"
         [required]="true"
@@ -15,7 +15,7 @@
         [errorText]="titleError()"
       />
 
-      <pe-textarea
+      <ul-textarea
         label="Description"
         placeholder="Describe the item — condition, brand, size, etc."
         [required]="true"
@@ -26,9 +26,9 @@
         [errorText]="descriptionError()"
       />
 
-      <div class="pe-row">
-        <div class="pe-col-12 pe-col-md-6">
-          <pe-input
+      <div class="ul-row">
+        <div class="ul-col-12 ul-col-md-6">
+          <ul-input
             label="Price (€)"
             placeholder="0.00"
             [required]="true"
@@ -37,8 +37,8 @@
             [errorText]="priceError()"
           />
         </div>
-        <div class="pe-col-12 pe-col-md-6">
-          <pe-select
+        <div class="ul-col-12 ul-col-md-6">
+          <ul-select
             label="Category"
             placeholder="Select a category"
             [required]="true"
@@ -50,7 +50,7 @@
         </div>
       </div>
 
-      <pe-file-input
+      <ul-file-input
         label="Photos"
         accept="image/*"
         [multiple]="true"
@@ -58,9 +58,9 @@
       />
 
       <div style="margin-top: 0.5rem;">
-        <pe-button type="submit" theme="fill-purple" size="lg" [disabled]="isLoading()">
+        <ul-button type="submit" theme="fill-purple" size="lg" [disabled]="isLoading()">
           {{ isLoading() ? 'Publishing...' : 'Publish listing' }}
-        </pe-button>
+        </ul-button>
       </div>
 
     </form>

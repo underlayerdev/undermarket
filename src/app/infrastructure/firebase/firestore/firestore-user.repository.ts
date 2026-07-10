@@ -1,19 +1,45 @@
-// TODO: inject Firebase SDK — import { Firestore, doc, getDoc, setDoc, updateDoc } from 'firebase/firestore'
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
+import { doc, getDoc, setDoc, updateDoc, Firestore } from 'firebase/firestore';
+import { FIREBASE_FIRESTORE } from '../../../core/configuration/tokens';
 import type { UserRepository } from '../../../domain/repositories/user.repository';
 import type { User, UserId } from '../../../domain/models/user.model';
 
-@Injectable({ providedIn: null })
+@Injectable({ providedIn: 'root' })
 export class FirestoreUserRepository implements UserRepository {
-  getById(_id: UserId): Promise<User | null> {
-    throw new Error('Not implemented');
+  private readonly firestore: Firestore = inject(FIREBASE_FIRESTORE);
+
+  async getById(id: UserId): Promise<User | null> {
+    const snapshot = await getDoc(doc(this.firestore, 'users', id));
+    if (!snapshot.exists()) return null;
+    return this.mapDoc(id, snapshot.data());
   }
 
-  create(_user: User): Promise<void> {
-    throw new Error('Not implemented');
+  async create(user: User): Promise<void> {
+    await setDoc(doc(this.firestore, 'users', user.id), {
+      email: user.email,
+      displayName: user.displayName,
+      photoUrl: user.photoUrl ?? null,
+      settings: user.settings,
+      createdAt: user.createdAt,
+    });
   }
 
-  update(_user: User): Promise<void> {
-    throw new Error('Not implemented');
+  async update(user: User): Promise<void> {
+    await updateDoc(doc(this.firestore, 'users', user.id), {
+      displayName: user.displayName,
+      photoUrl: user.photoUrl ?? null,
+      settings: user.settings,
+    });
+  }
+
+  private mapDoc(id: UserId, data: Record<string, unknown>): User {
+    return {
+      id,
+      email: data['email'] as string,
+      displayName: data['displayName'] as string,
+      photoUrl: (data['photoUrl'] as string | null) ?? undefined,
+      settings: data['settings'] as User['settings'],
+      createdAt: (data['createdAt'] as { toDate(): Date }).toDate(),
+    };
   }
 }

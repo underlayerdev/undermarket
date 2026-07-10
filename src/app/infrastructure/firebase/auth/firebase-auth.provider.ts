@@ -1,28 +1,69 @@
-// TODO: inject Firebase SDK — import { Auth, signInWithEmailAndPassword, ... } from 'firebase/auth'
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
+import {
+  Auth,
+  createUserWithEmailAndPassword,
+  FacebookAuthProvider,
+  GoogleAuthProvider,
+  OAuthProvider as FirebaseOAuthProvider,
+  signInAnonymously,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+  signOut,
+  updateProfile,
+} from 'firebase/auth';
+import { FIREBASE_AUTH } from '../../../core/configuration/tokens';
 import type { AuthProvider } from '../../../domain/providers/auth.provider';
+import type { OAuthProvider } from '../../../domain/models/oauth-provider';
 import type { User } from '../../../domain/models/user.model';
+
+const oauthProviderMap = {
+  google: () => new GoogleAuthProvider(),
+  apple: () => new FirebaseOAuthProvider('apple.com'),
+  facebook: () => new FacebookAuthProvider(),
+};
 
 @Injectable({ providedIn: null })
 export class FirebaseAuthProvider implements AuthProvider {
-  login(_email: string, _password: string): Promise<User> {
-    throw new Error('Not implemented');
+  private readonly auth: Auth = inject(FIREBASE_AUTH);
+
+  async login(email: string, password: string): Promise<User> {
+    const { user } = await signInWithEmailAndPassword(this.auth, email, password);
+    return this.mapUser(user);
   }
 
-  register(_email: string, _password: string): Promise<User> {
-    throw new Error('Not implemented');
+  async register(email: string, password: string): Promise<User> {
+    const { user } = await createUserWithEmailAndPassword(this.auth, email, password);
+    await updateProfile(user, { displayName: email.split('@')[0] });
+    return this.mapUser(user);
   }
 
-  loginWithGoogle(): Promise<User> {
-    throw new Error('Not implemented');
+  async loginWithOAuth(provider: OAuthProvider): Promise<User> {
+    const { user } = await signInWithPopup(this.auth, oauthProviderMap[provider]());
+    return this.mapUser(user);
   }
 
-  logout(): Promise<void> {
-    throw new Error('Not implemented');
+  async loginAnonymously(): Promise<User> {
+    const { user } = await signInAnonymously(this.auth);
+    return this.mapUser(user);
+  }
+
+  async logout(): Promise<void> {
+    await signOut(this.auth);
   }
 
   currentUser(): User | null {
-    // TODO: return Firebase Auth currentUser mapped to domain User
-    return null;
+    const user = this.auth.currentUser;
+    return user ? this.mapUser(user) : null;
+  }
+
+  private mapUser(firebaseUser: import('firebase/auth').User): User {
+    return {
+      id: firebaseUser.uid,
+      email: firebaseUser.email ?? '',
+      displayName: firebaseUser.displayName ?? firebaseUser.email?.split('@')[0] ?? 'Anonymous',
+      photoUrl: firebaseUser.photoURL ?? undefined,
+      settings: { theme: 'light', language: 'en' },
+      createdAt: new Date(firebaseUser.metadata.creationTime ?? Date.now()),
+    };
   }
 }
