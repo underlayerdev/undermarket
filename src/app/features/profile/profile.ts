@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  OnInit,
+  signal,
+} from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../application/services/auth.service';
 import { ListingService } from '../../application/services/listing.service';
@@ -15,7 +22,7 @@ import {
 } from '@underlayerdev/ui';
 
 @Component({
-  selector: 'app-profile',
+  selector: 'um-profile',
   standalone: true,
   imports: [RouterLink, AvatarComponent, CardComponent, SkeletonComponent, StatusComponent],
   templateUrl: './profile.html',

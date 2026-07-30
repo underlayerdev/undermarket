@@ -1,10 +1,12 @@
 import { inject, Injectable } from '@angular/core';
 import {
   Auth,
+  confirmPasswordReset,
   createUserWithEmailAndPassword,
   FacebookAuthProvider,
   GoogleAuthProvider,
   OAuthProvider as FirebaseOAuthProvider,
+  sendPasswordResetEmail,
   signInAnonymously,
   signInWithEmailAndPassword,
   signInWithPopup,
@@ -45,6 +47,14 @@ export class FirebaseAuthProvider implements AuthProvider {
   async loginAnonymously(): Promise<User> {
     const { user } = await signInAnonymously(this.auth);
     return this.mapUser(user);
+  }
+
+  async sendPasswordResetEmail(email: string): Promise<void> {
+    await sendPasswordResetEmail(this.auth, email);
+  }
+
+  async confirmPasswordReset(oobCode: string, newPassword: string): Promise<void> {
+    await confirmPasswordReset(this.auth, oobCode, newPassword);
   }
 
   async logout(): Promise<void> {

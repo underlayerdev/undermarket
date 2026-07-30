@@ -7,7 +7,7 @@ import { CardComponent, HeroComponent } from '@underlayerdev/ui';
 import type { HeroAction } from '@underlayerdev/ui';
 
 @Component({
-  selector: 'app-home',
+  selector: 'um-home',
   standalone: true,
   imports: [RouterLink, CardComponent, HeroComponent],
   templateUrl: './home.html',

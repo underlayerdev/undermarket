@@ -6,6 +6,8 @@ export interface AuthProvider {
   register(email: string, password: string): Promise<User>;
   loginWithOAuth(provider: OAuthProvider): Promise<User>;
   loginAnonymously(): Promise<User>;
+  sendPasswordResetEmail(email: string): Promise<void>;
+  confirmPasswordReset(oobCode: string, newPassword: string): Promise<void>;
   logout(): Promise<void>;
   currentUser(): User | null;
 }

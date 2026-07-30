@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  OnInit,
+  signal,
+} from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../application/services/auth.service';
 import { ErrorService } from '../../../application/services/error.service';
@@ -17,9 +24,15 @@ import {
 import type { SelectOption } from '@underlayerdev/ui';
 
 @Component({
-  selector: 'app-new-listing',
+  selector: 'um-new-listing',
   standalone: true,
-  imports: [ButtonComponent, FileInputComponent, InputComponent, SelectComponent, TextareaComponent],
+  imports: [
+    ButtonComponent,
+    FileInputComponent,
+    InputComponent,
+    SelectComponent,
+    TextareaComponent,
+  ],
   providers: [ToastService],
   templateUrl: './new-listing.html',
   styleUrl: './new-listing.scss',
@@ -76,10 +89,7 @@ export class NewListingComponent implements OnInit {
 
   readonly isFormValid = computed(
     () =>
-      !this.titleError() &&
-      !this.descriptionError() &&
-      !this.priceError() &&
-      !this.categoryError(),
+      !this.titleError() && !this.descriptionError() && !this.priceError() && !this.categoryError(),
   );
 
   ngOnInit(): void {

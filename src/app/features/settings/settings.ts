@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  OnInit,
+  signal,
+} from '@angular/core';
 import { UserService } from '../../application/services/user.service';
 import { AuthService } from '../../application/services/auth.service';
 import { SeoService } from '../../core/seo/seo.service';
@@ -7,7 +14,7 @@ import { CardComponent, SelectComponent } from '@underlayerdev/ui';
 import type { SelectOption } from '@underlayerdev/ui';
 
 @Component({
-  selector: 'app-settings',
+  selector: 'um-settings',
   standalone: true,
   imports: [CardComponent, SelectComponent],
   templateUrl: './settings.html',

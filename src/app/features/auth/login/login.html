@@ -1,50 +1,90 @@
-<div class="ul-container-form">
-  <div class="ul-content">
-    <div class="ul-shadow-md ul-rounded-lg" style="padding: 2rem; max-width: 480px; margin: 4rem auto;">
+@if (step() === 'email') {
+  <h1 class="ul-typography-headline-l-extrablack ul-mb-1 auth-title">Hola,</h1>
+  <p class="ul-typography-body-m-regular ul-mb-6 ul-text-secondary auth-subtitle">
+    Iniicia sesion para poder comprar y vender en el mercado mas libre del mundo.
+  </p>
 
-      <img src="assets/img/logo.png" alt="Undermarket" height="40" style="margin-bottom: 1.5rem; display: block;" />
+  <div class="ul-gap-4 auth-form">
+    <ul-input
+      label="Email"
+      placeholder="you@example.com"
+      type="email"
+      [required]="true"
+      [(value)]="emailValue"
+      [error]="!!emailError()"
+      [errorText]="emailError()"
+    />
 
-      <h1 class="ul-typography-headline-l-extrablack">Welcome to Undermarket</h1>
-      <p class="ul-typography-body-m-regular" style="margin-bottom: 1.5rem;">Sign in to your account or create a new one.</p>
-
-      <div style="display: flex; flex-direction: column; gap: 1rem;">
-        <ul-input
-          label="Email"
-          placeholder="you@example.com"
-          [required]="true"
-          [(value)]="emailValue"
-          [error]="!!emailError()"
-          [errorText]="emailError()"
-        />
-
-        <ul-input
-          label="Password"
-          placeholder="Min. 6 characters"
-          [required]="true"
-          [(value)]="passwordValue"
-          [error]="!!passwordError()"
-          [errorText]="passwordError()"
-        />
-
-        @if (errorMessage(); as msg) {
-          <div role="alert" class="ul-typography-caption-l-regular" style="color: red;">{{ msg }}</div>
-        }
-
-        <ul-button theme="fill-purple" size="md" type="button" [disabled]="isLoading()" (buttonClick)="onLogin()">
-          {{ isLoading() ? 'Signing in...' : 'Sign In' }}
-        </ul-button>
-
-        <ul-button theme="outline-purple" size="md" type="button" [disabled]="isLoading()" (buttonClick)="onRegister()">
-          Create Account
-        </ul-button>
-
-        <p class="ul-typography-caption-l-regular" style="text-align: center; opacity: 0.6;">or</p>
-
-        <ul-button theme="ghost-white" size="md" type="button" [disabled]="isLoading()" (buttonClick)="onGoogleLogin()">
-          Continue with Google
-        </ul-button>
+    @if (errorMessage(); as msg) {
+      <div
+        role="alert"
+        class="ul-py-2 ul-px-3 ul-bg-grey-lvl-1 ul-border-red ul-rounded-3 ul-text-red auth-form__error-banner"
+      >
+        {{ msg }}
       </div>
+    }
 
+    <ul-button
+      theme="fill-purple"
+      size="md"
+      type="button"
+      [disabled]="isLoading()"
+      (buttonClick)="onContinue()"
+    >
+      Continue
+    </ul-button>
+  </div>
+}
+
+@if (step() === 'password') {
+  <h1 class="ul-typography-headline-l-extrablack ul-mb-1 auth-title">Enter your password</h1>
+  <p class="ul-typography-body-m-regular ul-mb-6 ul-text-secondary auth-subtitle">
+    Signing in as <strong>{{ emailValue() }}</strong>
+  </p>
+
+  <div class="ul-gap-4 auth-form">
+    <ul-input
+      label="Password"
+      placeholder="Your password"
+      type="password"
+      [required]="true"
+      [(value)]="passwordValue"
+      [error]="!!passwordError()"
+      [errorText]="passwordError()"
+    />
+
+    @if (errorMessage(); as msg) {
+      <div
+        role="alert"
+        class="ul-py-2 ul-px-3 ul-bg-grey-lvl-1 ul-border-red ul-rounded-3 ul-text-red auth-form__error-banner"
+      >
+        {{ msg }}
+      </div>
+    }
+
+    <ul-button
+      theme="fill-purple"
+      size="md"
+      type="button"
+      [disabled]="isLoading()"
+      (buttonClick)="onLogin()"
+    >
+      {{ isLoading() ? 'Signing in...' : 'Sign In' }}
+    </ul-button>
+
+    <div class="ul-typography-caption-l-regular ul-text-secondary auth-form__links">
+      <button class="ul-text-secondary auth-form__back-btn" type="button" (click)="onBack()">
+        ← Back
+      </button>
+      <a routerLink="/forgot-password">Forgot password?</a>
     </div>
   </div>
-</div>
+}
+
+<div class="ul-gap-3 ul-text-tertiary auth-form__divider"><span>or</span></div>
+
+<um-google-sign-in-button />
+
+<p class="ul-typography-caption-l-regular ul-text-secondary auth-form__footer">
+  Don't have an account? <a routerLink="/register">Create one</a>
+</p>

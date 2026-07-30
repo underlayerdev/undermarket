@@ -39,8 +39,17 @@ This is the most important rule and has no silent exceptions.
   - Shadows: `ul-shadow-{none,sm,md,lg}`.
   - Grid: `ul-row`, `ul-col-{1-12}`, `ul-container-{fluid,gallery,product,form}`.
 - **Before using a `ul-*` class, verify it actually exists** in `node_modules/@underlayerdev/ui/styles/foundations.css` (quick grep). Invented classes that don't exist have already been found (`ul-bg-surface-secondary`, `ul-rounded-md`) and silently did nothing — don't repeat that mistake.
-- The published package does **not** expose the source Sass variables (`_variables.scss`), only compiled CSS with utility classes. So `.scss` files in this project can't `@use` the library — if you need a value with no matching utility class, use the library's exact literal value as a number (not invented) and comment it with the token name (e.g. `padding: 24px; // ul-spacing-6`).
-- **Under no circumstances add a new design value (color, font size, spacing, radius) without asking the user first.** If the design requires something the library doesn't cover:
+- Since `@underlayerdev/ui@0.1.0`, the package also exposes its raw Sass tokens via a `./design-tokens/*` subpath export (`node_modules/@underlayerdev/ui/design-tokens/_variables.scss` + `_elevations.scss`). Any `.scss` file can pull a token directly:
+  ```scss
+  @use 'pkg:@underlayerdev/ui/design-tokens' as tokens;
+
+  .something {
+    padding: tokens.$spacing-spacing-6;
+    color: tokens.$color-text-secondary;
+  }
+  ```
+  This only works per-file — there is no global include, and adding it to `src/styles.scss` does not make the variables available elsewhere (Sass `@use` is scoped to the file that declares it, and Angular's `stylePreprocessorOptions` has no "prepend to every file" option). Prefer the compiled `ul-*` utility classes in HTML first; reach for a raw token only when there's truly no matching utility class, or when a value must be interpolated (e.g. inside a computed style, a media query, or a value passed to a mixin) rather than applied as a static class in markup.
+- **Under no circumstances add a new design value (color, font size, spacing, radius) without asking the user first.** If the design requires a value that has no matching `ul-*` utility class *and* no matching raw Sass token (check `node_modules/@underlayerdev/ui/design-tokens/_variables.scss`):
   1. Ask the user whether that value should be added to the base library (`@underlayerdev/ui`, in the repo `/Users/lucas.yamone@al-pair.de/dev/base`) so it's available going forward, or
   2. If it's specific and not reusable outside this project, define it as a documented local constant (e.g. in a project `_local-tokens.scss`, never scattered as a literal across files).
      Never decide this unilaterally or hardcode it "for now."

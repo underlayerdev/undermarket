@@ -1,0 +1,89 @@
+.auth-title,
+.auth-subtitle {
+  align-self: flex-start;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+
+  &__error-banner {
+    border-style: solid;
+    border-width: 1px;
+  }
+
+  &__divider {
+    display: flex;
+    align-items: center;
+
+    &::before,
+    &::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background-color: rgba(
+        255,
+        255,
+        255,
+        0.1
+      ); // matches ul-bg-white-light; can't apply a class to a pseudo-element
+    }
+  }
+
+  &__footer {
+    text-align: center;
+
+    a {
+      color: inherit;
+      font-weight: 600;
+      text-decoration: underline;
+    }
+  }
+
+  &__links {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    a {
+      color: inherit;
+      text-decoration: underline;
+    }
+  }
+
+  &__back-btn {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    color: rgba(
+      255,
+      255,
+      255,
+      0.7
+    ); // ul-text-secondary; :hover can't be toggled via a utility class
+
+    &:hover {
+      color: #ffffff; // ul-text-primary
+    }
+  }
+}
+
+.auth-success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  width: 100%;
+
+  &__link {
+    text-decoration: underline;
+  }
+}
+
+.auth-invalid {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}

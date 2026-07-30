@@ -1,28 +1,28 @@
 <div class="ul-container-gallery">
-  <div class="ul-content" style="padding-top: 2rem;">
+  <div class="ul-content ul-pt-8">
 
     @if (isLoading()) {
-      <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 2rem;">
+      <div class="ul-gap-4 ul-mb-6" style="display: flex; align-items: center;">
         <ul-skeleton variant="rect" width="80px" height="80px" [show]="true" />
         <ul-skeleton variant="text" [lines]="2" [show]="true" />
       </div>
       <ul-skeleton variant="rect" height="200px" [show]="true" />
     } @else if (userService.profile(); as user) {
 
-      <div style="display: flex; align-items: center; gap: 1.5rem; margin-bottom: 2.5rem;">
+      <div class="ul-gap-6 ul-mb-10" style="display: flex; align-items: center;">
         <ul-avatar [initials]="avatarInitials()" [src]="avatarSrc()" size="xl" />
         <div>
           <h1 class="ul-typography-headline-l-extrablack">{{ user.displayName }}</h1>
-          <p class="ul-typography-body-m-regular" style="opacity: 0.6;">{{ user.email }}</p>
+          <p class="ul-typography-body-m-regular ul-text-secondary">{{ user.email }}</p>
         </div>
       </div>
 
-      <h2 class="ul-typography-headline-m-extrabold" style="margin-bottom: 1.5rem;">
+      <h2 class="ul-typography-headline-m-extrabold ul-mb-6">
         My listings ({{ userListings().length }})
       </h2>
 
       @if (userListings().length === 0) {
-        <p class="ul-typography-body-m-regular" style="opacity: 0.6;">You have not posted any listings yet.</p>
+        <p class="ul-typography-body-m-regular ul-text-secondary">You have not posted any listings yet.</p>
       } @else {
         <div class="ul-row">
           @for (listing of userListings(); track listing.id) {

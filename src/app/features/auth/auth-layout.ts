@@ -2,11 +2,11 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 
 @Component({
-  selector: 'um-public-layout',
+  selector: 'um-auth-layout',
   standalone: true,
   imports: [RouterOutlet],
-  templateUrl: './public-layout.html',
-  styleUrl: './public-layout.scss',
+  templateUrl: './auth-layout.html',
+  styleUrl: './auth-layout.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class PublicLayoutComponent {}
+export class AuthLayoutComponent {}

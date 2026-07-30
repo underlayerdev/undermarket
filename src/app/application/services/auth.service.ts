@@ -29,6 +29,14 @@ export class AuthService {
     this.currentUser.set(user);
   }
 
+  async sendPasswordResetEmail(email: string): Promise<void> {
+    await this.authProvider.sendPasswordResetEmail(email);
+  }
+
+  async confirmPasswordReset(oobCode: string, newPassword: string): Promise<void> {
+    await this.authProvider.confirmPasswordReset(oobCode, newPassword);
+  }
+
   async logout(): Promise<void> {
     await this.authProvider.logout();
     this.currentUser.set(null);

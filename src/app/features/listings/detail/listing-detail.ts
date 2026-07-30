@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  OnInit,
+  signal,
+} from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../../application/services/auth.service';
@@ -17,9 +24,16 @@ import {
 import type { BreadcrumbItem } from '@underlayerdev/ui';
 
 @Component({
-  selector: 'app-listing-detail',
+  selector: 'um-listing-detail',
   standalone: true,
-  imports: [DatePipe, BreadcrumbComponent, ButtonComponent, ModalComponent, PillComponent, SkeletonComponent],
+  imports: [
+    DatePipe,
+    BreadcrumbComponent,
+    ButtonComponent,
+    ModalComponent,
+    PillComponent,
+    SkeletonComponent,
+  ],
   templateUrl: './listing-detail.html',
   styleUrl: './listing-detail.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -46,10 +60,7 @@ export class ListingDetailComponent implements OnInit {
 
   readonly breadcrumbItems = computed<BreadcrumbItem[]>(() => {
     const l = this.listing();
-    return [
-      { label: 'Home', href: '/home' },
-      { label: l ? l.title : 'Listing' },
-    ];
+    return [{ label: 'Home', href: '/home' }, { label: l ? l.title : 'Listing' }];
   });
 
   async ngOnInit(): Promise<void> {

@@ -1,0 +1,63 @@
+<h1 class="ul-typography-headline-l-extrablack ul-mb-1 auth-title">Create your account</h1>
+<p class="ul-typography-body-m-regular ul-mb-6 ul-text-secondary auth-subtitle">
+  Start buying and selling today.
+</p>
+
+<div class="ul-gap-4 auth-form">
+  <ul-input
+    label="Email"
+    placeholder="you@example.com"
+    type="email"
+    [required]="true"
+    [(value)]="emailValue"
+    [error]="!!emailError()"
+    [errorText]="emailError()"
+  />
+
+  <ul-input
+    label="Password"
+    placeholder="Min. 6 characters"
+    type="password"
+    [required]="true"
+    [(value)]="passwordValue"
+    [error]="!!passwordError()"
+    [errorText]="passwordError()"
+  />
+
+  <ul-input
+    label="Confirm password"
+    placeholder="Repeat your password"
+    type="password"
+    [required]="true"
+    [(value)]="confirmPasswordValue"
+    [error]="!!confirmPasswordError()"
+    [errorText]="confirmPasswordError()"
+  />
+
+  @if (errorMessage(); as msg) {
+    <div
+      role="alert"
+      class="ul-py-2 ul-px-3 ul-bg-grey-lvl-1 ul-border-red ul-rounded-3 ul-text-red auth-form__error-banner"
+    >
+      {{ msg }}
+    </div>
+  }
+
+  <ul-button
+    theme="fill-purple"
+    size="md"
+    type="button"
+    [disabled]="isLoading()"
+    (buttonClick)="onRegister()"
+  >
+    {{ isLoading() ? 'Creating account...' : 'Create Account' }}
+  </ul-button>
+
+  <div class="ul-gap-3 ul-text-tertiary auth-form__divider"><span>or</span></div>
+
+  <um-google-sign-in-button />
+
+  <p class="ul-typography-caption-l-regular ul-text-secondary auth-form__footer">
+    Already have an account? <a routerLink="/login">Sign in</a>
+  </p>
+</div>

@@ -2,7 +2,6 @@ import { Routes } from '@angular/router';
 import { AppLayoutComponent } from './layouts/app-layout/app-layout';
 import { PublicLayoutComponent } from './layouts/public-layout/public-layout';
 import { authGuard } from './features/auth/guards/auth.guard';
-import { guestGuard } from './features/auth/guards/guest.guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'home', pathMatch: 'full' },
@@ -10,13 +9,7 @@ export const routes: Routes = [
   {
     path: '',
     component: PublicLayoutComponent,
-    children: [
-      {
-        path: 'login',
-        loadComponent: () => import('./features/auth/login/login').then((m) => m.LoginComponent),
-        canActivate: [guestGuard],
-      },
-    ],
+    loadChildren: () => import('./features/auth/auth.routes').then((m) => m.authRoutes),
   },
 
   {

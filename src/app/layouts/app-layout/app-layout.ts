@@ -10,9 +10,16 @@ import {
 } from '@underlayerdev/ui';
 
 @Component({
-  selector: 'app-layout',
+  selector: 'um-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, NavbarComponent, NavbarLogoSlotDirective, NavbarSearchSlotDirective, ToastContainerComponent],
+  imports: [
+    RouterOutlet,
+    RouterLink,
+    NavbarComponent,
+    NavbarLogoSlotDirective,
+    NavbarSearchSlotDirective,
+    ToastContainerComponent,
+  ],
   providers: [ToastService],
   templateUrl: './app-layout.html',
   styleUrl: './app-layout.scss',

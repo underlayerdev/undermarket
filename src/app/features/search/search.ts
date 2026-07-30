@@ -14,9 +14,16 @@ import {
 import type { SelectOption } from '@underlayerdev/ui';
 
 @Component({
-  selector: 'app-search',
+  selector: 'um-search',
   standalone: true,
-  imports: [RouterLink, ButtonComponent, CardComponent, InputComponent, PillComponent, SelectComponent],
+  imports: [
+    RouterLink,
+    ButtonComponent,
+    CardComponent,
+    InputComponent,
+    PillComponent,
+    SelectComponent,
+  ],
   templateUrl: './search.html',
   styleUrl: './search.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
