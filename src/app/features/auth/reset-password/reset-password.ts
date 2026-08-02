@@ -6,16 +6,16 @@ import {
   OnInit,
   signal,
 } from '@angular/core';
-import { ActivatedRoute, RouterLink, Router } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AuthService } from '../../../application/services/auth.service';
 import { ErrorService } from '../../../application/services/error.service';
 import { SeoService } from '../../../core/seo/seo.service';
-import { ButtonComponent, InputComponent } from '@underlayerdev/ui';
+import { ButtonComponent, InputComponent, StatusComponent } from '@underlayerdev/ui';
 
 @Component({
   selector: 'um-reset-password',
   standalone: true,
-  imports: [ButtonComponent, InputComponent, RouterLink],
+  imports: [ButtonComponent, InputComponent, RouterLink, StatusComponent],
   templateUrl: './reset-password.html',
   styleUrl: './reset-password.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -25,7 +25,6 @@ export class ResetPasswordComponent implements OnInit {
   private readonly errorService = inject(ErrorService);
   private readonly seoService = inject(SeoService);
   private readonly route = inject(ActivatedRoute);
-  private readonly router = inject(Router);
 
   private oobCode = '';
 
@@ -35,6 +34,7 @@ export class ResetPasswordComponent implements OnInit {
   readonly isLoading = signal(false);
   readonly errorMessage = signal<string | null>(null);
   readonly invalidLink = signal(false);
+  readonly passwordChanged = signal(false);
 
   readonly passwordError = computed(() => {
     if (!this.touched()) return null;
@@ -65,7 +65,7 @@ export class ResetPasswordComponent implements OnInit {
     this.errorMessage.set(null);
     try {
       await this.authService.confirmPasswordReset(this.oobCode, this.passwordValue());
-      await this.router.navigate(['/login'], { replaceUrl: true });
+      this.passwordChanged.set(true);
     } catch (err) {
       this.errorMessage.set(this.errorService.toUserMessage(err));
     } finally {

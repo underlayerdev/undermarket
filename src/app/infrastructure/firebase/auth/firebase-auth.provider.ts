@@ -5,6 +5,7 @@ import {
   createUserWithEmailAndPassword,
   FacebookAuthProvider,
   GoogleAuthProvider,
+  onAuthStateChanged,
   OAuthProvider as FirebaseOAuthProvider,
   sendPasswordResetEmail,
   signInAnonymously,
@@ -64,6 +65,12 @@ export class FirebaseAuthProvider implements AuthProvider {
   currentUser(): User | null {
     const user = this.auth.currentUser;
     return user ? this.mapUser(user) : null;
+  }
+
+  onAuthStateChange(callback: (user: User | null) => void): () => void {
+    return onAuthStateChanged(this.auth, (firebaseUser) => {
+      callback(firebaseUser ? this.mapUser(firebaseUser) : null);
+    });
   }
 
   private mapUser(firebaseUser: import('firebase/auth').User): User {

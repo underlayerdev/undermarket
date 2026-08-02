@@ -10,12 +10,12 @@ import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../application/services/auth.service';
 import { ErrorService } from '../../../application/services/error.service';
 import { SeoService } from '../../../core/seo/seo.service';
-import { ButtonComponent, InputComponent } from '@underlayerdev/ui';
+import { ButtonComponent, InputComponent, StatusComponent } from '@underlayerdev/ui';
 
 @Component({
   selector: 'um-forgot-password',
   standalone: true,
-  imports: [ButtonComponent, InputComponent, RouterLink],
+  imports: [ButtonComponent, InputComponent, RouterLink, StatusComponent],
   templateUrl: './forgot-password.html',
   styleUrl: './forgot-password.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

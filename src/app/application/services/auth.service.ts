@@ -9,6 +9,18 @@ export class AuthService {
 
   readonly currentUser = signal<User | null>(null);
 
+  /** Resolves once the first auth-state emission (including a session restored from storage) has been applied. Guards should await this before reading currentUser(). */
+  readonly ready: Promise<void>;
+
+  constructor() {
+    this.ready = new Promise<void>((resolve) => {
+      this.authProvider.onAuthStateChange((user) => {
+        this.currentUser.set(user);
+        resolve();
+      });
+    });
+  }
+
   async login(email: string, password: string): Promise<void> {
     const user = await this.authProvider.login(email, password);
     this.currentUser.set(user);

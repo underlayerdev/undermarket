@@ -1,0 +1,29 @@
+<button
+  type="button"
+  class="um-user-menu__trigger"
+  [cdkMenuTriggerFor]="menu"
+  aria-haspopup="menu"
+  aria-label="Open account menu"
+  [attr.aria-expanded]="isOpen()"
+  (cdkMenuOpened)="isOpen.set(true)"
+  (cdkMenuClosed)="isOpen.set(false)"
+>
+  <ul-avatar [initials]="avatarInitials()" [src]="avatarSrc()" size="md" />
+</button>
+
+<ng-template #menu>
+  <div cdkMenu class="um-user-menu__content">
+    <ul-list-item cdkMenuItem routerLink="/profile">
+      <ng-container ul-list-item-before-label><ul-icon size="5" icon="user" /></ng-container>
+      <ng-container ul-list-item-label>Profile</ng-container>
+    </ul-list-item>
+    <ul-list-item cdkMenuItem routerLink="/settings">
+      <ng-container ul-list-item-before-label><ul-icon size="5" icon="settings" /></ng-container>
+      <ng-container ul-list-item-label>Settings</ng-container>
+    </ul-list-item>
+    <ul-list-item cdkMenuItem (click)="onSignOut()">
+      <ng-container ul-list-item-before-label><ul-icon size="5" icon="log_out" /></ng-container>
+      <ng-container ul-list-item-label>Sign out</ng-container>
+    </ul-list-item>
+  </div>
+</ng-template>

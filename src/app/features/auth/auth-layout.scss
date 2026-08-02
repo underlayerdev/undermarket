@@ -1,17 +1,24 @@
 @use 'pkg:@underlayerdev/ui/design-tokens' as tokens;
 
+:host {
+  display: block;
+  min-height: 100vh;
+}
+
 .auth-page {
   min-height: 100vh;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  flex-direction: column;
 }
 
 .auth-card {
   width: min(416px, 100%);
+  flex: 1;
+  align-self: center;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
 
   &__logo {
     display: block;

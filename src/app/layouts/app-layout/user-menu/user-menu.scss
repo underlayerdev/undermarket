@@ -1,0 +1,28 @@
+@use 'pkg:@underlayerdev/ui/design-tokens' as tokens;
+
+.um-user-menu {
+  &__trigger {
+    display: inline-flex;
+    border: none;
+    background: none;
+    padding: 0;
+    cursor: pointer;
+    border-radius: tokens.$radius-radius-full;
+
+    &:focus-visible {
+      outline: tokens.$color-border-white-medium solid 2px;
+      outline-offset: 2px;
+    }
+  }
+
+  &__content {
+    display: flex;
+    flex-direction: column;
+    gap: tokens.$spacing-spacing-1;
+    background-color: tokens.$color-background-grey-lvl-1;
+    border-radius: tokens.$radius-radius-4;
+    padding: tokens.$spacing-spacing-1;
+    margin: tokens.$spacing-spacing-1 0;
+    min-width: 220px;
+  }
+}

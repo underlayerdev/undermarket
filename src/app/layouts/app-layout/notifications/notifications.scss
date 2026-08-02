@@ -1,0 +1,98 @@
+@use 'pkg:@underlayerdev/ui/design-tokens' as tokens;
+
+.um-notifications {
+  &__trigger {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: none;
+    padding: 0;
+    cursor: pointer;
+    color: inherit;
+    border-radius: tokens.$radius-radius-full;
+
+    &:focus-visible {
+      outline: tokens.$color-border-white-medium solid 2px;
+      outline-offset: 2px;
+    }
+  }
+
+  &__badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    border-radius: tokens.$radius-radius-full;
+    background-color: tokens.$color-background-red;
+    color: tokens.$color-text-primary;
+    font-size: 10px;
+    line-height: 16px;
+    text-align: center;
+  }
+
+  &__content {
+    display: flex;
+    flex-direction: column;
+    background-color: tokens.$color-background-grey-lvl-1;
+    border-radius: tokens.$radius-radius-4;
+    padding: tokens.$spacing-spacing-2;
+    margin: tokens.$spacing-spacing-1 0;
+    width: 320px;
+    max-height: 400px;
+    overflow-y: auto;
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: tokens.$spacing-spacing-2;
+    padding: tokens.$spacing-spacing-2;
+  }
+
+  &__title {
+    font-weight: 700;
+  }
+
+  &__empty {
+    padding: tokens.$spacing-spacing-4 tokens.$spacing-spacing-2;
+    color: tokens.$color-text-secondary;
+    text-align: center;
+  }
+
+  &__item {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: tokens.$spacing-spacing-1;
+    width: 100%;
+    border: none;
+    background: none;
+    text-align: left;
+    cursor: pointer;
+    color: inherit;
+    padding: tokens.$spacing-spacing-2;
+    border-radius: tokens.$radius-radius-2;
+
+    &:hover {
+      background-color: tokens.$color-background-white-extra-light;
+    }
+
+    &--unread {
+      background-color: tokens.$color-background-white-extra-light;
+    }
+  }
+
+  &__item-message {
+    font-size: 14px;
+  }
+
+  &__item-time {
+    font-size: 12px;
+    color: tokens.$color-text-secondary;
+  }
+}

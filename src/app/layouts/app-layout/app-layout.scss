@@ -1,4 +1,45 @@
+@use 'pkg:@underlayerdev/ui/design-tokens' as tokens;
+
 :host {
   display: block;
   min-height: 100vh;
+}
+
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+
+  &__body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  &__search {
+    width: 100%;
+    display: flex;
+    flex: 1;
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: tokens.$spacing-spacing-3;
+  }
+
+  // Sidebar is mobile-only chrome (hamburger-triggered drawer). The base
+  // library's own ul-sidebar CSS docks it as a permanent column at 1024px+
+  // (its 'md' breakpoint) — the opposite of what desktop nav should do here
+  // now that search + the avatar menu live in the navbar — so it's hidden
+  // above that width instead of relying on ul-sidebar's built-in responsive
+  // behavior. 1024px matches $breakpoint-md in @underlayerdev/ui's design
+  // tokens (not re-exported as a Sass mixin via the design-tokens subpath,
+  // so hardcoded here to stay in sync with where the library's own
+  // components already flip behavior).
+  &__sidebar {
+    @media (min-width: 1024px) {
+      display: none;
+    }
+  }
 }

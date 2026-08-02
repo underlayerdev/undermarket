@@ -1,21 +1,43 @@
-<ul-navbar [avatarInitials]="avatarInitials()">
-  <a ul-navbar-logo routerLink="/home">
-    <img src="assets/img/logo.png" alt="Undermarket" height="32" />
-  </a>
+<div class="app-shell">
+  <ul-sidebar
+    class="app-shell__sidebar"
+    [items]="sidebarItems"
+    [selectedIndex]="selectedIndex()"
+    [(open)]="sidebarOpen"
+    (itemSelected)="onItemSelected($event)"
+  />
 
-  <nav ul-navbar-search class="ul-typography-body-m-regular">
-    <a routerLink="/home">Home</a>
-    <a routerLink="/search">Search</a>
-    <a routerLink="/listings/new">New Listing</a>
-    <a routerLink="/profile">Profile</a>
-    <a routerLink="/settings">Settings</a>
-  </nav>
-</ul-navbar>
+  <div class="app-shell__body">
+    <ul-navbar
+      [sidebarOpen]="sidebarOpen()"
+      [showSidebarToggle]="true"
+      (sidebarToggle)="toggleSidebar()"
+    >
+      <a ul-navbar-logo routerLink="/home">
+        <img src="assets/img/logo.png" alt="Undermarket" class="ul-navbar__logo-img" height="64" />
+      </a>
 
-<main class="ul-container-fluid">
-  <div class="ul-content">
-    <router-outlet />
+      <div class="app-shell__search" ul-navbar-search>
+        <ul-input
+          placeholder="Search for anything..."
+          [(value)]="searchQuery"
+          (inputEnter)="onSearchSubmit()"
+        />
+      </div>
+
+      <div class="app-shell__actions" ul-navbar-avatar>
+        <um-notifications />
+        <um-user-menu [avatarInitials]="avatarInitials()" [avatarSrc]="userImage()" />
+      </div>
+    </ul-navbar>
+
+    <main class="ul-container-fluid">
+      <div class="ul-content">
+        <router-outlet />
+        <um-footer />
+      </div>
+    </main>
   </div>
-</main>
+</div>
 
 <ul-toast-container />

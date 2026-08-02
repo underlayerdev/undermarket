@@ -10,4 +10,6 @@ export interface AuthProvider {
   confirmPasswordReset(oobCode: string, newPassword: string): Promise<void>;
   logout(): Promise<void>;
   currentUser(): User | null;
+  /** Invoked whenever the underlying auth state changes (login, logout, or a session restored on load). Returns an unsubscribe function. */
+  onAuthStateChange(callback: (user: User | null) => void): () => void;
 }

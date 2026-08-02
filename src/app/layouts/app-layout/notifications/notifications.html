@@ -1,0 +1,48 @@
+<button
+  type="button"
+  class="um-notifications__trigger"
+  [cdkMenuTriggerFor]="menu"
+  aria-haspopup="menu"
+  aria-label="Open notifications"
+  [attr.aria-expanded]="isOpen()"
+  (cdkMenuOpened)="isOpen.set(true)"
+  (cdkMenuClosed)="isOpen.set(false)"
+>
+  <ul-icon icon="bell_on" size="6" />
+  @if (unreadCount() > 0) {
+    <span class="um-notifications__badge">{{ unreadCount() }}</span>
+  }
+</button>
+
+<ng-template #menu>
+  <div cdkMenu class="um-notifications__content">
+    <div class="um-notifications__header">
+      <span class="um-notifications__title">Notifications</span>
+      @if (unreadCount() > 0) {
+        <ul-button theme="ghost-white" size="sm" type="button" (buttonClick)="onMarkAllAsRead()">
+          <ul-icon icon="check_double" size="5" />
+          Mark all as read
+        </ul-button>
+      }
+    </div>
+
+    @if (notifications().length === 0) {
+      <p class="um-notifications__empty">You're all caught up.</p>
+    } @else {
+      @for (notification of notifications(); track notification.id) {
+        <button
+          cdkMenuItem
+          type="button"
+          class="um-notifications__item"
+          [class.um-notifications__item--unread]="!notification.read"
+          (click)="onNotificationClick(notification)"
+        >
+          <span class="um-notifications__item-message">{{ notification.message }}</span>
+          <span class="um-notifications__item-time">{{
+            notification.createdAt | date: 'short'
+          }}</span>
+        </button>
+      }
+    }
+  </div>
+</ng-template>

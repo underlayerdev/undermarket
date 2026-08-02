@@ -1,5 +1,5 @@
 @if (step() === 'email') {
-  <h1 class="ul-typography-headline-l-extrablack ul-mb-1 auth-title">Hola,</h1>
+  <h1 class="ul-typography-headline-l-extrablack ul-mb-1 auth-title">Hola, </h1>
   <p class="ul-typography-body-m-regular ul-mb-6 ul-text-secondary auth-subtitle">
     Iniicia sesion para poder comprar y vender en el mercado mas libre del mundo.
   </p>
@@ -13,6 +13,7 @@
       [(value)]="emailValue"
       [error]="!!emailError()"
       [errorText]="emailError()"
+      (inputEnter)="onContinue()"
     />
 
     @if (errorMessage(); as msg) {
@@ -28,7 +29,7 @@
       theme="fill-purple"
       size="md"
       type="button"
-      [disabled]="isLoading()"
+      [disabled]="isLoading() || !isEmailValid()"
       (buttonClick)="onContinue()"
     >
       Continue
@@ -51,6 +52,7 @@
       [(value)]="passwordValue"
       [error]="!!passwordError()"
       [errorText]="passwordError()"
+      (inputEnter)="onLogin()"
     />
 
     @if (errorMessage(); as msg) {
@@ -72,10 +74,9 @@
       {{ isLoading() ? 'Signing in...' : 'Sign In' }}
     </ul-button>
 
+    <ul-button theme="outline-white" size="md" type="button" (click)="onBack()"> Back </ul-button>
+
     <div class="ul-typography-caption-l-regular ul-text-secondary auth-form__links">
-      <button class="ul-text-secondary auth-form__back-btn" type="button" (click)="onBack()">
-        ← Back
-      </button>
       <a routerLink="/forgot-password">Forgot password?</a>
     </div>
   </div>

@@ -1,4 +1,12 @@
-import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  effect,
+  inject,
+  input,
+  OnInit,
+  signal,
+} from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ListingService } from '../../application/services/listing.service';
 import { SeoService } from '../../core/seo/seo.service';
@@ -36,8 +44,21 @@ export class SearchComponent implements OnInit {
 
   readonly categoryOptions: SelectOption[] = CATEGORIES.map((c) => ({ value: c, label: c }));
 
+  /** Bound to the `q` query param via withComponentInputBinding(). */
+  readonly q = input<string>('');
+
   readonly query = signal('');
   readonly selectedCategory = signal<string | null>(null);
+
+  constructor() {
+    effect(() => {
+      const incoming = this.q();
+      if (incoming && incoming !== this.query()) {
+        this.query.set(incoming);
+        this.onSearch();
+      }
+    });
+  }
 
   ngOnInit(): void {
     this.seoService.setPage('Search', 'Search for secondhand items on Undermarket.');
