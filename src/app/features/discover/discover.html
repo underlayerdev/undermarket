@@ -1,0 +1,45 @@
+<div class="ul-container-gallery">
+  <div class="ul-content ul-pt-8">
+    <h1 class="ul-typography-headline-xl-extrablack ul-mb-6">Discover</h1>
+
+    <div class="ul-gap-2 ul-mb-6" style="display: flex; flex-wrap: wrap">
+      <ul-pill
+        variant="interactive"
+        [theme]="selectedCategory() === null ? 'fill-purple' : 'transparent-white'"
+        (click)="selectCategory(null)"
+      >
+        All
+      </ul-pill>
+      @for (category of categories; track category) {
+        <ul-pill
+          variant="interactive"
+          [theme]="selectedCategory() === category ? 'fill-purple' : 'transparent-white'"
+          (click)="selectCategory(category)"
+        >
+          {{ category }}
+        </ul-pill>
+      }
+    </div>
+
+    @if (listingService.listings().length === 0) {
+      <p class="ul-typography-body-m-regular ul-text-secondary ul-mt-8">
+        No listings found in this category yet.
+      </p>
+    } @else {
+      <div class="ul-row">
+        @for (listing of listingService.listings(); track listing.id) {
+          <div class="ul-col-12 ul-col-md-4 ul-col-lg-3">
+            <a [routerLink]="['/listings', createListingSlug(listing.title, listing.id)]">
+              <ul-card
+                [cardTitle]="listing.title"
+                [cardSubtitle]="'€' + listing.price"
+                [cardCaption]="listing.category"
+                cardDirection="vertical"
+              />
+            </a>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>
