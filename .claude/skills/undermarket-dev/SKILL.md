@@ -49,12 +49,21 @@ This is the most important rule and has no silent exceptions.
   }
   ```
   This only works per-file — there is no global include, and adding it to `src/styles.scss` does not make the variables available elsewhere (Sass `@use` is scoped to the file that declares it, and Angular's `stylePreprocessorOptions` has no "prepend to every file" option). Prefer the compiled `ul-*` utility classes in HTML first; reach for a raw token only when there's truly no matching utility class, or when a value must be interpolated (e.g. inside a computed style, a media query, or a value passed to a mixin) rather than applied as a static class in markup.
+- Breakpoints are also exported as plain Sass variables in the same `design-tokens` subpath — `$breakpoint-xs` (0px), `$breakpoint-sm` (768px), `$breakpoint-md` (1024px), `$breakpoint-lg` (1280px), `$breakpoint-xl` (1600px). **Never hardcode a breakpoint pixel value in a media query** — use the token instead:
+  ```scss
+  @use 'pkg:@underlayerdev/ui/design-tokens' as tokens;
+
+  @media (min-width: tokens.$breakpoint-sm) { ... }
+  @media (max-width: tokens.$breakpoint-md - 1px) { ... } // "below md"
+  ```
+  This is the same rule as spacing/color/typography tokens above, just for breakpoints — if a value ever needs to change, it should only need to change in one place (the library), not be hunted down across every `.scss` file that duplicated it as a literal.
 - **Under no circumstances add a new design value (color, font size, spacing, radius) without asking the user first.** If the design requires a value that has no matching `ul-*` utility class *and* no matching raw Sass token (check `node_modules/@underlayerdev/ui/design-tokens/_variables.scss`):
   1. Ask the user whether that value should be added to the base library (`@underlayerdev/ui`, in the repo `/Users/lucas.yamone@al-pair.de/dev/base`) so it's available going forward, or
   2. If it's specific and not reusable outside this project, define it as a documented local constant (e.g. in a project `_local-tokens.scss`, never scattered as a literal across files).
      Never decide this unilaterally or hardcode it "for now."
 - The library is dark-themed (background `ul-bg-main` #0a0a0a, white text, `purple`/`fill-purple` brand). Any new page must follow that theme — don't introduce custom light palettes.
-- Pure layout with no design value (`display: flex`, `flex-direction`, `aspect-ratio`, `object-fit`) can stay inline or in SCSS without issue — the "no hardcoding" rule is about design-scale values (spacing, color, typography, radii, shadows), not structural CSS.
+- Pure layout with no design value (`display: flex`, `flex-direction`, `aspect-ratio`, `object-fit`) is exempt from the "no hardcoding" rule above — the rule is about design-scale values (spacing, color, typography, radii, shadows), not structural CSS. But that structural CSS still belongs in the component's `.scss` file as a class, **not** as an inline `style="..."` attribute in the template. Several existing pages (`discover.html`, `settings.html`, `search.html`, `listing-detail.html`, `profile.html`) accumulated `style="display: flex; ..."` sprawl this way — don't add to it, and clean one up if you're already touching that file.
+  - Only reach for `style="..."` (or `[style.*]`/`[ngStyle]`) when the value is genuinely dynamic/computed at runtime and there's no sensible reason to add a class for it — e.g. binding a signal-driven width, a color computed from data, or a one-off CSS var. If the value is static, or the same structural pattern (`display: flex; flex-wrap: wrap`, etc.) shows up more than once, it belongs in SCSS as a real class (or an existing `ul-*` layout utility, e.g. `ul-row`/`ul-col-*`), even if that means creating a `.scss` file for a component that didn't have one.
 
 ## 4. Don't create empty files
 
