@@ -1,9 +1,14 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { filter, map, startWith } from 'rxjs';
 import { AuthService } from '../../application/services/auth.service';
 import {
+  AvatarComponent,
+  DockComponent,
+  DockItemComponent,
+  DockItemContentSlotDirective,
+  IconComponent,
   InputComponent,
   NavbarAvatarSlotDirective,
   NavbarComponent,
@@ -18,10 +23,14 @@ import { SiteFooterComponent } from '../../shared/footer/footer';
 import { NotificationsComponent } from './notifications/notifications';
 import { UserMenuComponent } from './user-menu/user-menu';
 
-/** Mobile drawer only: Home + New Listing. Search lives in the navbar; Profile/Settings/Sign out live in the avatar menu. */
-const SIDEBAR_ITEMS: (SidebarItem & { url: string })[] = [
+/** Mobile drawer only: search lives in the navbar; Home/New/Profile live in the dock. */
+type AppSidebarItem = SidebarItem & { url?: string; action?: 'sign-out' };
+
+const SIDEBAR_ITEMS: AppSidebarItem[] = [
   { label: 'Home', value: 'home', url: '/home', leftIcons: ['home'] },
   { label: 'New Listing', value: 'new-listing', url: '/listings/new', leftIcons: ['plus'] },
+  { label: 'Settings', value: 'settings', url: '/settings', leftIcons: ['settings'] },
+  { label: 'Sign out', value: 'sign-out', action: 'sign-out', leftIcons: ['log_out'] },
 ];
 
 @Component({
@@ -30,6 +39,7 @@ const SIDEBAR_ITEMS: (SidebarItem & { url: string })[] = [
   imports: [
     RouterOutlet,
     RouterLink,
+    RouterLinkActive,
     NavbarComponent,
     NavbarLogoSlotDirective,
     NavbarSearchSlotDirective,
@@ -40,6 +50,11 @@ const SIDEBAR_ITEMS: (SidebarItem & { url: string })[] = [
     SiteFooterComponent,
     NotificationsComponent,
     UserMenuComponent,
+    DockComponent,
+    DockItemComponent,
+    DockItemContentSlotDirective,
+    IconComponent,
+    AvatarComponent,
   ],
   providers: [ToastService],
   templateUrl: './app-layout.html',
@@ -74,7 +89,7 @@ export class AppLayoutComponent {
 
   readonly selectedIndex = computed(() => {
     const url = this.currentUrl();
-    const index = SIDEBAR_ITEMS.findIndex((item) => url.startsWith(item.url));
+    const index = SIDEBAR_ITEMS.findIndex((item) => !!item.url && url.startsWith(item.url));
     return index >= 0 ? index : 0;
   });
 
@@ -82,11 +97,16 @@ export class AppLayoutComponent {
     this.sidebarOpen.update((open) => !open);
   }
 
-  onItemSelected(item: SidebarItem & { url?: string }): void {
+  async onItemSelected(item: AppSidebarItem): Promise<void> {
+    this.sidebarOpen.set(false);
+    if (item.action === 'sign-out') {
+      await this.authService.logout();
+      await this.router.navigateByUrl('/login');
+      return;
+    }
     if (item.url) {
       this.router.navigateByUrl(item.url);
     }
-    this.sidebarOpen.set(false);
   }
 
   onSearchSubmit(): void {

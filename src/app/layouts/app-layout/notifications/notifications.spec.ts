@@ -74,4 +74,26 @@ describe('NotificationsComponent', () => {
 
     expect(markAllAsReadSpy).toHaveBeenCalled();
   });
+
+  it('should render the icon-only trigger by default', () => {
+    const fixture = TestBed.createComponent(NotificationsComponent);
+    fixture.detectChanges();
+
+    const trigger = fixture.nativeElement.querySelector('.um-notifications__trigger');
+    expect(trigger).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('.ul-dock-item')).toBeNull();
+  });
+
+  it('should render as a ul-dock-item with a badge when layout is dock', () => {
+    const fixture = TestBed.createComponent(NotificationsComponent);
+    fixture.componentRef.setInput('layout', 'dock');
+    fixture.detectChanges();
+
+    const trigger = fixture.nativeElement.querySelector('.ul-dock-item');
+    expect(trigger).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('.um-notifications__trigger')).toBeNull();
+    expect(fixture.nativeElement.querySelector('.ul-dock-item__badge')?.textContent.trim()).toBe(
+      '1',
+    );
+  });
 });

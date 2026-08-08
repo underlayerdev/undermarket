@@ -1,6 +1,6 @@
 <div class="app-shell">
   <ul-sidebar
-    class="app-shell__sidebar"
+    class="md:ul-hidden"
     [items]="sidebarItems"
     [selectedIndex]="selectedIndex()"
     [(open)]="sidebarOpen"
@@ -11,10 +11,12 @@
     <ul-navbar
       [sidebarOpen]="sidebarOpen()"
       [showSidebarToggle]="true"
+      [searchCollapsible]="false"
       (sidebarToggle)="toggleSidebar()"
     >
       <a ul-navbar-logo routerLink="/home">
-        <img src="assets/img/logo.png" alt="Undermarket" class="ul-navbar__logo-img" height="64" />
+        <!-- <img src="assets/img/logo.png" alt="Undermarket" class="ul-navbar__logo-img" height="64" /> -->
+        <span class="ul-typography-brand-body-m-extrablack ul-text-primary">UNDERMARKET</span>
       </a>
 
       <div class="app-shell__search" ul-navbar-search>
@@ -31,10 +33,39 @@
       </div>
     </ul-navbar>
 
-    <main class="ul-container-fluid">
-      <div class="ul-content">
+    <ul-dock>
+      <ul-dock-item icon="home" routerLink="/home" routerLinkActive="ul-dock-item--active" />
+
+      <ul-dock-item
+        icon="view_grid"
+        routerLink="/discover"
+        routerLinkActive="ul-dock-item--active"
+      />
+
+      <ul-dock-item
+        variant="accent"
+        routerLink="/listings/new"
+        routerLinkActive="ul-dock-item--active"
+      >
+        <span ul-dock-item-content class="app-shell__dock-new-listing">
+          <ul-icon icon="plus" size="6" />
+        </span>
+      </ul-dock-item>
+      <um-notifications layout="dock" />
+      <ul-dock-item routerLink="/profile" routerLinkActive="ul-dock-item--active">
+        <ul-avatar
+          [src]="userImage()"
+          [initials]="avatarInitials()"
+          size="md"
+          ul-dock-item-content
+        />
+      </ul-dock-item>
+    </ul-dock>
+
+    <main class="app-shell__main ul-container-fluid">
+      <div class="app-shell__content ul-content">
         <router-outlet />
-        <um-footer />
+        <um-footer class="app-shell__footer" />
       </div>
     </main>
   </div>

@@ -1,0 +1,6 @@
+@use 'pkg:@underlayerdev/ui/design-tokens' as tokens;
+
+ul-breadcrumb {
+  padding-top: tokens.$spacing-spacing-4;
+  display: flex;
+}

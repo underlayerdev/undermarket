@@ -16,6 +16,30 @@
     min-width: 0;
   }
 
+  // Pins the footer to the viewport bottom on short pages, desktop only —
+  // on mobile ul-dock is already fixed to the bottom, so stretching the
+  // footer there too would fight for the same space.
+  &__main {
+    @media (min-width: tokens.$breakpoint-md) {
+      flex: 1;
+      display: flex;
+    }
+  }
+
+  &__content {
+    @media (min-width: tokens.$breakpoint-md) {
+      display: flex;
+      flex-direction: column;
+      min-height: 100%;
+    }
+  }
+
+  &__footer {
+    @media (min-width: tokens.$breakpoint-md) {
+      margin-top: auto;
+    }
+  }
+
   &__search {
     width: 100%;
     display: flex;
@@ -26,19 +50,18 @@
     display: flex;
     align-items: center;
     gap: tokens.$spacing-spacing-3;
-  }
 
-  // Sidebar is mobile-only chrome (hamburger-triggered drawer). The base
-  // library's own ul-sidebar CSS docks it as a permanent column at 1024px+
-  // (its 'md' breakpoint) — the opposite of what desktop nav should do here
-  // now that search + the avatar menu live in the navbar — so it's hidden
-  // above that width instead of relying on ul-sidebar's built-in responsive
-  // behavior. 1024px matches $breakpoint-md in @underlayerdev/ui's design
-  // tokens (not re-exported as a Sass mixin via the design-tokens subpath,
-  // so hardcoded here to stay in sync with where the library's own
-  // components already flip behavior).
-  &__sidebar {
-    @media (min-width: 1024px) {
+    // Bell + avatar move to the dock (notifications tab) and sidebar drawer
+    // (profile/settings/sign-out) on mobile, where ul-dock is the primary
+    // nav — keeping both visible would duplicate navigation. $breakpoint-md
+    // matches where the library's own ul-sidebar flips behavior (sidebar is
+    // hidden above that width via the md:ul-hidden utility class in the
+    // template — the base library's own ul-sidebar CSS would otherwise dock
+    // it as a permanent column there, the opposite of what desktop nav
+    // should do now that search + the avatar menu live in the navbar).
+    // No utility exists for "hidden below a breakpoint" (ul-hidden variants
+    // only hide from a breakpoint up), so this direction stays a manual query.
+    @media (max-width: tokens.$breakpoint-md - 1px) {
       display: none;
     }
   }
