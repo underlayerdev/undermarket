@@ -1,0 +1,106 @@
+@use 'pkg:@underlayerdev/ui/design-tokens' as tokens;
+
+:host {
+  display: block;
+}
+
+.new-listing {
+  // Visibility is handled by the md:ul-hidden utility class in the
+  // template (hidden at $breakpoint-md+) — display: flex must stay scoped
+  // below that breakpoint too, otherwise it fights the utility class for
+  // the display property at desktop widths.
+  &__mobile-header {
+    align-items: center;
+    justify-content: space-between;
+    gap: tokens.$spacing-spacing-4;
+    padding-bottom: tokens.$spacing-spacing-4;
+    padding-top: tokens.$spacing-spacing-4;
+    border-bottom: 1px solid tokens.$color-border-white-light;
+    position: sticky;
+    top: 0;
+    background-color: tokens.$color-background-main;
+    z-index: 1;
+
+    @media (max-width: (tokens.$breakpoint-md - 1px)) {
+      display: flex;
+    }
+  }
+
+  &__mobile-title {
+    margin: 0;
+  }
+
+  // No utility exists for "hidden below a breakpoint" (ul-hidden variants
+  // only hide from a breakpoint up), so this direction stays a manual query.
+  &__desktop-title {
+    display: block;
+
+    @media (max-width: tokens.$breakpoint-md - 1px) {
+      display: none;
+    }
+  }
+
+  &__form {
+    display: flex;
+    flex-direction: column;
+
+    @media (min-width: tokens.$breakpoint-sm) {
+      flex-direction: row-reverse;
+      align-items: flex-start;
+    }
+  }
+
+  &__photos {
+    display: flex;
+    flex-direction: column;
+    gap: tokens.$spacing-spacing-1;
+
+    @media (min-width: tokens.$breakpoint-sm) {
+      flex: 0 0 280px;
+      width: 280px;
+    }
+  }
+
+  &__fields {
+    display: flex;
+    flex-direction: column;
+    gap: tokens.$spacing-spacing-5;
+    min-width: 0;
+
+    @media (min-width: tokens.$breakpoint-sm) {
+      flex: 1 1 auto;
+    }
+  }
+
+  &__submit {
+    @media (min-width: tokens.$breakpoint-sm) {
+      display: flex;
+      justify-content: flex-end;
+    }
+  }
+
+  // Mobile already has a "Close" (X) button in &__mobile-header, so Cancel
+  // is redundant there. No utility exists for "hidden below a breakpoint"
+  // (ul-hidden variants only hide from a breakpoint up), so this stays a
+  // manual query.
+  &__cancel {
+    display: none;
+
+    @media (min-width: tokens.$breakpoint-sm) {
+      display: inline-flex;
+    }
+  }
+}
+
+// Below $breakpoint-md (see the note in app-layout.scss) the "New Listing"
+// page takes over the full screen — its own header replaces the navbar/dock
+// so users aren't distracted by navigation chrome while filling out the form.
+@media (max-width: (tokens.$breakpoint-md - 1px)) {
+  :host {
+    position: fixed;
+    inset: 0;
+    z-index: tokens.$elevation-modal;
+    overflow-y: auto;
+    background-color: tokens.$color-background-main;
+  }
+}

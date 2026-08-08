@@ -1,3 +1,4 @@
+import { Location } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -11,12 +12,20 @@ import { AuthService } from '../../../application/services/auth.service';
 import { ErrorService } from '../../../application/services/error.service';
 import { ListingService } from '../../../application/services/listing.service';
 import { SeoService } from '../../../core/seo/seo.service';
+import { ImageUploadComponent } from '../../../shared/image-upload/image-upload';
 import { CATEGORIES } from '../../../shared/constants/categories';
+import type { Category } from '../../../shared/constants/categories';
+import {
+  LISTING_DESCRIPTION_MAX_LENGTH,
+  LISTING_MAX_PRICE,
+  LISTING_TITLE_MAX_LENGTH,
+} from '../../../shared/constants/listing-constraints';
 import { createListingSlug } from '../../../shared/utils/slugify';
 import {
   ButtonComponent,
-  FileInputComponent,
+  IconComponent,
   InputComponent,
+  ModalComponent,
   SelectComponent,
   TextareaComponent,
   ToastService,
@@ -28,8 +37,10 @@ import type { SelectOption } from '@underlayerdev/ui';
   standalone: true,
   imports: [
     ButtonComponent,
-    FileInputComponent,
+    IconComponent,
+    ImageUploadComponent,
     InputComponent,
+    ModalComponent,
     SelectComponent,
     TextareaComponent,
   ],
@@ -45,6 +56,7 @@ export class NewListingComponent implements OnInit {
   private readonly seoService = inject(SeoService);
   private readonly router = inject(Router);
   private readonly toastService = inject(ToastService);
+  private readonly location = inject(Location);
 
   readonly categoryOptions: SelectOption[] = CATEGORIES.map((c) => ({ value: c, label: c }));
 
@@ -55,13 +67,15 @@ export class NewListingComponent implements OnInit {
   readonly descriptionValue = signal('');
   readonly priceValue = signal('');
   readonly categoryValue = signal<string | null>(null);
-  readonly filesValue = signal<FileList | null>(null);
+  readonly imageFiles = signal<File[]>([]);
 
   readonly titleError = computed(() => {
     if (!this.touched()) return null;
     const v = this.titleValue().trim();
     if (!v) return 'Title is required.';
-    if (v.length > 100) return 'Title must be at most 100 characters.';
+    if (v.length > LISTING_TITLE_MAX_LENGTH) {
+      return `Title must be at most ${LISTING_TITLE_MAX_LENGTH} characters.`;
+    }
     return null;
   });
 
@@ -69,7 +83,9 @@ export class NewListingComponent implements OnInit {
     if (!this.touched()) return null;
     const v = this.descriptionValue().trim();
     if (!v) return 'Description is required.';
-    if (v.length > 2000) return 'Description must be at most 2000 characters.';
+    if (v.length > LISTING_DESCRIPTION_MAX_LENGTH) {
+      return `Description must be at most ${LISTING_DESCRIPTION_MAX_LENGTH} characters.`;
+    }
     return null;
   });
 
@@ -78,12 +94,15 @@ export class NewListingComponent implements OnInit {
     const n = parseFloat(this.priceValue());
     if (this.priceValue() === '' || isNaN(n)) return 'Please enter a valid price.';
     if (n < 0) return 'Price must be 0 or more.';
+    if (n > LISTING_MAX_PRICE) return `Price must be at most ${LISTING_MAX_PRICE}.`;
     return null;
   });
 
   readonly categoryError = computed(() => {
     if (!this.touched()) return null;
-    if (!this.categoryValue()) return 'Please select a category.';
+    const category = this.categoryValue();
+    if (!category) return 'Please select a category.';
+    if (!CATEGORIES.includes(category as Category)) return 'Please select a valid category.';
     return null;
   });
 
@@ -92,8 +111,39 @@ export class NewListingComponent implements OnInit {
       !this.titleError() && !this.descriptionError() && !this.priceError() && !this.categoryError(),
   );
 
+  readonly hasUnsavedChanges = computed(
+    () =>
+      !!this.titleValue().trim() ||
+      !!this.descriptionValue().trim() ||
+      !!this.priceValue().trim() ||
+      !!this.categoryValue() ||
+      !!this.imageFiles().length,
+  );
+
+  readonly showDiscardModal = signal(false);
+
   ngOnInit(): void {
     this.seoService.setPage('Post a Listing');
+  }
+
+  onClose(): void {
+    if (this.hasUnsavedChanges()) {
+      this.showDiscardModal.set(true);
+      return;
+    }
+    this.location.back();
+  }
+
+  confirmDiscard(): void {
+    this.location.back();
+  }
+
+  // No FormsModule in this app (state lives in signals, not NgForm), so
+  // there's no NgForm directive to turn a native "submit" into "ngSubmit"
+  // with preventDefault() already applied — do it ourselves here instead.
+  onFormSubmit(event: SubmitEvent): void {
+    event.preventDefault();
+    void this.onSubmit();
   }
 
   async onSubmit(): Promise<void> {
@@ -106,19 +156,14 @@ export class NewListingComponent implements OnInit {
     this.isLoading.set(true);
 
     try {
-      const files = this.filesValue();
-      const fileArray = files ? Array.from(files) : [];
-      const listing = await this.listingService.create(
-        {
-          title: this.titleValue().trim(),
-          description: this.descriptionValue().trim(),
-          price: parseFloat(this.priceValue()),
-          category: this.categoryValue()!,
-          status: 'active',
-          ownerId: currentUser.id,
-        },
-        fileArray,
-      );
+      const listing = await this.listingService.create({
+        title: this.titleValue().trim(),
+        description: this.descriptionValue().trim(),
+        price: parseFloat(this.priceValue()),
+        category: this.categoryValue()!,
+        status: 'active',
+        ownerId: currentUser.id,
+      });
       await this.router.navigate(['/listings', createListingSlug(listing.title, listing.id)]);
     } catch (err) {
       this.toastService.error(this.errorService.toUserMessage(err));

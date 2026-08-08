@@ -1,12 +1,15 @@
 import { inject, Injectable, signal } from '@angular/core';
-import { IMAGE_STORAGE, LISTING_REPOSITORY } from '../../core/configuration/tokens';
+import { LISTING_REPOSITORY } from '../../core/configuration/tokens';
 import type { Listing, ListingId } from '../../domain/models/listing.model';
 import type { ListingSearchFilters } from '../../domain/repositories/listing.repository';
+import { validateNewListing } from '../../shared/validators/listing.validator';
+import type { NewListingInput } from '../../shared/validators/listing.validator';
+import { AuthService } from './auth.service';
 
 @Injectable({ providedIn: 'root' })
 export class ListingService {
   private readonly listingRepository = inject(LISTING_REPOSITORY);
-  private readonly imageStorage = inject(IMAGE_STORAGE);
+  private readonly authService = inject(AuthService);
 
   readonly listings = signal<Listing[]>([]);
 
@@ -20,12 +23,19 @@ export class ListingService {
     this.listings.set(result);
   }
 
-  async create(
-    data: Omit<Listing, 'id' | 'createdAt' | 'updatedAt' | 'imageUrls'>,
-    imageFiles: File[],
-  ): Promise<Listing> {
-    const imageUrls = await Promise.all(imageFiles.map((f) => this.imageStorage.upload(f)));
-    return this.listingRepository.create({ ...data, imageUrls });
+  // Image upload is intentionally not wired up yet (Cloudinary is a stub) —
+  // every new listing is created with an empty imageUrls array for now.
+  async create(data: NewListingInput): Promise<Listing> {
+    const currentUser = this.authService.currentUser();
+    if (!currentUser) throw new Error('You must be signed in to post a listing.');
+    if (data.ownerId !== currentUser.id) {
+      throw new Error('You can only create listings for your own account.');
+    }
+
+    const validationError = validateNewListing(data);
+    if (validationError) throw new Error(validationError);
+
+    return this.listingRepository.create({ ...data, imageUrls: [] });
   }
 
   async update(listing: Listing): Promise<void> {

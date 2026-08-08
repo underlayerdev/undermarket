@@ -1,0 +1,72 @@
+rules_version = '2';
+
+// Keep these in sync with src/app/shared/constants/listing-constraints.ts
+// and src/app/shared/constants/categories.ts.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidCategory(category) {
+      return category in [
+        'Electronics', 'Clothing', 'Furniture', 'Vehicles', 'Books', 'Sports', 'Other'
+      ];
+    }
+
+    function isValidNewListing(data) {
+      return data.keys().hasAll(
+        ['ownerId', 'title', 'description', 'price', 'category', 'status', 'imageUrls', 'createdAt', 'updatedAt']
+      )
+        && data.ownerId is string
+        && data.title is string && data.title.size() > 0 && data.title.size() <= 100
+        && data.description is string && data.description.size() > 0 && data.description.size() <= 2000
+        && data.price is number && data.price >= 0 && data.price <= 1000000
+        && isValidCategory(data.category)
+        && data.status == 'active'
+        && data.imageUrls is list && data.imageUrls.size() == 0
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidListingUpdate(data) {
+      return data.title is string && data.title.size() > 0 && data.title.size() <= 100
+        && data.description is string && data.description.size() > 0 && data.description.size() <= 2000
+        && data.price is number && data.price >= 0 && data.price <= 1000000
+        && isValidCategory(data.category)
+        && (data.status == 'active' || data.status == 'sold')
+        && data.imageUrls is list
+        && data.updatedAt is timestamp;
+    }
+
+    match /listings/{listingId} {
+      // Anyone can browse listings (public marketplace); only the owner
+      // (a signed-in user) may create/update/delete their own listings.
+      allow read: if true;
+
+      allow create: if isSignedIn()
+        && request.resource.data.ownerId == request.auth.uid
+        && isValidNewListing(request.resource.data);
+
+      allow update: if isSignedIn()
+        && resource.data.ownerId == request.auth.uid
+        && request.resource.data.ownerId == resource.data.ownerId
+        && isValidListingUpdate(request.resource.data);
+
+      allow delete: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+    }
+
+    match /users/{userId} {
+      // Display names/avatars are shown on listings, so profiles are
+      // publicly readable; only the account owner can write their own doc.
+      allow read: if true;
+      allow write: if isSignedIn() && request.auth.uid == userId;
+    }
+
+    // Deny everything else by default.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

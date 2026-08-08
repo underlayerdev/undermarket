@@ -1,68 +1,109 @@
+<div class="new-listing__mobile-header md:ul-hidden ul-container-form">
+  <h2 class="ul-typography-headline-s-extrabold new-listing__mobile-title">Post a listing</h2>
+  <ul-button
+    type="button"
+    theme="ghost-white"
+    [iconOnly]="true"
+    ariaLabel="Close"
+    (buttonClick)="onClose()"
+  >
+    <ul-icon icon="close" size="6" />
+  </ul-button>
+</div>
+
 <div class="ul-container-form">
   <div class="ul-content ul-pt-8">
+    <h1 class="ul-typography-headline-xl-extrablack ul-mb-8 new-listing__desktop-title">
+      Post a listing
+    </h1>
 
-    <h1 class="ul-typography-headline-xl-extrablack ul-mb-8">Post a listing</h1>
+    <form (submit)="onFormSubmit($event)" novalidate class="new-listing__form ul-gap-5">
+      <div class="new-listing__photos">
+        <label
+          class="ul-form-field__label ul-form-field__label--md ul-form-field__label--requireds"
+        >
+          Photos
 
-    <form (ngSubmit)="onSubmit()" novalidate class="ul-gap-5" style="display: flex; flex-direction: column;">
+          @if (imageFiles().length > 0) {
+            ({{ imageFiles().length }})
+          }
+        </label>
+        <um-image-upload [(images)]="imageFiles" />
+      </div>
+      <div class="new-listing__fields">
+        <ul-input
+          label="Title"
+          placeholder="What are you selling?"
+          [required]="true"
+          [maxLength]="100"
+          [(value)]="titleValue"
+          [error]="!!titleError()"
+          [errorText]="titleError()"
+        />
 
-      <ul-input
-        label="Title"
-        placeholder="What are you selling?"
-        [required]="true"
-        [maxLength]="100"
-        [(value)]="titleValue"
-        [error]="!!titleError()"
-        [errorText]="titleError()"
-      />
+        <ul-textarea
+          label="Description"
+          placeholder="Describe the item — condition, brand, size, etc."
+          [required]="true"
+          [rows]="5"
+          [maxLength]="2000"
+          [(value)]="descriptionValue"
+          [error]="!!descriptionError()"
+          [errorText]="descriptionError()"
+        />
 
-      <ul-textarea
-        label="Description"
-        placeholder="Describe the item — condition, brand, size, etc."
-        [required]="true"
-        [rows]="5"
-        [maxLength]="2000"
-        [(value)]="descriptionValue"
-        [error]="!!descriptionError()"
-        [errorText]="descriptionError()"
-      />
-
-      <div class="ul-row">
-        <div class="ul-col-12 ul-col-md-6">
-          <ul-input
-            label="Price (€)"
-            placeholder="0.00"
-            [required]="true"
-            [(value)]="priceValue"
-            [error]="!!priceError()"
-            [errorText]="priceError()"
-          />
+        <div class="ul-row">
+          <div class="ul-col-12 ul-col-md-6">
+            <ul-input
+              label="Price (€)"
+              placeholder="0.00"
+              [required]="true"
+              [(value)]="priceValue"
+              [error]="!!priceError()"
+              [errorText]="priceError()"
+            />
+          </div>
+          <div class="ul-col-12 ul-col-md-6">
+            <ul-select
+              label="Category"
+              placeholder="Select a category"
+              [required]="true"
+              [options]="categoryOptions"
+              [(value)]="categoryValue"
+              [error]="!!categoryError()"
+              [errorText]="categoryError()"
+            />
+          </div>
         </div>
-        <div class="ul-col-12 ul-col-md-6">
-          <ul-select
-            label="Category"
-            placeholder="Select a category"
-            [required]="true"
-            [options]="categoryOptions"
-            [(value)]="categoryValue"
-            [error]="!!categoryError()"
-            [errorText]="categoryError()"
-          />
+
+        <div class="new-listing__submit ul-gap-4 ul-mt-2">
+          <ul-button
+            type="button"
+            theme="ghost-white"
+            class="new-listing__cancel"
+            (buttonClick)="onClose()"
+          >
+            Cancel
+          </ul-button>
+          <ul-button type="submit" theme="fill-purple" size="md" [disabled]="isLoading()">
+            {{ isLoading() ? 'Publishing...' : 'Publish listing' }}
+          </ul-button>
         </div>
       </div>
-
-      <ul-file-input
-        label="Photos"
-        accept="image/*"
-        [multiple]="true"
-        [(value)]="filesValue"
-      />
-
-      <div class="ul-mt-2">
-        <ul-button type="submit" theme="fill-purple" size="lg" [disabled]="isLoading()">
-          {{ isLoading() ? 'Publishing...' : 'Publish listing' }}
-        </ul-button>
-      </div>
-
     </form>
   </div>
 </div>
+
+<ul-modal
+  [(open)]="showDiscardModal"
+  title="Discard changes?"
+  variant="confirmation"
+  confirmLabel="Discard"
+  cancelLabel="Keep editing"
+  (confirmed)="confirmDiscard()"
+  (cancelled)="showDiscardModal.set(false)"
+>
+  <p class="ul-typography-body-m-regular">
+    You have unsaved changes. Are you sure you want to discard them?
+  </p>
+</ul-modal>
