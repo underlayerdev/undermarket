@@ -1,0 +1,83 @@
+<div class="image-upload" [class.photos-added]="images().length > 0">
+  <div
+    class="image-upload__grid"
+    cdkDropList
+    cdkDropListOrientation="horizontal"
+    (cdkDropListDropped)="onDrop($event)"
+  >
+    @for (preview of previews(); track preview.url; let idx = $index) {
+      <div class="image-upload__thumb" cdkDrag>
+        <img [src]="preview.url" [alt]="'Photo ' + (idx + 1)" class="image-upload__img" />
+
+        @if (preview.compressing) {
+          <div class="image-upload__overlay">
+            <ul-icon icon="refresh_cw" size="6" class="image-upload__spinner" />
+          </div>
+        }
+
+        @if (idx === 0) {
+          <span class="image-upload__badge">Cover photo</span>
+        }
+
+        <ul-button
+          type="button"
+          theme="ghost-white"
+          size="sm"
+          [iconOnly]="true"
+          ariaLabel="Remove photo"
+          class="image-upload__remove"
+          (buttonClick)="removePreview(preview)"
+        >
+          <ul-icon icon="close" size="4" />
+        </ul-button>
+
+        <div class="image-upload__move">
+          <ul-button
+            type="button"
+            theme="ghost-white"
+            size="sm"
+            [iconOnly]="true"
+            ariaLabel="Move photo left"
+            [disabled]="idx === 0"
+            (buttonClick)="moveLeft(idx)"
+          >
+            <ul-icon icon="arrow_left" size="4" />
+          </ul-button>
+          <ul-button
+            type="button"
+            theme="ghost-white"
+            size="sm"
+            [iconOnly]="true"
+            ariaLabel="Move photo right"
+            [disabled]="idx === previews().length - 1"
+            (buttonClick)="moveRight(idx)"
+          >
+            <ul-icon icon="arrow_right" size="4" />
+          </ul-button>
+        </div>
+      </div>
+    }
+
+    @if (previews().length < maxFiles()) {
+      <button type="button" class="image-upload__add" (click)="openFilePicker()">
+        <ul-icon icon="plus" size="8" />
+        @if (previews().length === 0) {
+          <span class="ul-typography-body-s-regular">Add photos</span>
+        }
+      </button>
+    }
+  </div>
+
+  @if (error()) {
+    <p class="image-upload__error ul-typography-body-s-regular">{{ error() }}</p>
+  }
+
+  <input
+    #fileInput
+    type="file"
+    accept="image/*"
+    multiple
+    class="ul-hidden"
+    (change)="onFilesSelected($event)"
+  />
+</div>
