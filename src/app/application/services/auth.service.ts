@@ -1,7 +1,7 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { AUTH_PROVIDER } from '../../core/configuration/tokens';
-import type { OAuthProvider } from '../../domain/models/oauth-provider';
-import type { User } from '../../domain/models/user.model';
+import type { OAuthProvider } from '../../domain/auth/oauth-provider';
+import type { User } from '../../domain/user/user.model';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {

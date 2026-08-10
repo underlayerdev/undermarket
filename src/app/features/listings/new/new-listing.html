@@ -53,9 +53,20 @@
         />
 
         <div class="ul-row">
-          <div class="ul-col-12 ul-col-md-6">
+          <div class="ul-col-12 ul-col-md-3">
+            <ul-select
+              label="Currency"
+              placeholder="Select a currency"
+              [required]="true"
+              [options]="currencyOptions"
+              [(value)]="currencyValue"
+              [error]="!!currencyError()"
+              [errorText]="currencyError()"
+            />
+          </div>
+          <div class="ul-col-12 ul-col-md-3">
             <ul-input
-              label="Price (€)"
+              label="Price"
               placeholder="0.00"
               [required]="true"
               [(value)]="priceValue"

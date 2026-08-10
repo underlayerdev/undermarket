@@ -1,4 +1,4 @@
-import type { User, UserId } from '../models/user.model';
+import type { User, UserId } from './user.model';
 
 export interface UserRepository {
   getById(id: UserId): Promise<User | null>;

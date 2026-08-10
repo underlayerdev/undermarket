@@ -12,7 +12,8 @@ import { AuthService } from '../../../application/services/auth.service';
 import { ListingService } from '../../../application/services/listing.service';
 import { SeoService } from '../../../core/seo/seo.service';
 import { LISTING_REPOSITORY } from '../../../core/configuration/tokens';
-import type { Listing } from '../../../domain/models/listing.model';
+import type { Listing } from '../../../domain/listing/listing.model';
+import { ListingPricePipe } from '../../../shared/pipes/listing-price.pipe';
 import { extractIdFromSlug } from '../../../shared/utils/slugify';
 import {
   BreadcrumbComponent,
@@ -28,6 +29,7 @@ import type { BreadcrumbItem } from '@underlayerdev/ui';
   standalone: true,
   imports: [
     DatePipe,
+    ListingPricePipe,
     BreadcrumbComponent,
     ButtonComponent,
     ModalComponent,

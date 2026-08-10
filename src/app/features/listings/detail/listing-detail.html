@@ -14,7 +14,7 @@
 } @else if (listing(); as item) {
   <div class="ul-container-product">
     <div class="ul-content">
-      <ul-breadcrumb [items]="breadcrumbItems()"/>
+      <ul-breadcrumb [items]="breadcrumbItems()" />
 
       <article class="ul-row ul-mt-8">
         <div class="ul-col-12 ul-col-md-7">
@@ -66,7 +66,9 @@
           </div>
 
           <h1 class="ul-typography-headline-l-extrablack">{{ item.title }}</h1>
-          <p class="ul-typography-headline-m-extrabold">€{{ item.price }}</p>
+          <p class="ul-typography-headline-m-extrabold">
+            {{ item.price | listingPrice: item.currency }}
+          </p>
 
           <div>
             <h2 class="ul-typography-headline-s-extrabold ul-mb-2">Description</h2>

@@ -1,10 +1,7 @@
 import { validateNewListing } from './listing.validator';
 import type { NewListingInput } from './listing.validator';
-import {
-  LISTING_DESCRIPTION_MAX_LENGTH,
-  LISTING_MAX_PRICE,
-  LISTING_TITLE_MAX_LENGTH,
-} from '../constants/listing-constraints';
+import { getMaxPriceForCurrency } from '../currency/currency.model';
+import { LISTING_DESCRIPTION_MAX_LENGTH, LISTING_TITLE_MAX_LENGTH } from './listing-constraints';
 
 function validInput(overrides: Partial<NewListingInput> = {}): NewListingInput {
   return {
@@ -12,6 +9,7 @@ function validInput(overrides: Partial<NewListingInput> = {}): NewListingInput {
     title: 'Vintage lamp',
     description: 'A nice lamp in good condition.',
     price: 25,
+    currency: 'ARS',
     category: 'Furniture',
     status: 'active',
     ...overrides,
@@ -41,6 +39,12 @@ describe('validateNewListing', () => {
     expect(validateNewListing(validInput({ description }))).toContain('at most');
   });
 
+  it('should reject an unknown currency', () => {
+    expect(validateNewListing(validInput({ currency: 'EUR' }))).toBe(
+      'Please select a valid currency.',
+    );
+  });
+
   it('should reject a negative price', () => {
     expect(validateNewListing(validInput({ price: -1 }))).toBe('Price must be 0 or more.');
   });
@@ -49,8 +53,16 @@ describe('validateNewListing', () => {
     expect(validateNewListing(validInput({ price: NaN }))).toBe('Price must be 0 or more.');
   });
 
-  it('should reject a price over the max', () => {
-    expect(validateNewListing(validInput({ price: LISTING_MAX_PRICE + 1 }))).toContain('at most');
+  it('should reject a price over the max for the given currency', () => {
+    const maxPrice = getMaxPriceForCurrency('USD');
+    expect(validateNewListing(validInput({ currency: 'USD', price: maxPrice + 1 }))).toContain(
+      'at most',
+    );
+  });
+
+  it('should allow a price that would exceed the USD max but is within the ARS max', () => {
+    const usdMax = getMaxPriceForCurrency('USD');
+    expect(validateNewListing(validInput({ currency: 'ARS', price: usdMax + 1 }))).toBeNull();
   });
 
   it('should reject an unknown category', () => {

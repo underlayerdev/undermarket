@@ -2,11 +2,11 @@ import { InjectionToken } from '@angular/core';
 import type { FirebaseApp } from 'firebase/app';
 import type { Auth } from 'firebase/auth';
 import type { Firestore } from 'firebase/firestore';
-import type { AuthProvider } from '../../domain/providers/auth.provider';
-import type { ImageStorage } from '../../domain/providers/image-storage.provider';
-import type { NotificationProvider } from '../../domain/providers/notification.provider';
-import type { UserRepository } from '../../domain/repositories/user.repository';
-import type { ListingRepository } from '../../domain/repositories/listing.repository';
+import type { AuthProvider } from '../../domain/auth/auth.provider';
+import type { ImageStorage } from '../../domain/image-storage/image-storage.provider';
+import type { NotificationProvider } from '../../domain/notification/notification.provider';
+import type { UserRepository } from '../../domain/user/user.repository';
+import type { ListingRepository } from '../../domain/listing/listing.repository';
 
 export const FIREBASE_APP = new InjectionToken<FirebaseApp>('FIREBASE_APP');
 export const FIREBASE_AUTH = new InjectionToken<Auth>('FIREBASE_AUTH');

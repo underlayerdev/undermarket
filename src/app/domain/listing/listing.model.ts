@@ -1,4 +1,6 @@
-import type { UserId } from './user.model';
+import type { Category } from '../category/category.model';
+import type { CurrencyCode } from '../currency/currency.model';
+import type { UserId } from '../user/user.model';
 
 export type ListingId = string;
 
@@ -8,7 +10,8 @@ export interface Listing {
   title: string;
   description: string;
   price: number;
-  category: string;
+  currency: CurrencyCode;
+  category: Category;
   imageUrls: string[];
   status: 'active' | 'sold';
   createdAt: Date;

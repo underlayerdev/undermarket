@@ -15,9 +15,12 @@ import {
   Timestamp,
 } from 'firebase/firestore';
 import { FIREBASE_FIRESTORE } from '../../../core/configuration/tokens';
-import type { ListingRepository, ListingSearchFilters } from '../../../domain/repositories/listing.repository';
-import type { Listing, ListingId } from '../../../domain/models/listing.model';
-import type { UserId } from '../../../domain/models/user.model';
+import type {
+  ListingRepository,
+  ListingSearchFilters,
+} from '../../../domain/listing/listing.repository';
+import type { Listing, ListingId } from '../../../domain/listing/listing.model';
+import type { UserId } from '../../../domain/user/user.model';
 
 @Injectable({ providedIn: 'root' })
 export class FirestoreListingRepository implements ListingRepository {
@@ -27,7 +30,7 @@ export class FirestoreListingRepository implements ListingRepository {
   async getLatest(): Promise<Listing[]> {
     const q = query(this.col(), orderBy('createdAt', 'desc'), limit(20));
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(d => this.mapDoc(d.id, d.data()));
+    return snapshot.docs.map((d) => this.mapDoc(d.id, d.data()));
   }
 
   async getById(id: ListingId): Promise<Listing | null> {
@@ -39,7 +42,7 @@ export class FirestoreListingRepository implements ListingRepository {
   async getByOwner(ownerId: UserId): Promise<Listing[]> {
     const q = query(this.col(), where('ownerId', '==', ownerId), orderBy('createdAt', 'desc'));
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(d => this.mapDoc(d.id, d.data()));
+    return snapshot.docs.map((d) => this.mapDoc(d.id, d.data()));
   }
 
   async search(filters: ListingSearchFilters): Promise<Listing[]> {
@@ -48,11 +51,11 @@ export class FirestoreListingRepository implements ListingRepository {
     constraints.push(orderBy('createdAt', 'desc'));
     const q = query(this.col(), ...constraints);
     const snapshot = await getDocs(q);
-    const results = snapshot.docs.map(d => this.mapDoc(d.id, d.data()));
+    const results = snapshot.docs.map((d) => this.mapDoc(d.id, d.data()));
     if (!filters.query) return results;
     const lower = filters.query.toLowerCase();
     return results.filter(
-      l => l.title.toLowerCase().includes(lower) || l.description.toLowerCase().includes(lower),
+      (l) => l.title.toLowerCase().includes(lower) || l.description.toLowerCase().includes(lower),
     );
   }
 
@@ -78,7 +81,8 @@ export class FirestoreListingRepository implements ListingRepository {
       title: data['title'] as string,
       description: data['description'] as string,
       price: data['price'] as number,
-      category: data['category'] as string,
+      currency: data['currency'] as Listing['currency'],
+      category: data['category'] as Listing['category'],
       imageUrls: data['imageUrls'] as string[],
       status: data['status'] as Listing['status'],
       createdAt: (data['createdAt'] as Timestamp).toDate(),

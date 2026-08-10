@@ -12,8 +12,9 @@ import { ListingService } from '../../application/services/listing.service';
 import { UserService } from '../../application/services/user.service';
 import { SeoService } from '../../core/seo/seo.service';
 import { LISTING_REPOSITORY } from '../../core/configuration/tokens';
+import { ListingPricePipe } from '../../shared/pipes/listing-price.pipe';
 import { createListingSlug } from '../../shared/utils/slugify';
-import type { Listing } from '../../domain/models/listing.model';
+import type { Listing } from '../../domain/listing/listing.model';
 import {
   AvatarComponent,
   CardComponent,
@@ -24,7 +25,14 @@ import {
 @Component({
   selector: 'um-profile',
   standalone: true,
-  imports: [RouterLink, AvatarComponent, CardComponent, SkeletonComponent, StatusComponent],
+  imports: [
+    RouterLink,
+    AvatarComponent,
+    CardComponent,
+    SkeletonComponent,
+    StatusComponent,
+    ListingPricePipe,
+  ],
   templateUrl: './profile.html',
   styleUrl: './profile.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

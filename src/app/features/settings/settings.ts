@@ -9,7 +9,7 @@ import {
 import { UserService } from '../../application/services/user.service';
 import { AuthService } from '../../application/services/auth.service';
 import { SeoService } from '../../core/seo/seo.service';
-import type { UserSettings } from '../../domain/models/user.model';
+import type { UserSettings } from '../../domain/user/user.model';
 import { CardComponent, SelectComponent } from '@underlayerdev/ui';
 import type { SelectOption } from '@underlayerdev/ui';
 

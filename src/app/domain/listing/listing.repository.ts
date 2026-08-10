@@ -1,5 +1,5 @@
-import type { Listing, ListingId } from '../models/listing.model';
-import type { UserId } from '../models/user.model';
+import type { Listing, ListingId } from './listing.model';
+import type { UserId } from '../user/user.model';
 
 export interface ListingSearchFilters {
   query?: string;

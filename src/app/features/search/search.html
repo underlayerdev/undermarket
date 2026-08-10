@@ -1,6 +1,5 @@
 <div class="ul-container-gallery">
   <div class="ul-content ul-pt-8">
-
     <h1 class="ul-typography-headline-xl-extrablack ul-mb-6">Search listings</h1>
 
     <div class="ul-row ul-mb-4">
@@ -8,15 +7,22 @@
         <ul-input label="Search" placeholder="Search for anything..." [(value)]="query" />
       </div>
       <div class="ul-col-12 ul-col-md-4">
-        <ul-select label="Category" placeholder="All categories" [options]="categoryOptions" [(value)]="selectedCategory" />
+        <ul-select
+          label="Category"
+          placeholder="All categories"
+          [options]="categoryOptions"
+          [(value)]="selectedCategory"
+        />
       </div>
-      <div class="ul-col-12 ul-col-md-2" style="display: flex; align-items: flex-end;">
-        <ul-button theme="fill-purple" size="md" type="button" (buttonClick)="onSearch()">Search</ul-button>
+      <div class="ul-col-12 ul-col-md-2" style="display: flex; align-items: flex-end">
+        <ul-button theme="fill-purple" size="md" type="button" (buttonClick)="onSearch()"
+          >Search</ul-button
+        >
       </div>
     </div>
 
     @if (selectedCategory()) {
-      <div class="ul-gap-2 ul-mb-4" style="display: flex; align-items: center;">
+      <div class="ul-gap-2 ul-mb-4" style="display: flex; align-items: center">
         <span class="ul-typography-caption-l-regular">Active filter:</span>
         <ul-pill theme="fill-purple" variant="dismissible" (dismiss)="clearCategory()">
           {{ selectedCategory() }}
@@ -25,7 +31,9 @@
     }
 
     @if (listingService.listings().length === 0) {
-      <p class="ul-typography-body-m-regular ul-text-secondary ul-mt-8">No results found. Try a different search.</p>
+      <p class="ul-typography-body-m-regular ul-text-secondary ul-mt-8">
+        No results found. Try a different search.
+      </p>
     } @else {
       <div class="ul-row">
         @for (listing of listingService.listings(); track listing.id) {
@@ -33,7 +41,7 @@
             <a [routerLink]="['/listings', createListingSlug(listing.title, listing.id)]">
               <ul-card
                 [cardTitle]="listing.title"
-                [cardSubtitle]="'€' + listing.price"
+                [cardSubtitle]="listing.price | listingPrice: listing.currency"
                 [cardCaption]="listing.category"
                 cardDirection="vertical"
               />
@@ -42,6 +50,5 @@
         }
       </div>
     }
-
   </div>
 </div>

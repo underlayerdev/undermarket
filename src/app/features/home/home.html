@@ -19,9 +19,10 @@
             <a [routerLink]="['/listings', createListingSlug(listing.title, listing.id)]">
               <ul-card
                 [cardTitle]="listing.title"
-                [cardSubtitle]="'€' + listing.price"
+                [cardSubtitle]="listing.price | listingPrice: listing.currency"
                 [cardCaption]="listing.category"
                 cardDirection="vertical"
+                mediaAspectRatio="portrait"
               />
             </a>
           </div>

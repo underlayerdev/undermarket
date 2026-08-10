@@ -3,7 +3,7 @@ import { Router } from '@angular/router';
 import { signal } from '@angular/core';
 import { NotificationsComponent } from './notifications';
 import { NotificationService } from '../../../application/services/notification.service';
-import type { Notification } from '../../../domain/models/notification.model';
+import type { Notification } from '../../../domain/notification/notification.model';
 
 const notifications: Notification[] = [
   { id: '1', message: 'First', read: false, createdAt: new Date() },

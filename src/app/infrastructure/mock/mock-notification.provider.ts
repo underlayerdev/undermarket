@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import type { NotificationProvider } from '../../domain/providers/notification.provider';
-import type { Notification, NotificationId } from '../../domain/models/notification.model';
+import type { NotificationProvider } from '../../domain/notification/notification.provider';
+import type { Notification, NotificationId } from '../../domain/notification/notification.model';
 
 const SEED_NOTIFICATIONS: Notification[] = [
   {

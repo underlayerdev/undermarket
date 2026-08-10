@@ -15,9 +15,9 @@ import {
   updateProfile,
 } from 'firebase/auth';
 import { FIREBASE_AUTH } from '../../../core/configuration/tokens';
-import type { AuthProvider } from '../../../domain/providers/auth.provider';
-import type { OAuthProvider } from '../../../domain/models/oauth-provider';
-import type { User } from '../../../domain/models/user.model';
+import type { AuthProvider } from '../../../domain/auth/auth.provider';
+import type { OAuthProvider } from '../../../domain/auth/oauth-provider';
+import type { User } from '../../../domain/user/user.model';
 
 const oauthProviderMap = {
   google: () => new GoogleAuthProvider(),

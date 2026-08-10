@@ -10,7 +10,8 @@ import {
 import { RouterLink } from '@angular/router';
 import { ListingService } from '../../application/services/listing.service';
 import { SeoService } from '../../core/seo/seo.service';
-import { CATEGORIES } from '../../shared/constants/categories';
+import { CATEGORIES } from '../../domain/category/category.model';
+import { ListingPricePipe } from '../../shared/pipes/listing-price.pipe';
 import { createListingSlug } from '../../shared/utils/slugify';
 import {
   ButtonComponent,
@@ -31,6 +32,7 @@ import type { SelectOption } from '@underlayerdev/ui';
     InputComponent,
     PillComponent,
     SelectComponent,
+    ListingPricePipe,
   ],
   templateUrl: './search.html',
   styleUrl: './search.scss',

@@ -1,15 +1,13 @@
 <div class="ul-container-gallery">
   <div class="ul-content ul-pt-8">
-
     @if (isLoading()) {
-      <div class="ul-gap-4 ul-mb-6" style="display: flex; align-items: center;">
+      <div class="ul-gap-4 ul-mb-6" style="display: flex; align-items: center">
         <ul-skeleton variant="rect" width="80px" height="80px" [show]="true" />
         <ul-skeleton variant="text" [lines]="2" [show]="true" />
       </div>
       <ul-skeleton variant="rect" height="200px" [show]="true" />
     } @else if (userService.profile(); as user) {
-
-      <div class="ul-gap-6 ul-mb-10" style="display: flex; align-items: center;">
+      <div class="ul-gap-6 ul-mb-10" style="display: flex; align-items: center">
         <ul-avatar [initials]="avatarInitials()" [src]="avatarSrc()" size="xl" />
         <div>
           <h1 class="ul-typography-headline-l-extrablack">{{ user.displayName }}</h1>
@@ -22,7 +20,9 @@
       </h2>
 
       @if (userListings().length === 0) {
-        <p class="ul-typography-body-m-regular ul-text-secondary">You have not posted any listings yet.</p>
+        <p class="ul-typography-body-m-regular ul-text-secondary">
+          You have not posted any listings yet.
+        </p>
       } @else {
         <div class="ul-row">
           @for (listing of userListings(); track listing.id) {
@@ -30,7 +30,7 @@
               <a [routerLink]="['/listings', createListingSlug(listing.title, listing.id)]">
                 <ul-card
                   [cardTitle]="listing.title"
-                  [cardSubtitle]="'€' + listing.price"
+                  [cardSubtitle]="listing.price | listingPrice: listing.currency"
                   [cardCaption]="listing.category"
                   cardDirection="vertical"
                 />
@@ -40,7 +40,6 @@
           }
         </div>
       }
-
     }
   </div>
 </div>

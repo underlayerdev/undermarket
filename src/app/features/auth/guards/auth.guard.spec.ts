@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { authGuard } from './auth.guard';
 import { AuthService } from '../../../application/services/auth.service';
-import type { User } from '../../../domain/models/user.model';
+import type { User } from '../../../domain/user/user.model';
 
 const testUser: User = {
   id: 'u1',
@@ -34,9 +34,7 @@ describe('authGuard', () => {
   it('should allow activation once ready resolves and a user is present', async () => {
     setup(testUser);
 
-    const result = await TestBed.runInInjectionContext(() =>
-      authGuard({} as never, {} as never)
-    );
+    const result = await TestBed.runInInjectionContext(() => authGuard({} as never, {} as never));
 
     expect(result).toBe(true);
   });
@@ -44,9 +42,7 @@ describe('authGuard', () => {
   it('should redirect to /login once ready resolves and no user is present', async () => {
     const { createUrlTreeSpy } = setup(null);
 
-    const result = await TestBed.runInInjectionContext(() =>
-      authGuard({} as never, {} as never)
-    );
+    const result = await TestBed.runInInjectionContext(() => authGuard({} as never, {} as never));
 
     expect(createUrlTreeSpy).toHaveBeenCalledWith(['/login']);
     expect(result).toBe('url-tree');

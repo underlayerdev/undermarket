@@ -1,8 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import { AuthService } from './auth.service';
 import { AUTH_PROVIDER } from '../../core/configuration/tokens';
-import type { AuthProvider } from '../../domain/providers/auth.provider';
-import type { User } from '../../domain/models/user.model';
+import type { AuthProvider } from '../../domain/auth/auth.provider';
+import type { User } from '../../domain/user/user.model';
 
 const testUser: User = {
   id: 'u1',

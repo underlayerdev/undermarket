@@ -3,7 +3,7 @@ import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject, input, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { NotificationService } from '../../../application/services/notification.service';
-import type { Notification } from '../../../domain/models/notification.model';
+import type { Notification } from '../../../domain/notification/notification.model';
 import { ButtonComponent, IconComponent } from '@underlayerdev/ui';
 
 /** 'icon' (default): standalone bell+badge button for the navbar. 'dock': styled to match ul-dock-item, for placement inside ul-dock. */

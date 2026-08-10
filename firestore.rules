@@ -1,7 +1,8 @@
 rules_version = '2';
 
-// Keep these in sync with src/app/shared/constants/listing-constraints.ts
-// and src/app/shared/constants/categories.ts.
+// Keep these in sync with src/app/domain/listing/listing-constraints.ts,
+// src/app/domain/category/category.model.ts, and
+// src/app/domain/currency/currency.model.ts.
 service cloud.firestore {
   match /databases/{database}/documents {
 
@@ -15,14 +16,25 @@ service cloud.firestore {
       ];
     }
 
+    // Max price is per-currency (ARS runs much higher than USD due to
+    // inflation) — mirrors CURRENCIES in currency.model.ts.
+    function maxPriceForCurrency(currency) {
+      return currency == 'ARS' ? 1000000000 : 1000000;
+    }
+
+    function isValidPrice(price, currency) {
+      return currency in ['ARS', 'USD']
+        && price is number && price >= 0 && price <= maxPriceForCurrency(currency);
+    }
+
     function isValidNewListing(data) {
       return data.keys().hasAll(
-        ['ownerId', 'title', 'description', 'price', 'category', 'status', 'imageUrls', 'createdAt', 'updatedAt']
+        ['ownerId', 'title', 'description', 'price', 'currency', 'category', 'status', 'imageUrls', 'createdAt', 'updatedAt']
       )
         && data.ownerId is string
         && data.title is string && data.title.size() > 0 && data.title.size() <= 100
         && data.description is string && data.description.size() > 0 && data.description.size() <= 2000
-        && data.price is number && data.price >= 0 && data.price <= 1000000
+        && isValidPrice(data.price, data.currency)
         && isValidCategory(data.category)
         && data.status == 'active'
         && data.imageUrls is list && data.imageUrls.size() == 0
@@ -33,7 +45,7 @@ service cloud.firestore {
     function isValidListingUpdate(data) {
       return data.title is string && data.title.size() > 0 && data.title.size() <= 100
         && data.description is string && data.description.size() > 0 && data.description.size() <= 2000
-        && data.price is number && data.price >= 0 && data.price <= 1000000
+        && isValidPrice(data.price, data.currency)
         && isValidCategory(data.category)
         && (data.status == 'active' || data.status == 'sold')
         && data.imageUrls is list

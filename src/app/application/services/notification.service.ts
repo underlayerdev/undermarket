@@ -1,6 +1,6 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { NOTIFICATION_PROVIDER } from '../../core/configuration/tokens';
-import type { Notification, NotificationId } from '../../domain/models/notification.model';
+import type { Notification, NotificationId } from '../../domain/notification/notification.model';
 
 @Injectable({ providedIn: 'root' })
 export class NotificationService {

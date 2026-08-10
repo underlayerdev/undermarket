@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
-import type { Listing } from '../../domain/models/listing.model';
+import type { Listing } from '../../domain/listing/listing.model';
 
 const SITE_NAME = 'Undermarket';
 

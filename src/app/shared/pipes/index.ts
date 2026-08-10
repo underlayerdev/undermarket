@@ -1,1 +1,1 @@
-// Shared pipes barrel — add exports here as pipes are created
+export * from './listing-price.pipe';

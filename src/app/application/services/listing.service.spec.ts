@@ -2,11 +2,11 @@ import { TestBed } from '@angular/core/testing';
 import { ListingService } from './listing.service';
 import { AuthService } from './auth.service';
 import { AUTH_PROVIDER, LISTING_REPOSITORY } from '../../core/configuration/tokens';
-import type { AuthProvider } from '../../domain/providers/auth.provider';
-import type { ListingRepository } from '../../domain/repositories/listing.repository';
-import type { Listing } from '../../domain/models/listing.model';
-import type { User } from '../../domain/models/user.model';
-import type { NewListingInput } from '../../shared/validators/listing.validator';
+import type { AuthProvider } from '../../domain/auth/auth.provider';
+import type { ListingRepository } from '../../domain/listing/listing.repository';
+import type { Listing } from '../../domain/listing/listing.model';
+import type { User } from '../../domain/user/user.model';
+import type { NewListingInput } from '../../domain/listing/listing.validator';
 
 const testUser: User = {
   id: 'user-1',
@@ -22,6 +22,7 @@ function validInput(overrides: Partial<NewListingInput> = {}): NewListingInput {
     title: 'Vintage lamp',
     description: 'A nice lamp in good condition.',
     price: 25,
+    currency: 'ARS',
     category: 'Furniture',
     status: 'active',
     ...overrides,
@@ -55,14 +56,12 @@ describe('ListingService', () => {
 
   async function setup(): Promise<{ service: ListingService; authService: AuthService }> {
     authProviderMock = createAuthProviderMock();
-    createSpy = vi.fn<ListingRepository['create']>(
-      async (listing): Promise<Listing> => ({
-        ...listing,
-        id: 'listing-1',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      }),
-    );
+    createSpy = vi.fn<ListingRepository['create']>(async (listing): Promise<Listing> => ({
+      ...listing,
+      id: 'listing-1',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }));
 
     const listingRepositoryMock: Partial<ListingRepository> = { create: createSpy };
 

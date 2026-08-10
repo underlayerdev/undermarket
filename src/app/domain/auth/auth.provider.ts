@@ -1,5 +1,5 @@
-import type { OAuthProvider } from '../models/oauth-provider';
-import type { User } from '../models/user.model';
+import type { OAuthProvider } from './oauth-provider';
+import type { User } from '../user/user.model';
 
 export interface AuthProvider {
   login(email: string, password: string): Promise<User>;

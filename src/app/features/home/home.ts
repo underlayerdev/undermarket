@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/cor
 import { RouterLink } from '@angular/router';
 import { ListingService } from '../../application/services/listing.service';
 import { SeoService } from '../../core/seo/seo.service';
+import { ListingPricePipe } from '../../shared/pipes/listing-price.pipe';
 import { createListingSlug } from '../../shared/utils/slugify';
 import { CardComponent, HeroComponent } from '@underlayerdev/ui';
 import type { HeroAction } from '@underlayerdev/ui';
@@ -9,7 +10,7 @@ import type { HeroAction } from '@underlayerdev/ui';
 @Component({
   selector: 'um-home',
   standalone: true,
-  imports: [RouterLink, CardComponent, HeroComponent],
+  imports: [RouterLink, CardComponent, HeroComponent, ListingPricePipe],
   templateUrl: './home.html',
   styleUrl: './home.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -13,13 +13,18 @@ import { ErrorService } from '../../../application/services/error.service';
 import { ListingService } from '../../../application/services/listing.service';
 import { SeoService } from '../../../core/seo/seo.service';
 import { ImageUploadComponent } from '../../../shared/image-upload/image-upload';
-import { CATEGORIES } from '../../../shared/constants/categories';
-import type { Category } from '../../../shared/constants/categories';
+import { CATEGORIES } from '../../../domain/category/category.model';
+import type { Category } from '../../../domain/category/category.model';
+import {
+  CURRENCIES,
+  DEFAULT_CURRENCY,
+  getMaxPriceForCurrency,
+} from '../../../domain/currency/currency.model';
+import type { CurrencyCode } from '../../../domain/currency/currency.model';
 import {
   LISTING_DESCRIPTION_MAX_LENGTH,
-  LISTING_MAX_PRICE,
   LISTING_TITLE_MAX_LENGTH,
-} from '../../../shared/constants/listing-constraints';
+} from '../../../domain/listing/listing-constraints';
 import { createListingSlug } from '../../../shared/utils/slugify';
 import {
   ButtonComponent,
@@ -59,6 +64,10 @@ export class NewListingComponent implements OnInit {
   private readonly location = inject(Location);
 
   readonly categoryOptions: SelectOption[] = CATEGORIES.map((c) => ({ value: c, label: c }));
+  readonly currencyOptions: SelectOption[] = CURRENCIES.map((c) => ({
+    value: c.code,
+    label: c.label,
+  }));
 
   readonly isLoading = signal(false);
   readonly touched = signal(false);
@@ -66,6 +75,7 @@ export class NewListingComponent implements OnInit {
   readonly titleValue = signal('');
   readonly descriptionValue = signal('');
   readonly priceValue = signal('');
+  readonly currencyValue = signal<string | null>(DEFAULT_CURRENCY);
   readonly categoryValue = signal<string | null>(null);
   readonly imageFiles = signal<File[]>([]);
 
@@ -89,12 +99,21 @@ export class NewListingComponent implements OnInit {
     return null;
   });
 
+  readonly currencyError = computed(() => {
+    if (!this.touched()) return null;
+    const currency = this.currencyValue();
+    if (!currency) return 'Please select a currency.';
+    if (!CURRENCIES.some((c) => c.code === currency)) return 'Please select a valid currency.';
+    return null;
+  });
+
   readonly priceError = computed(() => {
     if (!this.touched()) return null;
     const n = parseFloat(this.priceValue());
     if (this.priceValue() === '' || isNaN(n)) return 'Please enter a valid price.';
     if (n < 0) return 'Price must be 0 or more.';
-    if (n > LISTING_MAX_PRICE) return `Price must be at most ${LISTING_MAX_PRICE}.`;
+    const maxPrice = getMaxPriceForCurrency(this.currencyValue() ?? DEFAULT_CURRENCY);
+    if (n > maxPrice) return `Price must be at most ${maxPrice}.`;
     return null;
   });
 
@@ -108,7 +127,11 @@ export class NewListingComponent implements OnInit {
 
   readonly isFormValid = computed(
     () =>
-      !this.titleError() && !this.descriptionError() && !this.priceError() && !this.categoryError(),
+      !this.titleError() &&
+      !this.descriptionError() &&
+      !this.currencyError() &&
+      !this.priceError() &&
+      !this.categoryError(),
   );
 
   readonly hasUnsavedChanges = computed(
@@ -160,7 +183,9 @@ export class NewListingComponent implements OnInit {
         title: this.titleValue().trim(),
         description: this.descriptionValue().trim(),
         price: parseFloat(this.priceValue()),
-        category: this.categoryValue()!,
+        // isFormValid() already confirmed these against CURRENCIES/CATEGORIES.
+        currency: this.currencyValue() as CurrencyCode,
+        category: this.categoryValue() as Category,
         status: 'active',
         ownerId: currentUser.id,
       });

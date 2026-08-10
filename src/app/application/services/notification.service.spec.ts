@@ -1,8 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import { NotificationService } from './notification.service';
 import { NOTIFICATION_PROVIDER } from '../../core/configuration/tokens';
-import type { NotificationProvider } from '../../domain/providers/notification.provider';
-import type { Notification } from '../../domain/models/notification.model';
+import type { NotificationProvider } from '../../domain/notification/notification.provider';
+import type { Notification } from '../../domain/notification/notification.model';
 
 const notifications: Notification[] = [
   { id: '1', message: 'First', read: false, createdAt: new Date() },

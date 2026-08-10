@@ -1,4 +1,4 @@
-import type { Notification, NotificationId } from '../models/notification.model';
+import type { Notification, NotificationId } from './notification.model';
 
 export interface NotificationProvider {
   /**

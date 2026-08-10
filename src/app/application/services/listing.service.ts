@@ -1,9 +1,9 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { LISTING_REPOSITORY } from '../../core/configuration/tokens';
-import type { Listing, ListingId } from '../../domain/models/listing.model';
-import type { ListingSearchFilters } from '../../domain/repositories/listing.repository';
-import { validateNewListing } from '../../shared/validators/listing.validator';
-import type { NewListingInput } from '../../shared/validators/listing.validator';
+import type { Listing, ListingId } from '../../domain/listing/listing.model';
+import type { ListingSearchFilters } from '../../domain/listing/listing.repository';
+import { validateNewListing } from '../../domain/listing/listing.validator';
+import type { NewListingInput } from '../../domain/listing/listing.validator';
 import { AuthService } from './auth.service';
 
 @Injectable({ providedIn: 'root' })
@@ -35,7 +35,12 @@ export class ListingService {
     const validationError = validateNewListing(data);
     if (validationError) throw new Error(validationError);
 
-    return this.listingRepository.create({ ...data, imageUrls: [] });
+    return this.listingRepository.create({
+      ...data,
+      currency: data.currency as Listing['currency'],
+      category: data.category as Listing['category'],
+      imageUrls: [],
+    });
   }
 
   async update(listing: Listing): Promise<void> {

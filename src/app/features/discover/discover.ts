@@ -2,14 +2,15 @@ import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@ang
 import { RouterLink } from '@angular/router';
 import { ListingService } from '../../application/services/listing.service';
 import { SeoService } from '../../core/seo/seo.service';
-import { CATEGORIES } from '../../shared/constants/categories';
+import { CATEGORIES } from '../../domain/category/category.model';
+import { ListingPricePipe } from '../../shared/pipes/listing-price.pipe';
 import { createListingSlug } from '../../shared/utils/slugify';
 import { CardComponent, PillComponent } from '@underlayerdev/ui';
 
 @Component({
   selector: 'um-discover',
   standalone: true,
-  imports: [RouterLink, CardComponent, PillComponent],
+  imports: [RouterLink, CardComponent, PillComponent, ListingPricePipe],
   templateUrl: './discover.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

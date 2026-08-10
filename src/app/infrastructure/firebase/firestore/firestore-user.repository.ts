@@ -1,8 +1,8 @@
 import { inject, Injectable } from '@angular/core';
 import { doc, getDoc, setDoc, updateDoc, Firestore } from 'firebase/firestore';
 import { FIREBASE_FIRESTORE } from '../../../core/configuration/tokens';
-import type { UserRepository } from '../../../domain/repositories/user.repository';
-import type { User, UserId } from '../../../domain/models/user.model';
+import type { UserRepository } from '../../../domain/user/user.repository';
+import type { User, UserId } from '../../../domain/user/user.model';
 
 @Injectable({ providedIn: 'root' })
 export class FirestoreUserRepository implements UserRepository {

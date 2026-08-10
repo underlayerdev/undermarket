@@ -1,6 +1,6 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { USER_REPOSITORY } from '../../core/configuration/tokens';
-import type { User, UserId, UserSettings } from '../../domain/models/user.model';
+import type { User, UserId, UserSettings } from '../../domain/user/user.model';
 
 @Injectable({ providedIn: 'root' })
 export class UserService {
