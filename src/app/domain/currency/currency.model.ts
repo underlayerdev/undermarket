@@ -17,9 +17,11 @@ export type CurrencyCode = CurrencyOption['code'];
 export const DEFAULT_CURRENCY: CurrencyCode = 'ARS';
 
 export function getCurrency(code: string): CurrencyOption | undefined {
-  return CURRENCIES.find((c) => c.code === code);
+  return CURRENCIES.find((currency) => currency.code === code);
 }
 
 export function getMaxPriceForCurrency(code: string): number {
-  return getCurrency(code)?.maxPrice ?? Math.min(...CURRENCIES.map((c) => c.maxPrice));
+  return (
+    getCurrency(code)?.maxPrice ?? Math.min(...CURRENCIES.map((currency) => currency.maxPrice))
+  );
 }

@@ -41,7 +41,7 @@ export class ImageUploadComponent {
 
   constructor() {
     inject(DestroyRef).onDestroy(() => {
-      this.previews().forEach((p) => URL.revokeObjectURL(p.url));
+      this.previews().forEach((preview) => URL.revokeObjectURL(preview.url));
     });
   }
 
@@ -55,7 +55,7 @@ export class ImageUploadComponent {
     input.value = '';
     if (!selected.length) return;
 
-    const existing = this.previews().map((p) => p.file);
+    const existing = this.previews().map((preview) => preview.file);
     const unique = selected.filter((file) => !existing.some((added) => isSameFile(added, file)));
     const hadDuplicates = unique.length < selected.length;
 
@@ -97,7 +97,11 @@ export class ImageUploadComponent {
       }
 
       this.previews.update((current) =>
-        current.map((p) => (p === preview ? { ...p, file: compressed, compressing: false } : p)),
+        current.map((existingPreview) =>
+          existingPreview === preview
+            ? { ...existingPreview, file: compressed, compressing: false }
+            : existingPreview,
+        ),
       );
       this.syncValue();
     }
@@ -105,7 +109,9 @@ export class ImageUploadComponent {
 
   protected removePreview(preview: ImagePreview): void {
     URL.revokeObjectURL(preview.url);
-    this.previews.update((current) => current.filter((p) => p !== preview));
+    this.previews.update((current) =>
+      current.filter((existingPreview) => existingPreview !== preview),
+    );
     this.syncValue();
   }
 
@@ -131,6 +137,6 @@ export class ImageUploadComponent {
   }
 
   private syncValue(): void {
-    this.images.set(this.previews().map((p) => p.file));
+    this.images.set(this.previews().map((preview) => preview.file));
   }
 }

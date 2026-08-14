@@ -8,7 +8,9 @@ export class NotificationService {
 
   readonly notifications = signal<Notification[]>([]);
 
-  readonly unreadCount = computed(() => this.notifications().filter((n) => !n.read).length);
+  readonly unreadCount = computed(
+    () => this.notifications().filter((notification) => !notification.read).length,
+  );
 
   constructor() {
     this.notificationProvider.observe((notifications) => this.notifications.set(notifications));

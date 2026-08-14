@@ -44,12 +44,17 @@ export class MockNotificationProvider implements NotificationProvider {
   }
 
   async markAsRead(id: NotificationId): Promise<void> {
-    this.notifications = this.notifications.map((n) => (n.id === id ? { ...n, read: true } : n));
+    this.notifications = this.notifications.map((notification) =>
+      notification.id === id ? { ...notification, read: true } : notification,
+    );
     this.notifyListeners();
   }
 
   async markAllAsRead(): Promise<void> {
-    this.notifications = this.notifications.map((n) => ({ ...n, read: true }));
+    this.notifications = this.notifications.map((notification) => ({
+      ...notification,
+      read: true,
+    }));
     this.notifyListeners();
   }
 

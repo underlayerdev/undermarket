@@ -28,9 +28,9 @@ export class FirestoreListingRepository implements ListingRepository {
   private readonly col = () => collection(this.firestore, 'listings');
 
   async getLatest(): Promise<Listing[]> {
-    const q = query(this.col(), orderBy('createdAt', 'desc'), limit(20));
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map((d) => this.mapDoc(d.id, d.data()));
+    const listingsQuery = query(this.col(), orderBy('createdAt', 'desc'), limit(20));
+    const snapshot = await getDocs(listingsQuery);
+    return snapshot.docs.map((docSnapshot) => this.mapDoc(docSnapshot.id, docSnapshot.data()));
   }
 
   async getById(id: ListingId): Promise<Listing | null> {
@@ -40,22 +40,30 @@ export class FirestoreListingRepository implements ListingRepository {
   }
 
   async getByOwner(ownerId: UserId): Promise<Listing[]> {
-    const q = query(this.col(), where('ownerId', '==', ownerId), orderBy('createdAt', 'desc'));
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map((d) => this.mapDoc(d.id, d.data()));
+    const listingsQuery = query(
+      this.col(),
+      where('ownerId', '==', ownerId),
+      orderBy('createdAt', 'desc'),
+    );
+    const snapshot = await getDocs(listingsQuery);
+    return snapshot.docs.map((docSnapshot) => this.mapDoc(docSnapshot.id, docSnapshot.data()));
   }
 
   async search(filters: ListingSearchFilters): Promise<Listing[]> {
     const constraints = [];
     if (filters.category) constraints.push(where('category', '==', filters.category));
     constraints.push(orderBy('createdAt', 'desc'));
-    const q = query(this.col(), ...constraints);
-    const snapshot = await getDocs(q);
-    const results = snapshot.docs.map((d) => this.mapDoc(d.id, d.data()));
+    const listingsQuery = query(this.col(), ...constraints);
+    const snapshot = await getDocs(listingsQuery);
+    const results = snapshot.docs.map((docSnapshot) =>
+      this.mapDoc(docSnapshot.id, docSnapshot.data()),
+    );
     if (!filters.query) return results;
     const lower = filters.query.toLowerCase();
     return results.filter(
-      (l) => l.title.toLowerCase().includes(lower) || l.description.toLowerCase().includes(lower),
+      (listing) =>
+        listing.title.toLowerCase().includes(lower) ||
+        listing.description.toLowerCase().includes(lower),
     );
   }
 

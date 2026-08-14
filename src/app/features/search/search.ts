@@ -44,7 +44,10 @@ export class SearchComponent implements OnInit {
 
   readonly createListingSlug = createListingSlug;
 
-  readonly categoryOptions: SelectOption[] = CATEGORIES.map((c) => ({ value: c, label: c }));
+  readonly categoryOptions: SelectOption[] = CATEGORIES.map((category) => ({
+    value: category,
+    label: category,
+  }));
 
   /** Bound to the `q` query param via withComponentInputBinding(). */
   readonly q = input<string>('');

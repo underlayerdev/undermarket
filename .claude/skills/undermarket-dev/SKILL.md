@@ -89,7 +89,13 @@ This is the most important rule and has no silent exceptions.
 - Cover at least: happy path, one relevant error/edge case, and (if applicable) form validation/computed signal checks.
 - Run `ng test` (or the builder's equivalent command) before considering a task done, if the environment allows it.
 
-## 7. Other conventions to respect (found in the repo)
+## 7. Meaningful variable names
+
+- Avoid single-letter or otherwise unclear names in callbacks, even short ones — `(c) => ({ value: c, label: c })` forces the reader to infer what `c` is. Prefer `(category) => ({ value: category, label: category })`.
+- This applies to `.map`/`.filter`/`.reduce`/`.find`/etc. callbacks, arrow function params, and destructured variables — not just top-level declarations.
+- Short names are fine when the meaning is already unambiguous from tight, obvious scope (e.g. `i` in a bare `for (let i = 0; ...)` loop index), but default to a real word when in doubt.
+
+## 8. Other conventions to respect (found in the repo)
 
 - Strict TypeScript: don't introduce `any` unnecessarily; use the models in `domain/models`.
 - Firebase/Auth error messages are centralized in `application/services/error.service.ts` (the `ERROR_MESSAGES` map + `FALLBACK_MESSAGE`) — don't show raw `err.message` in the UI, add the new code to that map instead.

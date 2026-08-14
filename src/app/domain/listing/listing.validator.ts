@@ -31,7 +31,7 @@ export function validateNewListing(data: NewListingInput): string | null {
     return `Description must be at most ${LISTING_DESCRIPTION_MAX_LENGTH} characters.`;
   }
 
-  if (!CURRENCIES.some((c) => c.code === data.currency)) {
+  if (!CURRENCIES.some((currency) => currency.code === data.currency)) {
     return 'Please select a valid currency.';
   }
 
