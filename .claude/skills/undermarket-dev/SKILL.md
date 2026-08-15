@@ -16,6 +16,7 @@ This skill applies to **all** code written in this project (Angular + Firebase +
 - `inject()` instead of constructor injection.
 - `ChangeDetectionStrategy.OnPush` on every new component.
 - Respect the existing layered architecture: `domain/` (models, provider/repository interfaces), `application/services/` (orchestration logic, wrappers over providers), `infrastructure/` (concrete implementations: Firebase, Cloudinary), `features/` (per-feature UI components), `core/` (config, DI tokens, guards, SEO). Don't mix layers — a component in `features/` must not talk to Firebase directly; it must go through `application/services`.
+- `domain/` must stay framework-agnostic: no `@angular/*` or `@underlayerdev/ui` imports there, ever — not even types. Signal Forms is a UI-binding concern (e.g. a form model shaped by `FormValueControl<string>`), so form-specific types/mappers belong in the `features/` component that owns the form, not in `domain/`. If a domain type needs to change shape only to satisfy a UI control's binding requirements, that's a sign the mapping belongs at the feature layer, not that the domain type should compromise.
 
 ## 2. Signals — priority, but with judgment
 

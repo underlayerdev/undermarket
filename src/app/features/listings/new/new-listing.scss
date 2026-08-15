@@ -103,4 +103,10 @@
     overflow-y: auto;
     background-color: tokens.$color-background-main;
   }
+
+  // Extra bottom padding so the publish button clears the iOS home
+  // indicator / gesture area instead of sitting flush against it.
+  .new-listing__form {
+    padding-bottom: calc(tokens.$spacing-spacing-8 + env(safe-area-inset-bottom));
+  }
 }

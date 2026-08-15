@@ -20,10 +20,11 @@ import {
   DEFAULT_CURRENCY,
   getMaxPriceForCurrency,
 } from '../../../domain/currency/currency.model';
-import type { CurrencyCode } from '../../../domain/currency/currency.model';
+import type { NewListingInput } from '../../../domain/listing/listing.validator';
 import {
   LISTING_DESCRIPTION_MAX_LENGTH,
   LISTING_TITLE_MAX_LENGTH,
+  LISTING_TITLE_MIN_LENGTH,
 } from '../../../domain/listing/listing-constraints';
 import { createListingSlug } from '../../../shared/utils/slugify';
 import {
@@ -36,11 +37,49 @@ import {
   ToastService,
 } from '@underlayerdev/ui';
 import type { SelectOption } from '@underlayerdev/ui';
+import type { LogicFn } from '@angular/forms/signals';
+import {
+  form,
+  FormField,
+  maxLength,
+  minLength,
+  required,
+  submit,
+  validate,
+} from '@angular/forms/signals';
+
+// The shape signal forms binds to: ul-input/ul-textarea controls always hold
+// `string` and ul-select holds `string | null` until something is chosen, so
+// this can't just be NewListingInput (price: number, currency/category:
+// non-null string) without re-introducing "as CurrencyCode" casts. The one
+// place this narrows back down to the validated domain shape is
+// toNewListingInput() below.
+interface NewListingFormModel {
+  title: string;
+  description: string;
+  price: string;
+  currency: string | null;
+  category: string | null;
+}
+
+function toNewListingInput(value: NewListingFormModel, ownerId: string): NewListingInput {
+  return {
+    title: value.title.trim(),
+    description: value.description.trim(),
+    price: parseFloat(value.price),
+    // required() + validate() on currency/category guarantee non-null here.
+    currency: value.currency!,
+    category: value.category!,
+    status: 'active',
+    ownerId,
+  };
+}
 
 @Component({
   selector: 'um-new-listing',
   standalone: true,
   imports: [
+    FormField,
     ButtonComponent,
     IconComponent,
     ImageUploadComponent,
@@ -63,87 +102,92 @@ export class NewListingComponent implements OnInit {
   private readonly toastService = inject(ToastService);
   private readonly location = inject(Location);
 
-  readonly categoryOptions: SelectOption[] = CATEGORIES.map((c) => ({ value: c, label: c }));
-  readonly currencyOptions: SelectOption[] = CURRENCIES.map((c) => ({
-    value: c.code,
-    label: c.label,
+  readonly categoryOptions: SelectOption[] = CATEGORIES.map((category) => ({
+    value: category,
+    label: category,
+  }));
+  readonly currencyOptions: SelectOption[] = CURRENCIES.map((currency) => ({
+    value: currency.code,
+    label: currency.label,
   }));
 
   readonly isLoading = signal(false);
-  readonly touched = signal(false);
-
-  readonly titleValue = signal('');
-  readonly descriptionValue = signal('');
-  readonly priceValue = signal('');
-  readonly currencyValue = signal<string | null>(DEFAULT_CURRENCY);
-  readonly categoryValue = signal<string | null>(null);
   readonly imageFiles = signal<File[]>([]);
-
-  readonly titleError = computed(() => {
-    if (!this.touched()) return null;
-    const v = this.titleValue().trim();
-    if (!v) return 'Title is required.';
-    if (v.length > LISTING_TITLE_MAX_LENGTH) {
-      return `Title must be at most ${LISTING_TITLE_MAX_LENGTH} characters.`;
-    }
-    return null;
-  });
-
-  readonly descriptionError = computed(() => {
-    if (!this.touched()) return null;
-    const v = this.descriptionValue().trim();
-    if (!v) return 'Description is required.';
-    if (v.length > LISTING_DESCRIPTION_MAX_LENGTH) {
-      return `Description must be at most ${LISTING_DESCRIPTION_MAX_LENGTH} characters.`;
-    }
-    return null;
-  });
-
-  readonly currencyError = computed(() => {
-    if (!this.touched()) return null;
-    const currency = this.currencyValue();
-    if (!currency) return 'Please select a currency.';
-    if (!CURRENCIES.some((c) => c.code === currency)) return 'Please select a valid currency.';
-    return null;
-  });
-
-  readonly priceError = computed(() => {
-    if (!this.touched()) return null;
-    const n = parseFloat(this.priceValue());
-    if (this.priceValue() === '' || isNaN(n)) return 'Please enter a valid price.';
-    if (n < 0) return 'Price must be 0 or more.';
-    const maxPrice = getMaxPriceForCurrency(this.currencyValue() ?? DEFAULT_CURRENCY);
-    if (n > maxPrice) return `Price must be at most ${maxPrice}.`;
-    return null;
-  });
-
-  readonly categoryError = computed(() => {
-    if (!this.touched()) return null;
-    const category = this.categoryValue();
-    if (!category) return 'Please select a category.';
-    if (!CATEGORIES.includes(category as Category)) return 'Please select a valid category.';
-    return null;
-  });
-
-  readonly isFormValid = computed(
-    () =>
-      !this.titleError() &&
-      !this.descriptionError() &&
-      !this.currencyError() &&
-      !this.priceError() &&
-      !this.categoryError(),
-  );
-
-  readonly hasUnsavedChanges = computed(
-    () =>
-      !!this.titleValue().trim() ||
-      !!this.descriptionValue().trim() ||
-      !!this.priceValue().trim() ||
-      !!this.categoryValue() ||
-      !!this.imageFiles().length,
-  );
-
   readonly showDiscardModal = signal(false);
+
+  readonly listingModel = signal<NewListingFormModel>({
+    title: '',
+    description: '',
+    price: '',
+    currency: DEFAULT_CURRENCY,
+    category: null,
+  });
+
+  readonly listingForm = form(this.listingModel, (listing) => {
+    // [formField] shows a field's errors as soon as they exist, with no
+    // built-in "wait for touch" gate — required() would otherwise flag every
+    // empty field red the instant the modal opens. Every rule below gates on
+    // the field's own touched state (set per-field on blur, and on all
+    // fields at once by submit()) to match the original UX.
+    const whenTouched: LogicFn<unknown, boolean> = ({ state }) => state.touched();
+
+    required(listing.title, { message: 'Title is required.', when: whenTouched });
+    minLength(listing.title, LISTING_TITLE_MIN_LENGTH, {
+      message: `Title must be at least ${LISTING_TITLE_MIN_LENGTH} characters.`,
+      when: whenTouched,
+    });
+    maxLength(listing.title, LISTING_TITLE_MAX_LENGTH, {
+      message: `Title must be at most ${LISTING_TITLE_MAX_LENGTH} characters.`,
+      when: whenTouched,
+    });
+
+    required(listing.description, { message: 'Description is required.', when: whenTouched });
+    maxLength(listing.description, LISTING_DESCRIPTION_MAX_LENGTH, {
+      message: `Description must be at most ${LISTING_DESCRIPTION_MAX_LENGTH} characters.`,
+      when: whenTouched,
+    });
+
+    required(listing.currency, { message: 'Please select a currency.', when: whenTouched });
+    validate(listing.currency, ({ value, state }) =>
+      state.touched() && value() && !CURRENCIES.some((currency) => currency.code === value())
+        ? { kind: 'invalid', message: 'Please select a valid currency.' }
+        : undefined,
+    );
+
+    required(listing.price, { message: 'Please enter a valid price.', when: whenTouched });
+    validate(listing.price, ({ value, valueOf, state }) => {
+      if (!state.touched()) return undefined;
+      const n = parseFloat(value());
+      if (value() === '' || isNaN(n))
+        return { kind: 'invalid', message: 'Please enter a valid price.' };
+      if (n < 0) return { kind: 'min', message: 'Price must be 0 or more.' };
+      const maxPrice = getMaxPriceForCurrency(valueOf(listing.currency) ?? DEFAULT_CURRENCY);
+      if (n > maxPrice) return { kind: 'max', message: `Price must be at most ${maxPrice}.` };
+      return undefined;
+    });
+
+    required(listing.category, { message: 'Please select a category.', when: whenTouched });
+    validate(listing.category, ({ value, state }) =>
+      state.touched() && value() && !CATEGORIES.includes(value() as Category)
+        ? { kind: 'invalid', message: 'Please select a valid category.' }
+        : undefined,
+    );
+  });
+
+  readonly publishButtonNotReady = computed(
+    () => this.isLoading() || this.listingForm().invalid() || !this.listingForm().touched(),
+  );
+
+  readonly hasUnsavedChanges = computed(() => {
+    const value = this.listingModel();
+    return (
+      !!value.title.trim() ||
+      !!value.description.trim() ||
+      !!value.price.trim() ||
+      !!value.category ||
+      !!this.imageFiles().length
+    );
+  });
 
   ngOnInit(): void {
     this.seoService.setPage('Post a Listing');
@@ -170,30 +214,24 @@ export class NewListingComponent implements OnInit {
   }
 
   async onSubmit(): Promise<void> {
-    this.touched.set(true);
-    if (!this.isFormValid()) return;
-
     const currentUser = this.authService.currentUser();
     if (!currentUser) return;
 
-    this.isLoading.set(true);
-
-    try {
-      const listing = await this.listingService.create({
-        title: this.titleValue().trim(),
-        description: this.descriptionValue().trim(),
-        price: parseFloat(this.priceValue()),
-        // isFormValid() already confirmed these against CURRENCIES/CATEGORIES.
-        currency: this.currencyValue() as CurrencyCode,
-        category: this.categoryValue() as Category,
-        status: 'active',
-        ownerId: currentUser.id,
-      });
-      await this.router.navigate(['/listings', createListingSlug(listing.title, listing.id)]);
-    } catch (err) {
-      this.toastService.error(this.errorService.toUserMessage(err));
-    } finally {
-      this.isLoading.set(false);
-    }
+    await submit(this.listingForm, async () => {
+      this.isLoading.set(true);
+      try {
+        const listing = await this.listingService.create(
+          toNewListingInput(this.listingModel(), currentUser.id),
+          this.imageFiles(),
+        );
+        await this.router.navigate(['/listings', createListingSlug(listing.title, listing.id)]);
+        return [];
+      } catch (err) {
+        this.toastService.error(this.errorService.toUserMessage(err));
+        return [];
+      } finally {
+        this.isLoading.set(false);
+      }
+    });
   }
 }

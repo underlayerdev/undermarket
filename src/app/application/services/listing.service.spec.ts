@@ -1,8 +1,9 @@
 import { TestBed } from '@angular/core/testing';
 import { ListingService } from './listing.service';
 import { AuthService } from './auth.service';
-import { AUTH_PROVIDER, LISTING_REPOSITORY } from '../../core/configuration/tokens';
+import { AUTH_PROVIDER, IMAGE_STORAGE, LISTING_REPOSITORY } from '../../core/configuration/tokens';
 import type { AuthProvider } from '../../domain/auth/auth.provider';
+import type { ImageStorage } from '../../domain/image-storage/image-storage.provider';
 import type { ListingRepository } from '../../domain/listing/listing.repository';
 import type { Listing } from '../../domain/listing/listing.model';
 import type { User } from '../../domain/user/user.model';
@@ -53,6 +54,8 @@ function createAuthProviderMock(): AuthProvider & { emitAuthState: (user: User |
 describe('ListingService', () => {
   let authProviderMock: ReturnType<typeof createAuthProviderMock>;
   let createSpy: ReturnType<typeof vi.fn<ListingRepository['create']>>;
+  let updateSpy: ReturnType<typeof vi.fn<ListingRepository['update']>>;
+  let uploadSpy: ReturnType<typeof vi.fn<ImageStorage['upload']>>;
 
   async function setup(): Promise<{ service: ListingService; authService: AuthService }> {
     authProviderMock = createAuthProviderMock();
@@ -62,13 +65,20 @@ describe('ListingService', () => {
       createdAt: new Date(),
       updatedAt: new Date(),
     }));
+    updateSpy = vi.fn<ListingRepository['update']>(async () => undefined);
+    uploadSpy = vi.fn<ImageStorage['upload']>(async (file) => `https://cdn.test/${file.name}`);
 
-    const listingRepositoryMock: Partial<ListingRepository> = { create: createSpy };
+    const listingRepositoryMock: Partial<ListingRepository> = {
+      create: createSpy,
+      update: updateSpy,
+    };
+    const imageStorageMock: ImageStorage = { upload: uploadSpy };
 
     TestBed.configureTestingModule({
       providers: [
         { provide: AUTH_PROVIDER, useValue: authProviderMock },
         { provide: LISTING_REPOSITORY, useValue: listingRepositoryMock },
+        { provide: IMAGE_STORAGE, useValue: imageStorageMock },
       ],
     });
 
@@ -119,6 +129,22 @@ describe('ListingService', () => {
     const listing = await service.create(validInput());
 
     expect(createSpy).toHaveBeenCalledWith(expect.objectContaining({ imageUrls: [] }));
+    expect(uploadSpy).not.toHaveBeenCalled();
+    expect(updateSpy).not.toHaveBeenCalled();
     expect(listing.id).toBe('listing-1');
+  });
+
+  it('should upload images and attach their URLs via an update after creating the listing', async () => {
+    const { service } = await setup();
+    authProviderMock.emitAuthState(testUser);
+    const image = new File(['data'], 'lamp.jpg', { type: 'image/jpeg' });
+
+    const listing = await service.create(validInput(), [image]);
+
+    expect(uploadSpy).toHaveBeenCalledWith(image);
+    expect(updateSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'listing-1', imageUrls: ['https://cdn.test/lamp.jpg'] }),
+    );
+    expect(listing.imageUrls).toEqual(['https://cdn.test/lamp.jpg']);
   });
 });

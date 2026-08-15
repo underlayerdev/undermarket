@@ -13,11 +13,14 @@
 
 <div class="ul-container-form">
   <div class="ul-content ul-pt-8">
-    <h1 class="ul-typography-headline-xl-extrablack ul-mb-8 new-listing__desktop-title">
+    <h1 class="ul-typography-headline-xl-extrablack ul-mb-2 new-listing__desktop-title">
       Post a listing
     </h1>
+    <p class="ul-typography-body-m-regular ul-text-secondary ul-hidden md:ul-flex l-mb-8">
+      Add photos and details so buyers know what you're selling.
+    </p>
 
-    <form (submit)="onFormSubmit($event)" novalidate class="new-listing__form ul-gap-5">
+    <form (submit)="onFormSubmit($event)" class="new-listing__form ul-gap-5">
       <div class="new-listing__photos">
         <label
           class="ul-form-field__label ul-form-field__label--md ul-form-field__label--requireds"
@@ -34,22 +37,14 @@
         <ul-input
           label="Title"
           placeholder="What are you selling?"
-          [required]="true"
-          [maxLength]="100"
-          [(value)]="titleValue"
-          [error]="!!titleError()"
-          [errorText]="titleError()"
+          [formField]="listingForm.title"
         />
 
         <ul-textarea
           label="Description"
           placeholder="Describe the item — condition, brand, size, etc."
-          [required]="true"
           [rows]="5"
-          [maxLength]="2000"
-          [(value)]="descriptionValue"
-          [error]="!!descriptionError()"
-          [errorText]="descriptionError()"
+          [formField]="listingForm.description"
         />
 
         <div class="ul-row">
@@ -57,32 +52,24 @@
             <ul-select
               label="Currency"
               placeholder="Select a currency"
-              [required]="true"
               [options]="currencyOptions"
-              [(value)]="currencyValue"
-              [error]="!!currencyError()"
-              [errorText]="currencyError()"
+              [formField]="listingForm.currency"
             />
           </div>
           <div class="ul-col-12 ul-col-md-3">
             <ul-input
+              type="number"
               label="Price"
               placeholder="0.00"
-              [required]="true"
-              [(value)]="priceValue"
-              [error]="!!priceError()"
-              [errorText]="priceError()"
+              [formField]="listingForm.price"
             />
           </div>
           <div class="ul-col-12 ul-col-md-6">
             <ul-select
               label="Category"
               placeholder="Select a category"
-              [required]="true"
               [options]="categoryOptions"
-              [(value)]="categoryValue"
-              [error]="!!categoryError()"
-              [errorText]="categoryError()"
+              [formField]="listingForm.category"
             />
           </div>
         </div>
@@ -96,7 +83,12 @@
           >
             Cancel
           </ul-button>
-          <ul-button type="submit" theme="fill-purple" size="md" [disabled]="isLoading()">
+          <ul-button
+            type="submit"
+            theme="fill-purple"
+            size="md"
+            [disabled]="publishButtonNotReady()"
+          >
             {{ isLoading() ? 'Publishing...' : 'Publish listing' }}
           </ul-button>
         </div>

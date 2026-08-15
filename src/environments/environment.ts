@@ -9,4 +9,8 @@ export const environment = {
     appId: '1:108481725867:web:599324b5106a16fb6fbeee',
     measurementId: 'G-Z4FP6QTVE1',
   },
+  cloudinary: {
+    cloudName: 'db3cbociq',
+    uploadPreset: 'listing',
+  },
 };
