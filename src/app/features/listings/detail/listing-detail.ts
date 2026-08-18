@@ -62,8 +62,15 @@ export class ListingDetailComponent implements OnInit {
 
   readonly breadcrumbItems = computed<BreadcrumbItem[]>(() => {
     const l = this.listing();
-    return [{ label: 'Home', href: '/home' }, { label: l ? l.title : 'Listing' }];
+    return [
+      { label: $localize`:@@common.home:Home`, href: '/home' },
+      { label: l ? l.title : $localize`:@@listingDetail.breadcrumbFallback:Listing` },
+    ];
   });
+
+  protected photoAltText(index: number): string {
+    return $localize`:@@listingDetail.photoAlt:Photo ${index + 1}:photoNumber:`;
+  }
 
   async ngOnInit(): Promise<void> {
     const slug = this.route.snapshot.params['slug'] as string;
@@ -75,12 +82,14 @@ export class ListingDetailComponent implements OnInit {
         this.listing.set(listing);
         this.seoService.setListing(listing);
       } else {
-        this.errorMessage.set('This listing no longer exists.');
-        this.seoService.setPage('Listing not found');
+        this.errorMessage.set($localize`:@@listingDetail.notFound:This listing no longer exists.`);
+        this.seoService.setPage($localize`:@@listingDetail.notFoundPageTitle:Listing not found`);
       }
     } catch {
-      this.errorMessage.set('Failed to load listing. Please try again.');
-      this.seoService.setPage('Error');
+      this.errorMessage.set(
+        $localize`:@@listingDetail.loadError:Failed to load listing. Please try again.`,
+      );
+      this.seoService.setPage($localize`:@@common.error:Error`);
     } finally {
       this.isLoading.set(false);
     }

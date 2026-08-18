@@ -23,7 +23,9 @@ export class CloudinaryImageStorage implements ImageStorage {
     });
 
     if (!response.ok) {
-      throw new Error('Failed to upload image. Please try again.');
+      throw new Error(
+        $localize`:@@cloudinary.uploadFailed:Failed to upload image. Please try again.`,
+      );
     }
 
     const data: { secure_url: string } = await response.json();

@@ -28,9 +28,14 @@ export class ListingService {
   // images are uploaded and attached in a follow-up update after create().
   async create(data: NewListingInput, images: File[] = []): Promise<Listing> {
     const currentUser = this.authService.currentUser();
-    if (!currentUser) throw new Error('You must be signed in to post a listing.');
+    if (!currentUser)
+      throw new Error(
+        $localize`:@@listingService.mustBeSignedIn:You must be signed in to post a listing.`,
+      );
     if (data.ownerId !== currentUser.id) {
-      throw new Error('You can only create listings for your own account.');
+      throw new Error(
+        $localize`:@@listingService.ownAccountOnly:You can only create listings for your own account.`,
+      );
     }
 
     const validationError = validateNewListing(data);

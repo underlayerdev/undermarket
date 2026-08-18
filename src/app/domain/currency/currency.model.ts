@@ -8,8 +8,18 @@ export interface CurrencyOption {
 }
 
 export const CURRENCIES: readonly CurrencyOption[] = [
-  { code: 'ARS', label: 'Argentine Peso (ARS)', symbol: '$', maxPrice: 1_000_000_000 },
-  { code: 'USD', label: 'US Dollar (USD)', symbol: 'US$', maxPrice: 1_000_000 },
+  {
+    code: 'ARS',
+    label: $localize`:@@currency.ars:Argentine Peso (ARS)`,
+    symbol: '$',
+    maxPrice: 1_000_000_000,
+  },
+  {
+    code: 'USD',
+    label: $localize`:@@currency.usd:US Dollar (USD)`,
+    symbol: 'US$',
+    maxPrice: 1_000_000,
+  },
 ];
 
 export type CurrencyCode = CurrencyOption['code'];

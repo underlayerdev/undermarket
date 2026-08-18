@@ -7,7 +7,8 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "firebase:deploy:rules": "firebase deploy --only firestore:rules"
+    "firebase:deploy:rules": "firebase deploy --only firestore:rules",
+    "start:es": "ng serve --configuration=es"
   },
   "private": true,
   "engines": {
@@ -35,6 +36,7 @@
     "@angular/build": "^22.0.0",
     "@angular/cli": "^22.0.0",
     "@angular/compiler-cli": "^22.0.0",
+    "@angular/localize": "^22.1.2",
     "firebase-tools": "^15.26.0",
     "jsdom": "^28.0.0",
     "playwright": "^1.62.1",

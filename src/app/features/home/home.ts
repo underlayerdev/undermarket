@@ -22,12 +22,15 @@ export class HomeComponent implements OnInit {
   readonly createListingSlug = createListingSlug;
 
   readonly heroPrimaryAction: HeroAction = {
-    label: 'Post a Listing',
+    label: $localize`:@@home.postListing:Post a Listing`,
     routerLink: '/listings/new',
   };
 
   ngOnInit(): void {
-    this.seoService.setPage('', 'Discover secondhand treasures on Undermarket.');
+    this.seoService.setPage(
+      '',
+      $localize`:@@home.seoDescription:Discover secondhand treasures on Undermarket.`,
+    );
     this.listingService.loadLatest();
   }
 }

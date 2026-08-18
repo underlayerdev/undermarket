@@ -1,6 +1,8 @@
 <ul-hero
   title="Find your next favourite thing"
+  i18n-title="@@home.heroTitle"
   subtitle="Browse thousands of second-hand items listed by people near you."
+  i18n-subtitle="@@home.heroSubtitle"
   [primaryAction]="heroPrimaryAction"
   size="md"
   alignment="left"
@@ -8,10 +10,14 @@
 
 <section class="ul-container-gallery">
   <div class="ul-content">
-    <h2 class="ul-typography-headline-m-extrabold ul-mb-2">Latest listings</h2>
+    <h2 class="ul-typography-headline-m-extrabold ul-mb-2" i18n="@@home.latestListings">
+      Latest listings
+    </h2>
 
     @if (listingService.listings().length === 0) {
-      <p class="ul-typography-body-m-regular">No listings yet. Be the first to post one!</p>
+      <p class="ul-typography-body-m-regular" i18n="@@home.emptyState">
+        No listings yet. Be the first to post one!
+      </p>
     } @else {
       <div class="ul-row">
         @for (listing of listingService.listings(); track listing.id) {

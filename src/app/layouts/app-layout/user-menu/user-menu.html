@@ -4,6 +4,7 @@
   [cdkMenuTriggerFor]="menu"
   aria-haspopup="menu"
   aria-label="Open account menu"
+  i18n-aria-label="@@userMenu.openAriaLabel"
   [attr.aria-expanded]="isOpen()"
   (cdkMenuOpened)="isOpen.set(true)"
   (cdkMenuClosed)="isOpen.set(false)"
@@ -15,15 +16,15 @@
   <div cdkMenu class="um-user-menu__content">
     <ul-list-item cdkMenuItem routerLink="/profile">
       <ng-container ul-list-item-before-label><ul-icon size="5" icon="user" /></ng-container>
-      <ng-container ul-list-item-label>Profile</ng-container>
+      <ng-container ul-list-item-label i18n="@@userMenu.profile">Profile</ng-container>
     </ul-list-item>
     <ul-list-item cdkMenuItem routerLink="/settings">
       <ng-container ul-list-item-before-label><ul-icon size="5" icon="settings" /></ng-container>
-      <ng-container ul-list-item-label>Settings</ng-container>
+      <ng-container ul-list-item-label i18n="@@userMenu.settings">Settings</ng-container>
     </ul-list-item>
     <ul-list-item cdkMenuItem (click)="onSignOut()">
       <ng-container ul-list-item-before-label><ul-icon size="5" icon="log_out" /></ng-container>
-      <ng-container ul-list-item-label>Sign out</ng-container>
+      <ng-container ul-list-item-label i18n="@@userMenu.signOut">Sign out</ng-container>
     </ul-list-item>
   </div>
 </ng-template>

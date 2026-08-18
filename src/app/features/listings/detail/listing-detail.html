@@ -37,7 +37,7 @@
                   >
                     <img
                       [src]="url"
-                      [alt]="'Photo ' + (i + 1)"
+                      [alt]="photoAltText(i)"
                       class="ul-w-12 ul-h-12"
                       style="object-fit: cover"
                     />
@@ -50,7 +50,9 @@
               class="ul-bg-grey-lvl-1 ul-rounded-2"
               style="aspect-ratio: 4/3; display: flex; align-items: center; justify-content: center"
             >
-              <p class="ul-typography-caption-l-regular">No photos available</p>
+              <p class="ul-typography-caption-l-regular" i18n="@@listingDetail.noPhotos">
+                No photos available
+              </p>
             </div>
           }
         </div>
@@ -59,9 +61,13 @@
           <div class="ul-gap-2" style="display: flex; flex-wrap: wrap">
             <ul-pill theme="outline-purple" variant="read-only">{{ item.category }}</ul-pill>
             @if (item.status === 'sold') {
-              <ul-pill theme="fill-red" variant="read-only">Sold</ul-pill>
+              <ul-pill theme="fill-red" variant="read-only">
+                <ng-container i18n="@@listingDetail.sold">Sold</ng-container>
+              </ul-pill>
             } @else {
-              <ul-pill theme="transparent-green" variant="read-only">Available</ul-pill>
+              <ul-pill theme="transparent-green" variant="read-only">
+                <ng-container i18n="@@listingDetail.available">Available</ng-container>
+              </ul-pill>
             }
           </div>
 
@@ -71,20 +77,30 @@
           </p>
 
           <div>
-            <h2 class="ul-typography-headline-s-extrabold ul-mb-2">Description</h2>
+            <h2
+              class="ul-typography-headline-s-extrabold ul-mb-2"
+              i18n="@@listingDetail.description"
+            >
+              Description
+            </h2>
             <p class="ul-typography-body-m-regular">{{ item.description }}</p>
           </div>
 
-          <p class="ul-typography-caption-l-regular ul-text-secondary">
+          <p
+            class="ul-typography-caption-l-regular ul-text-secondary"
+            i18n="@@listingDetail.listedOn"
+          >
             Listed on {{ item.createdAt | date: 'mediumDate' }}
           </p>
 
           @if (isOwner()) {
             <div class="ul-gap-3" style="display: flex">
-              <ul-button type="button" theme="outline-purple" size="md">Edit listing</ul-button>
-              <ul-button type="button" theme="fill-red" size="md" (buttonClick)="onDeleteClick()"
-                >Delete listing</ul-button
-              >
+              <ul-button type="button" theme="outline-purple" size="md">
+                <ng-container i18n="@@listingDetail.editListing">Edit listing</ng-container>
+              </ul-button>
+              <ul-button type="button" theme="fill-red" size="md" (buttonClick)="onDeleteClick()">
+                <ng-container i18n="@@listingDetail.deleteListing">Delete listing</ng-container>
+              </ul-button>
             </div>
           }
         </div>
@@ -95,13 +111,16 @@
   <ul-modal
     [(open)]="showDeleteModal"
     title="Delete listing?"
+    i18n-title="@@listingDetail.deleteModalTitle"
     variant="confirmation"
     confirmLabel="Delete"
+    i18n-confirmLabel="@@common.delete"
     cancelLabel="Cancel"
+    i18n-cancelLabel="@@common.cancel"
     (confirmed)="confirmDelete()"
     (cancelled)="showDeleteModal.set(false)"
   >
-    <p class="ul-typography-body-m-regular">
+    <p class="ul-typography-body-m-regular" i18n="@@listingDetail.deleteModalBody">
       Are you sure you want to delete "{{ item.title }}"? This action cannot be undone.
     </p>
   </ul-modal>

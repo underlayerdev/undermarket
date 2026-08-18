@@ -23,7 +23,10 @@ export class DiscoverComponent implements OnInit {
   readonly selectedCategory = signal<string | null>(null);
 
   ngOnInit(): void {
-    this.seoService.setPage('Discover', 'Browse secondhand listings by category on Undermarket.');
+    this.seoService.setPage(
+      $localize`:@@discover.pageTitle:Discover`,
+      $localize`:@@discover.seoDescription:Browse secondhand listings by category on Undermarket.`,
+    );
     this.listingService.loadLatest();
   }
 

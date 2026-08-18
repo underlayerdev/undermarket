@@ -1,12 +1,18 @@
 @if (step() === 'email') {
-  <h1 class="ul-typography-headline-l-extrablack ul-mb-1 auth-title">Hola, </h1>
-  <p class="ul-typography-body-m-regular ul-mb-6 ul-text-secondary auth-subtitle">
-    Iniicia sesion para poder comprar y vender en el mercado mas libre del mundo.
+  <h1 class="ul-typography-headline-l-extrablack ul-mb-1 auth-title" i18n="@@login.title">
+    Welcome back
+  </h1>
+  <p
+    class="ul-typography-body-m-regular ul-mb-6 ul-text-secondary auth-subtitle"
+    i18n="@@login.subtitle"
+  >
+    Sign in to buy and sell in the world's most open marketplace.
   </p>
 
   <div class="ul-gap-4 auth-form">
     <ul-input
       label="Email"
+      i18n-label="@@login.emailLabel"
       placeholder="you@example.com"
       type="email"
       [required]="true"
@@ -32,21 +38,28 @@
       [disabled]="isLoading() || !isEmailValid()"
       (buttonClick)="onContinue()"
     >
-      Continue
+      <ng-container i18n="@@common.continue">Continue</ng-container>
     </ul-button>
   </div>
 }
 
 @if (step() === 'password') {
-  <h1 class="ul-typography-headline-l-extrablack ul-mb-1 auth-title">Enter your password</h1>
-  <p class="ul-typography-body-m-regular ul-mb-6 ul-text-secondary auth-subtitle">
+  <h1 class="ul-typography-headline-l-extrablack ul-mb-1 auth-title" i18n="@@login.passwordTitle">
+    Enter your password
+  </h1>
+  <p
+    class="ul-typography-body-m-regular ul-mb-6 ul-text-secondary auth-subtitle"
+    i18n="@@login.signingInAs"
+  >
     Signing in as <strong>{{ emailValue() }}</strong>
   </p>
 
   <div class="ul-gap-4 auth-form">
     <ul-input
       label="Password"
+      i18n-label="@@common.passwordLabel"
       placeholder="Your password"
+      i18n-placeholder="@@login.passwordPlaceholder"
       type="password"
       [required]="true"
       [(value)]="passwordValue"
@@ -71,21 +84,28 @@
       [disabled]="isLoading()"
       (buttonClick)="onLogin()"
     >
-      {{ isLoading() ? 'Signing in...' : 'Sign In' }}
+      {{ signInButtonLabel() }}
     </ul-button>
 
-    <ul-button theme="outline-white" size="md" type="button" (click)="onBack()"> Back </ul-button>
+    <ul-button theme="outline-white" size="md" type="button" (click)="onBack()">
+      <ng-container i18n="@@common.back">Back</ng-container>
+    </ul-button>
 
     <div class="ul-typography-caption-l-regular ul-text-secondary auth-form__links">
-      <a routerLink="/forgot-password">Forgot password?</a>
+      <a routerLink="/forgot-password" i18n="@@login.forgotPassword">Forgot password?</a>
     </div>
   </div>
 }
 
-<div class="ul-gap-3 ul-text-tertiary auth-form__divider"><span>or</span></div>
+<div class="ul-gap-3 ul-text-tertiary auth-form__divider">
+  <span i18n="@@common.or">or</span>
+</div>
 
 <um-google-sign-in-button />
 
-<p class="ul-typography-caption-l-regular ul-text-secondary auth-form__footer">
+<p
+  class="ul-typography-caption-l-regular ul-text-secondary auth-form__footer"
+  i18n="@@login.noAccount"
+>
   Don't have an account? <a routerLink="/register">Create one</a>
 </p>

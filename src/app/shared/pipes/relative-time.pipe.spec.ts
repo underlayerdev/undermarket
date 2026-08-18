@@ -1,7 +1,7 @@
 import { RelativeTimePipe } from './relative-time.pipe';
 
 describe('RelativeTimePipe', () => {
-  const pipe = new RelativeTimePipe();
+  const pipe = new RelativeTimePipe('en');
   const now = new Date('2026-08-18T12:00:00Z');
 
   beforeEach(() => {
@@ -47,5 +47,15 @@ describe('RelativeTimePipe', () => {
 
   it('should return an empty string for an invalid date', () => {
     expect(pipe.transform(new Date('invalid'))).toBe('');
+  });
+
+  it('should format using the Spanish date-fns locale when constructed with locale "es"', () => {
+    const esPipe = new RelativeTimePipe('es');
+    expect(esPipe.transform(new Date(now.getTime() - 5 * 60 * 1000))).toBe('hace 5 minutos');
+  });
+
+  it('should fall back to English for an unsupported locale id', () => {
+    const unknownPipe = new RelativeTimePipe('fr');
+    expect(unknownPipe.transform(new Date(now.getTime() - 5 * 60 * 1000))).toBe('5 minutes ago');
   });
 });

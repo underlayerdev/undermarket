@@ -11,6 +11,11 @@ import { Router } from '@angular/router';
 import { AuthService } from '../../../application/services/auth.service';
 import { ErrorService } from '../../../application/services/error.service';
 import { SeoService } from '../../../core/seo/seo.service';
+import {
+  validateConfirmPassword,
+  validateEmail,
+  validatePassword,
+} from '../../../shared/utils/auth-validation';
 import { ButtonComponent, InputComponent } from '@underlayerdev/ui';
 import { GoogleSignInButtonComponent } from '../components/google-sign-in-button/google-sign-in-button';
 
@@ -36,34 +41,30 @@ export class RegisterComponent implements OnInit {
   readonly passwordValue = signal('');
   readonly confirmPasswordValue = signal('');
 
-  readonly emailError = computed(() => {
-    if (!this.touched()) return null;
-    const v = this.emailValue().trim();
-    if (!v) return 'Email is required.';
-    if (!/^[^\s@,]+@[^\s@,]+\.[^\s@,]+$/.test(v)) return 'Please enter a valid email address.';
-    return null;
-  });
+  readonly emailError = computed(() => (this.touched() ? validateEmail(this.emailValue()) : null));
 
-  readonly passwordError = computed(() => {
-    if (!this.touched()) return null;
-    if (!this.passwordValue()) return 'Password is required.';
-    if (this.passwordValue().length < 6) return 'Password must be at least 6 characters.';
-    return null;
-  });
+  readonly passwordError = computed(() =>
+    this.touched() ? validatePassword(this.passwordValue()) : null,
+  );
 
-  readonly confirmPasswordError = computed(() => {
-    if (!this.touched()) return null;
-    if (!this.confirmPasswordValue()) return 'Please confirm your password.';
-    if (this.confirmPasswordValue() !== this.passwordValue()) return 'Passwords do not match.';
-    return null;
-  });
+  readonly confirmPasswordError = computed(() =>
+    this.touched()
+      ? validateConfirmPassword(this.confirmPasswordValue(), this.passwordValue())
+      : null,
+  );
 
   readonly isFormValid = computed(
     () => !this.emailError() && !this.passwordError() && !this.confirmPasswordError(),
   );
 
+  readonly registerButtonLabel = computed(() =>
+    this.isLoading()
+      ? $localize`:@@register.creatingAccount:Creating account...`
+      : $localize`:@@register.createAccount:Create Account`,
+  );
+
   ngOnInit(): void {
-    this.seoService.setPage('Create Account');
+    this.seoService.setPage($localize`:@@register.pageTitle:Create Account`);
   }
 
   async onRegister(): Promise<void> {

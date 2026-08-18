@@ -27,15 +27,13 @@ export class SettingsComponent implements OnInit {
   private readonly seoService = inject(SeoService);
 
   readonly themeOptions: SelectOption[] = [
-    { value: 'light', label: 'Light' },
-    { value: 'dark', label: 'Dark' },
+    { value: 'light', label: $localize`:@@settings.themeLight:Light` },
+    { value: 'dark', label: $localize`:@@settings.themeDark:Dark` },
   ];
 
   readonly languageOptions: SelectOption[] = [
     { value: 'en', label: 'English' },
-    { value: 'de', label: 'Deutsch' },
     { value: 'es', label: 'Español' },
-    { value: 'fr', label: 'Français' },
   ];
 
   readonly currentTheme = computed(() => this.userService.profile()?.settings.theme ?? 'light');
@@ -45,7 +43,7 @@ export class SettingsComponent implements OnInit {
   readonly languageValue = signal<string | null>(null);
 
   ngOnInit(): void {
-    this.seoService.setPage('Settings');
+    this.seoService.setPage($localize`:@@settings.pageTitle:Settings`);
     const user = this.authService.currentUser();
     if (user) {
       this.userService.loadProfile(user.id).then(() => {
@@ -64,10 +62,18 @@ export class SettingsComponent implements OnInit {
   }
 
   async onLanguageChange(language: string | null): Promise<void> {
-    if (!language) return;
+    if (!language || language === this.currentLanguage()) return;
     const current = this.userService.profile()?.settings;
     if (!current) return;
     const updated: UserSettings = { ...current, language };
     await this.userService.updateSettings(updated);
+
+    // Each locale is a fully separate static build (@angular/localize inlines
+    // translations at build time) — there's no in-memory way to swap the
+    // active language, so switching means navigating to the sibling locale's
+    // build, preserving whatever page/path the user is currently on.
+    const { pathname, search, hash } = window.location;
+    const pathWithoutLocale = pathname.replace(/^\/(en|es)(\/|$)/, '/');
+    window.location.href = `/${language}${pathWithoutLocale}${search}${hash}`;
   }
 }

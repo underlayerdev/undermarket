@@ -27,10 +27,25 @@ import { UserMenuComponent } from './user-menu/user-menu';
 type AppSidebarItem = SidebarItem & { url?: string; action?: 'sign-out' };
 
 const SIDEBAR_ITEMS: AppSidebarItem[] = [
-  { label: 'Home', value: 'home', url: '/home', leftIcons: ['home'] },
-  { label: 'New Listing', value: 'new-listing', url: '/listings/new', leftIcons: ['plus'] },
-  { label: 'Settings', value: 'settings', url: '/settings', leftIcons: ['settings'] },
-  { label: 'Sign out', value: 'sign-out', action: 'sign-out', leftIcons: ['log_out'] },
+  { label: $localize`:@@common.home:Home`, value: 'home', url: '/home', leftIcons: ['home'] },
+  {
+    label: $localize`:@@appLayout.newListing:New Listing`,
+    value: 'new-listing',
+    url: '/listings/new',
+    leftIcons: ['plus'],
+  },
+  {
+    label: $localize`:@@userMenu.settings:Settings`,
+    value: 'settings',
+    url: '/settings',
+    leftIcons: ['settings'],
+  },
+  {
+    label: $localize`:@@userMenu.signOut:Sign out`,
+    value: 'sign-out',
+    action: 'sign-out',
+    leftIcons: ['log_out'],
+  },
 ];
 
 @Component({

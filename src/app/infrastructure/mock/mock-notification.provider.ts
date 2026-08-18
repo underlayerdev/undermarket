@@ -5,20 +5,20 @@ import type { Notification, NotificationId } from '../../domain/notification/not
 const SEED_NOTIFICATIONS: Notification[] = [
   {
     id: '1',
-    message: 'You have a new message about "Vintage leather jacket".',
+    message: $localize`:@@mockNotifications.newMessage:You have a new message about "Vintage leather jacket".`,
     read: false,
     createdAt: new Date(Date.now() - 1000 * 60 * 30),
     url: '/listings/vintage-leather-jacket-1',
   },
   {
     id: '2',
-    message: 'A saved item just dropped in price.',
+    message: $localize`:@@mockNotifications.priceDrop:A saved item just dropped in price.`,
     read: false,
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 5),
   },
   {
     id: '3',
-    message: 'Your listing "Mountain bike" was published.',
+    message: $localize`:@@mockNotifications.listingPublished:Your listing "Mountain bike" was published.`,
     read: true,
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24),
   },

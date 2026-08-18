@@ -10,6 +10,7 @@ import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../application/services/auth.service';
 import { ErrorService } from '../../../application/services/error.service';
 import { SeoService } from '../../../core/seo/seo.service';
+import { isValidEmail, validateEmail } from '../../../shared/utils/auth-validation';
 import { ButtonComponent, InputComponent, StatusComponent } from '@underlayerdev/ui';
 
 @Component({
@@ -31,21 +32,18 @@ export class ForgotPasswordComponent implements OnInit {
   readonly errorMessage = signal<string | null>(null);
   readonly successMessage = signal<string | null>(null);
 
-  readonly emailError = computed(() => {
-    if (!this.touched()) return null;
-    const v = this.emailValue().trim();
-    if (!v) return 'Email is required.';
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return 'Please enter a valid email address.';
-    return null;
-  });
+  readonly emailError = computed(() => (this.touched() ? validateEmail(this.emailValue()) : null));
 
-  readonly isEmailValid = computed(() => {
-    const v = this.emailValue().trim();
-    return !!v && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
-  });
+  readonly isEmailValid = computed(() => isValidEmail(this.emailValue()));
+
+  readonly sendButtonLabel = computed(() =>
+    this.isLoading()
+      ? $localize`:@@forgotPassword.sending:Sending...`
+      : $localize`:@@forgotPassword.sendLink:Send Reset Link`,
+  );
 
   ngOnInit(): void {
-    this.seoService.setPage('Reset Password');
+    this.seoService.setPage($localize`:@@forgotPassword.pageTitle:Reset Password`);
   }
 
   async onSubmit(): Promise<void> {
@@ -56,7 +54,9 @@ export class ForgotPasswordComponent implements OnInit {
     this.successMessage.set(null);
     try {
       await this.authService.sendPasswordResetEmail(this.emailValue().trim());
-      this.successMessage.set('Check your inbox — we sent a password reset link.');
+      this.successMessage.set(
+        $localize`:@@forgotPassword.successMessage:Check your inbox — we sent a password reset link.`,
+      );
     } catch (err) {
       this.errorMessage.set(this.errorService.toUserMessage(err));
     } finally {

@@ -55,7 +55,7 @@ export class ProfileComponent implements OnInit {
   readonly avatarSrc = computed(() => this.userService.profile()?.photoUrl ?? undefined);
 
   async ngOnInit(): Promise<void> {
-    this.seoService.setPage('My Profile');
+    this.seoService.setPage($localize`:@@profile.pageTitle:My Profile`);
 
     const user = this.authService.currentUser();
     if (!user) return;

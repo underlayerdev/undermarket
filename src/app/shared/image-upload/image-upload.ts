@@ -49,6 +49,10 @@ export class ImageUploadComponent {
     this.fileInput()?.nativeElement.click();
   }
 
+  protected photoAltText(index: number): string {
+    return $localize`:@@imageUpload.photoAlt:Photo ${index + 1}:photoNumber:`;
+  }
+
   protected async onFilesSelected(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
     const selected = input.files ? Array.from(input.files) : [];
@@ -60,13 +64,15 @@ export class ImageUploadComponent {
     const hadDuplicates = unique.length < selected.length;
 
     if (!unique.length) {
-      this.error.set('That photo has already been added.');
+      this.error.set($localize`:@@imageUpload.alreadyAdded:That photo has already been added.`);
       return;
     }
 
     const remainingSlots = this.maxFiles() - this.previews().length;
     if (remainingSlots <= 0) {
-      this.error.set(`You can upload up to ${this.maxFiles()} photos.`);
+      this.error.set(
+        $localize`:@@imageUpload.maxFilesReached:You can upload up to ${this.maxFiles()}:maxFiles: photos.`,
+      );
       return;
     }
 
@@ -74,9 +80,9 @@ export class ImageUploadComponent {
     const hadTooMany = unique.length > toAdd.length;
     this.error.set(
       hadTooMany
-        ? `You can upload up to ${this.maxFiles()} photos.`
+        ? $localize`:@@imageUpload.maxFilesReached:You can upload up to ${this.maxFiles()}:maxFiles: photos.`
         : hadDuplicates
-          ? 'Some photos were already added and were skipped.'
+          ? $localize`:@@imageUpload.someSkipped:Some photos were already added and were skipped.`
           : null,
     );
 
@@ -91,7 +97,9 @@ export class ImageUploadComponent {
     for (const preview of pendingPreviews) {
       const compressed = await compressImage(preview.file);
       if (compressed.size / (1024 * 1024) > this.maxFileSizeMb()) {
-        this.error.set(`"${preview.file.name}" is too large (max ${this.maxFileSizeMb()}MB).`);
+        this.error.set(
+          $localize`:@@imageUpload.fileTooLarge:"${preview.file.name}:fileName:" is too large (max ${this.maxFileSizeMb()}:maxSizeMb:MB).`,
+        );
         this.removePreview(preview);
         continue;
       }

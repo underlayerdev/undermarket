@@ -66,7 +66,10 @@ export class SearchComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.seoService.setPage('Search', 'Search for secondhand items on Undermarket.');
+    this.seoService.setPage(
+      $localize`:@@search.pageTitle:Search`,
+      $localize`:@@search.seoDescription:Search for secondhand items on Undermarket.`,
+    );
   }
 
   onSearch(): void {

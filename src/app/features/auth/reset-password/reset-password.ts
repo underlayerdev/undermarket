@@ -10,6 +10,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AuthService } from '../../../application/services/auth.service';
 import { ErrorService } from '../../../application/services/error.service';
 import { SeoService } from '../../../core/seo/seo.service';
+import { validateConfirmPassword, validatePassword } from '../../../shared/utils/auth-validation';
 import { ButtonComponent, InputComponent, StatusComponent } from '@underlayerdev/ui';
 
 @Component({
@@ -36,24 +37,26 @@ export class ResetPasswordComponent implements OnInit {
   readonly invalidLink = signal(false);
   readonly passwordChanged = signal(false);
 
-  readonly passwordError = computed(() => {
-    if (!this.touched()) return null;
-    if (!this.passwordValue()) return 'Password is required.';
-    if (this.passwordValue().length < 6) return 'Password must be at least 6 characters.';
-    return null;
-  });
+  readonly passwordError = computed(() =>
+    this.touched() ? validatePassword(this.passwordValue()) : null,
+  );
 
-  readonly confirmPasswordError = computed(() => {
-    if (!this.touched()) return null;
-    if (!this.confirmPasswordValue()) return 'Please confirm your password.';
-    if (this.confirmPasswordValue() !== this.passwordValue()) return 'Passwords do not match.';
-    return null;
-  });
+  readonly confirmPasswordError = computed(() =>
+    this.touched()
+      ? validateConfirmPassword(this.confirmPasswordValue(), this.passwordValue())
+      : null,
+  );
 
   readonly isFormValid = computed(() => !this.passwordError() && !this.confirmPasswordError());
 
+  readonly submitButtonLabel = computed(() =>
+    this.isLoading()
+      ? $localize`:@@resetPassword.saving:Saving...`
+      : $localize`:@@resetPassword.setNewPassword:Set New Password`,
+  );
+
   ngOnInit(): void {
-    this.seoService.setPage('Set New Password');
+    this.seoService.setPage($localize`:@@resetPassword.pageTitle:Set New Password`);
     this.oobCode = this.route.snapshot.queryParamMap.get('oobCode') ?? '';
     if (!this.oobCode) this.invalidLink.set(true);
   }

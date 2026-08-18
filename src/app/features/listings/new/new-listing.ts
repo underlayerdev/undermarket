@@ -131,51 +131,89 @@ export class NewListingComponent implements OnInit {
     // fields at once by submit()) to match the original UX.
     const whenTouched: LogicFn<unknown, boolean> = ({ state }) => state.touched();
 
-    required(listing.title, { message: 'Title is required.', when: whenTouched });
+    required(listing.title, {
+      message: $localize`:@@newListing.errors.titleRequired:Title is required.`,
+      when: whenTouched,
+    });
     minLength(listing.title, LISTING_TITLE_MIN_LENGTH, {
-      message: `Title must be at least ${LISTING_TITLE_MIN_LENGTH} characters.`,
+      message: $localize`:@@newListing.errors.titleTooShort:Title must be at least ${LISTING_TITLE_MIN_LENGTH}:minLength: characters.`,
       when: whenTouched,
     });
     maxLength(listing.title, LISTING_TITLE_MAX_LENGTH, {
-      message: `Title must be at most ${LISTING_TITLE_MAX_LENGTH} characters.`,
+      message: $localize`:@@newListing.errors.titleTooLong:Title must be at most ${LISTING_TITLE_MAX_LENGTH}:maxLength: characters.`,
       when: whenTouched,
     });
 
-    required(listing.description, { message: 'Description is required.', when: whenTouched });
+    required(listing.description, {
+      message: $localize`:@@newListing.errors.descriptionRequired:Description is required.`,
+      when: whenTouched,
+    });
     maxLength(listing.description, LISTING_DESCRIPTION_MAX_LENGTH, {
-      message: `Description must be at most ${LISTING_DESCRIPTION_MAX_LENGTH} characters.`,
+      message: $localize`:@@newListing.errors.descriptionTooLong:Description must be at most ${LISTING_DESCRIPTION_MAX_LENGTH}:maxLength: characters.`,
       when: whenTouched,
     });
 
-    required(listing.currency, { message: 'Please select a currency.', when: whenTouched });
+    required(listing.currency, {
+      message: $localize`:@@newListing.errors.currencyRequired:Please select a currency.`,
+      when: whenTouched,
+    });
     validate(listing.currency, ({ value, state }) =>
       state.touched() && value() && !CURRENCIES.some((currency) => currency.code === value())
-        ? { kind: 'invalid', message: 'Please select a valid currency.' }
+        ? {
+            kind: 'invalid',
+            message: $localize`:@@newListing.errors.currencyInvalid:Please select a valid currency.`,
+          }
         : undefined,
     );
 
-    required(listing.price, { message: 'Please enter a valid price.', when: whenTouched });
+    required(listing.price, {
+      message: $localize`:@@newListing.errors.priceInvalid:Please enter a valid price.`,
+      when: whenTouched,
+    });
     validate(listing.price, ({ value, valueOf, state }) => {
       if (!state.touched()) return undefined;
       const n = parseFloat(value());
       if (value() === '' || isNaN(n))
-        return { kind: 'invalid', message: 'Please enter a valid price.' };
-      if (n < 0) return { kind: 'min', message: 'Price must be 0 or more.' };
+        return {
+          kind: 'invalid',
+          message: $localize`:@@newListing.errors.priceInvalid:Please enter a valid price.`,
+        };
+      if (n < 0)
+        return {
+          kind: 'min',
+          message: $localize`:@@newListing.errors.priceNegative:Price must be 0 or more.`,
+        };
       const maxPrice = getMaxPriceForCurrency(valueOf(listing.currency) ?? DEFAULT_CURRENCY);
-      if (n > maxPrice) return { kind: 'max', message: `Price must be at most ${maxPrice}.` };
+      if (n > maxPrice)
+        return {
+          kind: 'max',
+          message: $localize`:@@newListing.errors.priceTooHigh:Price must be at most ${maxPrice}:maxPrice:.`,
+        };
       return undefined;
     });
 
-    required(listing.category, { message: 'Please select a category.', when: whenTouched });
+    required(listing.category, {
+      message: $localize`:@@newListing.errors.categoryRequired:Please select a category.`,
+      when: whenTouched,
+    });
     validate(listing.category, ({ value, state }) =>
       state.touched() && value() && !CATEGORIES.includes(value() as Category)
-        ? { kind: 'invalid', message: 'Please select a valid category.' }
+        ? {
+            kind: 'invalid',
+            message: $localize`:@@newListing.errors.categoryInvalid:Please select a valid category.`,
+          }
         : undefined,
     );
   });
 
   readonly publishButtonNotReady = computed(
     () => this.isLoading() || this.listingForm().invalid() || !this.listingForm().touched(),
+  );
+
+  readonly publishButtonLabel = computed(() =>
+    this.isLoading()
+      ? $localize`:@@newListing.publishing:Publishing...`
+      : $localize`:@@newListing.publish:Publish listing`,
   );
 
   readonly hasUnsavedChanges = computed(() => {
@@ -190,7 +228,7 @@ export class NewListingComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    this.seoService.setPage('Post a Listing');
+    this.seoService.setPage($localize`:@@newListing.pageTitle:Post a Listing`);
   }
 
   onClose(): void {

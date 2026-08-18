@@ -4,6 +4,7 @@
     class="ul-dock-item"
     aria-haspopup="dialog"
     aria-label="Open notifications"
+    i18n-aria-label="@@notifications.openAriaLabel"
     [attr.aria-expanded]="isOpen()"
     (click)="isOpen.set(true)"
   >
@@ -16,12 +17,13 @@
   @if (isOpen()) {
     <div class="um-notifications__mobile-panel">
       <div class="um-notifications__mobile-header">
-        <span class="um-notifications__title">Notifications</span>
+        <span class="um-notifications__title" i18n="@@notifications.title">Notifications</span>
         <ul-button
           type="button"
           theme="ghost-white"
           [iconOnly]="true"
           ariaLabel="Close"
+          i18n-ariaLabel="@@common.close"
           (buttonClick)="isOpen.set(false)"
         >
           <ul-icon icon="close" size="6" />
@@ -29,7 +31,9 @@
       </div>
 
       @if (notifications().length === 0) {
-        <p class="um-notifications__empty">You're all caught up.</p>
+        <p class="um-notifications__empty" i18n="@@notifications.emptyState">
+          You're all caught up.
+        </p>
       } @else {
         <ul class="um-notifications__list">
           @for (notification of notifications(); track notification.id) {
@@ -60,6 +64,7 @@
     [cdkMenuTriggerFor]="menu"
     aria-haspopup="menu"
     aria-label="Open notifications"
+    i18n-aria-label="@@notifications.openAriaLabel"
     [attr.aria-expanded]="isOpen()"
     (cdkMenuOpened)="isOpen.set(true)"
     (cdkMenuClosed)="isOpen.set(false)"
@@ -73,11 +78,13 @@
   <ng-template #menu>
     <div cdkMenu class="um-notifications__content">
       <div class="um-notifications__header">
-        <span class="um-notifications__title">Notifications</span>
+        <span class="um-notifications__title" i18n="@@notifications.title">Notifications</span>
       </div>
 
       @if (notifications().length === 0) {
-        <p class="um-notifications__empty">You're all caught up.</p>
+        <p class="um-notifications__empty" i18n="@@notifications.emptyState">
+          You're all caught up.
+        </p>
       } @else {
         @for (notification of notifications(); track notification.id) {
           <button

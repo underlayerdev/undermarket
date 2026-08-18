@@ -11,6 +11,11 @@ import { Router } from '@angular/router';
 import { AuthService } from '../../../application/services/auth.service';
 import { ErrorService } from '../../../application/services/error.service';
 import { SeoService } from '../../../core/seo/seo.service';
+import {
+  isValidEmail,
+  validateEmail,
+  validatePassword,
+} from '../../../shared/utils/auth-validation';
 import { ButtonComponent, InputComponent } from '@underlayerdev/ui';
 import { GoogleSignInButtonComponent } from '../components/google-sign-in-button/google-sign-in-button';
 
@@ -39,28 +44,24 @@ export class LoginComponent implements OnInit {
   readonly emailTouched = signal(false);
   readonly passwordTouched = signal(false);
 
-  readonly emailError = computed(() => {
-    if (!this.emailTouched()) return null;
-    const v = this.emailValue().trim();
-    if (!v) return 'Email is required.';
-    if (!/^[^\s@,]+@[^\s@,]+\.[^\s@,]+$/.test(v)) return 'Please enter a valid email address.';
-    return null;
-  });
+  readonly emailError = computed(() =>
+    this.emailTouched() ? validateEmail(this.emailValue()) : null,
+  );
 
-  readonly passwordError = computed(() => {
-    if (!this.passwordTouched()) return null;
-    if (!this.passwordValue()) return 'Password is required.';
-    if (this.passwordValue().length < 6) return 'Password must be at least 6 characters.';
-    return null;
-  });
+  readonly passwordError = computed(() =>
+    this.passwordTouched() ? validatePassword(this.passwordValue()) : null,
+  );
 
-  readonly isEmailValid = computed(() => {
-    const v = this.emailValue().trim();
-    return !!v && /^[^\s@,]+@[^\s@,]+\.[^\s@,]+$/.test(v);
-  });
+  readonly isEmailValid = computed(() => isValidEmail(this.emailValue()));
+
+  readonly signInButtonLabel = computed(() =>
+    this.isLoading()
+      ? $localize`:@@auth.signingIn:Signing in...`
+      : $localize`:@@auth.signIn:Sign In`,
+  );
 
   ngOnInit(): void {
-    this.seoService.setPage('Sign In');
+    this.seoService.setPage($localize`:@@auth.signInPageTitle:Sign In`);
   }
 
   onContinue(): void {

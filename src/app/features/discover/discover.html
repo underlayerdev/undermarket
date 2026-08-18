@@ -1,6 +1,6 @@
 <div class="ul-container-gallery">
   <div class="ul-content ul-pt-8">
-    <h1 class="ul-typography-headline-xl-extrablack ul-mb-6">Discover</h1>
+    <h1 class="ul-typography-headline-xl-extrablack ul-mb-6" i18n="@@discover.title">Discover</h1>
 
     <div class="ul-gap-2 ul-mb-6" style="display: flex; flex-wrap: wrap">
       <ul-pill
@@ -8,7 +8,7 @@
         [theme]="selectedCategory() === null ? 'fill-purple' : 'transparent-white'"
         (click)="selectCategory(null)"
       >
-        All
+        <ng-container i18n="@@discover.allCategories">All</ng-container>
       </ul-pill>
       @for (category of categories; track category) {
         <ul-pill
@@ -22,7 +22,10 @@
     </div>
 
     @if (listingService.listings().length === 0) {
-      <p class="ul-typography-body-m-regular ul-text-secondary ul-mt-8">
+      <p
+        class="ul-typography-body-m-regular ul-text-secondary ul-mt-8"
+        i18n="@@discover.emptyState"
+      >
         No listings found in this category yet.
       </p>
     } @else {

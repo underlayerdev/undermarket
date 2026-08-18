@@ -7,7 +7,7 @@
   >
     @for (preview of previews(); track preview.url; let idx = $index) {
       <div class="image-upload__thumb" cdkDrag>
-        <img [src]="preview.url" [alt]="'Photo ' + (idx + 1)" class="image-upload__img" />
+        <img [src]="preview.url" [alt]="photoAltText(idx)" class="image-upload__img" />
 
         @if (preview.compressing) {
           <div class="image-upload__overlay">
@@ -16,7 +16,7 @@
         }
 
         @if (idx === 0) {
-          <span class="image-upload__badge">Cover photo</span>
+          <span class="image-upload__badge" i18n="@@imageUpload.coverPhoto">Cover photo</span>
         }
 
         <ul-button
@@ -25,6 +25,7 @@
           size="sm"
           [iconOnly]="true"
           ariaLabel="Remove photo"
+          i18n-ariaLabel="@@imageUpload.removePhoto"
           class="image-upload__remove"
           (buttonClick)="removePreview(preview)"
         >
@@ -38,6 +39,7 @@
             size="sm"
             [iconOnly]="true"
             ariaLabel="Move photo left"
+            i18n-ariaLabel="@@imageUpload.movePhotoLeft"
             [disabled]="idx === 0"
             (buttonClick)="moveLeft(idx)"
           >
@@ -49,6 +51,7 @@
             size="sm"
             [iconOnly]="true"
             ariaLabel="Move photo right"
+            i18n-ariaLabel="@@imageUpload.movePhotoRight"
             [disabled]="idx === previews().length - 1"
             (buttonClick)="moveRight(idx)"
           >
@@ -62,7 +65,9 @@
       <button type="button" class="image-upload__add" (click)="openFilePicker()">
         <ul-icon icon="plus" size="8" />
         @if (previews().length === 0) {
-          <span class="ul-typography-body-s-regular">Add photos</span>
+          <span class="ul-typography-body-s-regular" i18n="@@imageUpload.addPhotos">
+            Add photos
+          </span>
         }
       </button>
     }

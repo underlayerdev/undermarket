@@ -1,11 +1,17 @@
-<h1 class="ul-typography-headline-l-extrablack ul-mb-1 auth-title">Create your account</h1>
-<p class="ul-typography-body-m-regular ul-mb-6 ul-text-secondary auth-subtitle">
+<h1 class="ul-typography-headline-l-extrablack ul-mb-1 auth-title" i18n="@@register.title">
+  Create your account
+</h1>
+<p
+  class="ul-typography-body-m-regular ul-mb-6 ul-text-secondary auth-subtitle"
+  i18n="@@register.subtitle"
+>
   Start buying and selling today.
 </p>
 
 <div class="ul-gap-4 auth-form">
   <ul-input
     label="Email"
+    i18n-label="@@login.emailLabel"
     placeholder="you@example.com"
     type="email"
     [required]="true"
@@ -16,7 +22,9 @@
 
   <ul-input
     label="Password"
+    i18n-label="@@common.passwordLabel"
     placeholder="Min. 6 characters"
+    i18n-placeholder="@@register.passwordPlaceholder"
     type="password"
     [required]="true"
     [(value)]="passwordValue"
@@ -26,7 +34,9 @@
 
   <ul-input
     label="Confirm password"
+    i18n-label="@@register.confirmPasswordLabel"
     placeholder="Repeat your password"
+    i18n-placeholder="@@register.confirmPasswordPlaceholder"
     type="password"
     [required]="true"
     [(value)]="confirmPasswordValue"
@@ -50,14 +60,19 @@
     [disabled]="isLoading()"
     (buttonClick)="onRegister()"
   >
-    {{ isLoading() ? 'Creating account...' : 'Create Account' }}
+    {{ registerButtonLabel() }}
   </ul-button>
 
-  <div class="ul-gap-3 ul-text-tertiary auth-form__divider"><span>or</span></div>
+  <div class="ul-gap-3 ul-text-tertiary auth-form__divider">
+    <span i18n="@@common.or">or</span>
+  </div>
 
   <um-google-sign-in-button />
 
-  <p class="ul-typography-caption-l-regular ul-text-secondary auth-form__footer">
+  <p
+    class="ul-typography-caption-l-regular ul-text-secondary auth-form__footer"
+    i18n="@@register.hasAccount"
+  >
     Already have an account? <a routerLink="/login">Sign in</a>
   </p>
 </div>

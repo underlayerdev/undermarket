@@ -15,12 +15,12 @@
         </div>
       </div>
 
-      <h2 class="ul-typography-headline-m-extrabold ul-mb-6">
+      <h2 class="ul-typography-headline-m-extrabold ul-mb-6" i18n="@@profile.myListings">
         My listings ({{ userListings().length }})
       </h2>
 
       @if (userListings().length === 0) {
-        <p class="ul-typography-body-m-regular ul-text-secondary">
+        <p class="ul-typography-body-m-regular ul-text-secondary" i18n="@@profile.emptyState">
           You have not posted any listings yet.
         </p>
       } @else {
