@@ -34,6 +34,7 @@
     text-align: center;
   }
 
+  // Desktop-only: the small CDK Menu dropdown opened from the navbar bell.
   &__content {
     display: flex;
     flex-direction: column;
@@ -44,6 +45,34 @@
     width: 320px;
     max-height: 400px;
     overflow-y: auto;
+  }
+
+  // Mobile-only: opened from the dock bell. ul-dock only ever renders
+  // below tokens.$breakpoint-md (see the base library's dock.scss), so
+  // this never needs its own breakpoint gate — it's reachable only on
+  // mobile in the first place. Plain fixed positioning, no CDK overlay,
+  // same mechanism new-listing.scss uses for its own mobile takeover.
+  &__mobile-panel {
+    position: fixed;
+    inset: 0;
+    z-index: tokens.$elevation-modal;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    background-color: tokens.$color-background-main;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  &__mobile-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: tokens.$spacing-spacing-4;
+    padding: tokens.$spacing-spacing-4;
+    border-bottom: 1px solid tokens.$color-border-white-light;
+    position: sticky;
+    top: 0;
+    background-color: tokens.$color-background-main;
   }
 
   &__header {
@@ -62,6 +91,18 @@
     padding: tokens.$spacing-spacing-4 tokens.$spacing-spacing-2;
     color: tokens.$color-text-secondary;
     text-align: center;
+  }
+
+  &__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  &__list-item {
+    &:not(:last-child) {
+      border-bottom: 1px solid tokens.$color-border-white-light;
+    }
   }
 
   &__item {
@@ -87,12 +128,7 @@
     }
   }
 
-  &__item-message {
-    font-size: 14px;
-  }
-
   &__item-time {
-    font-size: 12px;
     color: tokens.$color-text-secondary;
   }
 }

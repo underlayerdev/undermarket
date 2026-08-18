@@ -49,28 +49,54 @@ describe('NotificationsComponent', () => {
     expect(fixture.componentInstance.unreadCount()).toBe(1);
   });
 
-  it('should mark an unread notification as read and navigate when it has a url', () => {
+  it('should navigate when a clicked notification has a url', () => {
     const fixture = TestBed.createComponent(NotificationsComponent);
     const withUrl: Notification = { ...notifications[0], url: '/listings/foo' };
 
     fixture.componentInstance.onNotificationClick(withUrl);
 
-    expect(markAsReadSpy).toHaveBeenCalledWith('1');
     expect(navigateByUrlSpy).toHaveBeenCalledWith('/listings/foo');
   });
 
-  it('should not call markAsRead for an already-read notification', () => {
+  it('should not mark notifications as read while the panel is open', () => {
     const fixture = TestBed.createComponent(NotificationsComponent);
+    fixture.componentRef.setInput('layout', 'dock');
+    fixture.detectChanges();
 
-    fixture.componentInstance.onNotificationClick(notifications[1]);
+    fixture.componentInstance.isOpen.set(true);
+    fixture.detectChanges();
 
-    expect(markAsReadSpy).not.toHaveBeenCalled();
+    expect(markAllAsReadSpy).not.toHaveBeenCalled();
   });
 
-  it('should mark all notifications as read', () => {
+  it('should mark all notifications as read once the panel closes', () => {
     const fixture = TestBed.createComponent(NotificationsComponent);
+    fixture.componentRef.setInput('layout', 'dock');
+    fixture.detectChanges();
 
-    fixture.componentInstance.onMarkAllAsRead();
+    fixture.componentInstance.isOpen.set(true);
+    fixture.detectChanges();
+    fixture.componentInstance.isOpen.set(false);
+    fixture.detectChanges();
+
+    expect(markAllAsReadSpy).toHaveBeenCalled();
+  });
+
+  it('should not mark as read on initial render, before the panel is ever opened', () => {
+    const fixture = TestBed.createComponent(NotificationsComponent);
+    fixture.detectChanges();
+
+    expect(markAllAsReadSpy).not.toHaveBeenCalled();
+  });
+
+  it('should mark all notifications as read once the desktop dropdown closes', () => {
+    const fixture = TestBed.createComponent(NotificationsComponent);
+    fixture.detectChanges();
+
+    fixture.componentInstance.isOpen.set(true);
+    fixture.detectChanges();
+    fixture.componentInstance.isOpen.set(false);
+    fixture.detectChanges();
 
     expect(markAllAsReadSpy).toHaveBeenCalled();
   });
@@ -95,5 +121,52 @@ describe('NotificationsComponent', () => {
     expect(fixture.nativeElement.querySelector('.ul-dock-item__badge')?.textContent.trim()).toBe(
       '1',
     );
+  });
+
+  it('should not render the mobile panel until opened, for the dock layout', () => {
+    const fixture = TestBed.createComponent(NotificationsComponent);
+    fixture.componentRef.setInput('layout', 'dock');
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('.um-notifications__mobile-panel')).toBeNull();
+  });
+
+  it('should open the full-screen mobile panel when the dock trigger is clicked', () => {
+    const fixture = TestBed.createComponent(NotificationsComponent);
+    fixture.componentRef.setInput('layout', 'dock');
+    fixture.detectChanges();
+
+    fixture.nativeElement.querySelector('.ul-dock-item').click();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('.um-notifications__mobile-panel')).toBeTruthy();
+  });
+
+  it('should close the mobile panel when its close button is clicked', () => {
+    const fixture = TestBed.createComponent(NotificationsComponent);
+    fixture.componentRef.setInput('layout', 'dock');
+    fixture.detectChanges();
+    fixture.componentInstance.isOpen.set(true);
+    fixture.detectChanges();
+
+    const closeButton = fixture.nativeElement.querySelector(
+      '.um-notifications__mobile-header ul-button button',
+    );
+    closeButton.click();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('.um-notifications__mobile-panel')).toBeNull();
+  });
+
+  it('should close the mobile panel when a notification is clicked', () => {
+    const fixture = TestBed.createComponent(NotificationsComponent);
+    fixture.componentRef.setInput('layout', 'dock');
+    fixture.detectChanges();
+    fixture.componentInstance.isOpen.set(true);
+    fixture.detectChanges();
+
+    fixture.componentInstance.onNotificationClick(notifications[1]);
+
+    expect(fixture.componentInstance.isOpen()).toBe(false);
   });
 });

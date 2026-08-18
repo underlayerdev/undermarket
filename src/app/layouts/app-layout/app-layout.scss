@@ -61,7 +61,7 @@
     // should do now that search + the avatar menu live in the navbar).
     // No utility exists for "hidden below a breakpoint" (ul-hidden variants
     // only hide from a breakpoint up), so this direction stays a manual query.
-    @media (max-width: tokens.$breakpoint-md - 1px) {
+    @media (max-width: (tokens.$breakpoint-md - 1px)) {
       display: none;
     }
   }
