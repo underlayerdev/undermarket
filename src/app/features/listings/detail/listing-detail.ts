@@ -63,7 +63,7 @@ export class ListingDetailComponent implements OnInit {
   readonly breadcrumbItems = computed<BreadcrumbItem[]>(() => {
     const l = this.listing();
     return [
-      { label: $localize`:@@common.home:Home`, href: '/home' },
+      { label: $localize`:@@common.home:Home`, routerLink: '/home' },
       { label: l ? l.title : $localize`:@@listingDetail.breadcrumbFallback:Listing` },
     ];
   });
