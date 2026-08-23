@@ -1,127 +1,118 @@
-@if (isLoading()) {
-  <div class="ul-container-product">
-    <div class="ul-content ul-pt-8">
-      <ul-skeleton variant="rect" height="400px" [show]="true" />
-      <ul-skeleton variant="text" [lines]="5" [show]="true" />
+<ng-container *transloco="let t">
+  @if (isLoading()) {
+    <div class="ul-container-product">
+      <div class="ul-content ul-pt-8">
+        <ul-skeleton variant="rect" height="400px" [show]="true" />
+        <ul-skeleton variant="text" [lines]="5" [show]="true" />
+      </div>
     </div>
-  </div>
-} @else if (errorMessage(); as msg) {
-  <div class="ul-container-fluid">
-    <div class="ul-content" role="alert">
-      <p class="ul-typography-body-m-regular ul-text-red">{{ msg }}</p>
+  } @else if (errorMessage(); as msg) {
+    <div class="ul-container-fluid">
+      <div class="ul-content" role="alert">
+        <p class="ul-typography-body-m-regular ul-text-red">{{ msg }}</p>
+      </div>
     </div>
-  </div>
-} @else if (listing(); as item) {
-  <div class="ul-container-product">
-    <div class="ul-content">
-      <ul-breadcrumb [items]="breadcrumbItems()" />
+  } @else if (listing(); as item) {
+    <div class="ul-container-product">
+      <div class="ul-content">
+        <ul-breadcrumb [items]="breadcrumbItems()" />
 
-      <article class="ul-row ul-mt-8">
-        <div class="ul-col-12 ul-col-md-7">
-          @if (item.imageUrls.length > 0) {
-            <img
-              [src]="item.imageUrls[activeImageIndex()]"
-              [alt]="item.title"
-              class="ul-rounded-2"
-              style="width: 100%; aspect-ratio: 4/3; object-fit: cover"
-            />
-            @if (item.imageUrls.length > 1) {
-              <div class="ul-gap-2 ul-mt-3" style="display: flex; flex-wrap: wrap">
-                @for (url of item.imageUrls; track url; let i = $index) {
-                  <ul-button
-                    type="button"
-                    [theme]="activeImageIndex() === i ? 'fill-purple' : 'ghost-white'"
-                    size="sm"
-                    [iconOnly]="true"
-                    (buttonClick)="setActiveImage(i)"
-                  >
-                    <img
-                      [src]="url"
-                      [alt]="photoAltText(i)"
-                      class="ul-w-12 ul-h-12"
-                      style="object-fit: cover"
-                    />
-                  </ul-button>
-                }
+        <article class="ul-row ul-mt-8">
+          <div class="ul-col-12 ul-col-md-7">
+            @if (item.imageUrls.length > 0) {
+              <img
+                [src]="item.imageUrls[activeImageIndex()]"
+                [alt]="item.title"
+                class="ul-rounded-2"
+                style="width: 100%; aspect-ratio: 4/3; object-fit: cover"
+              />
+              @if (item.imageUrls.length > 1) {
+                <div class="ul-gap-2 ul-mt-3" style="display: flex; flex-wrap: wrap">
+                  @for (url of item.imageUrls; track url; let i = $index) {
+                    <ul-button
+                      type="button"
+                      [theme]="activeImageIndex() === i ? 'fill-purple' : 'ghost-white'"
+                      size="sm"
+                      [iconOnly]="true"
+                      (buttonClick)="setActiveImage(i)"
+                    >
+                      <img
+                        [src]="url"
+                        [alt]="photoAltText(i)"
+                        class="ul-w-12 ul-h-12"
+                        style="object-fit: cover"
+                      />
+                    </ul-button>
+                  }
+                </div>
+              }
+            } @else {
+              <div
+                class="ul-bg-grey-lvl-1 ul-rounded-2"
+                style="aspect-ratio: 4/3; display: flex; align-items: center; justify-content: center"
+              >
+                <p class="ul-typography-caption-l-regular">{{ t('listingDetail.noPhotos') }}</p>
               </div>
             }
-          } @else {
-            <div
-              class="ul-bg-grey-lvl-1 ul-rounded-2"
-              style="aspect-ratio: 4/3; display: flex; align-items: center; justify-content: center"
-            >
-              <p class="ul-typography-caption-l-regular" i18n="@@listingDetail.noPhotos">
-                No photos available
-              </p>
-            </div>
-          }
-        </div>
+          </div>
 
-        <div class="ul-col-12 ul-col-md-5 ul-gap-4" style="display: flex; flex-direction: column">
-          <div class="ul-gap-2" style="display: flex; flex-wrap: wrap">
-            <ul-pill theme="outline-purple" variant="read-only">{{ item.category }}</ul-pill>
-            @if (item.status === 'sold') {
-              <ul-pill theme="fill-red" variant="read-only">
-                <ng-container i18n="@@listingDetail.sold">Sold</ng-container>
-              </ul-pill>
-            } @else {
-              <ul-pill theme="transparent-green" variant="read-only">
-                <ng-container i18n="@@listingDetail.available">Available</ng-container>
-              </ul-pill>
+          <div class="ul-col-12 ul-col-md-5 ul-gap-4" style="display: flex; flex-direction: column">
+            <div class="ul-gap-2" style="display: flex; flex-wrap: wrap">
+              <ul-pill theme="outline-purple" variant="read-only">{{ item.category }}</ul-pill>
+              @if (item.status === 'sold') {
+                <ul-pill theme="fill-red" variant="read-only">
+                  {{ t('listingDetail.sold') }}
+                </ul-pill>
+              } @else {
+                <ul-pill theme="transparent-green" variant="read-only">
+                  {{ t('listingDetail.available') }}
+                </ul-pill>
+              }
+            </div>
+
+            <h1 class="ul-typography-headline-l-extrablack">{{ item.title }}</h1>
+            <p class="ul-typography-headline-m-extrabold">
+              {{ item.price | listingPrice: item.currency }}
+            </p>
+
+            <div>
+              <h2 class="ul-typography-headline-s-extrabold ul-mb-2">
+                {{ t('listingDetail.description') }}
+              </h2>
+              <p class="ul-typography-body-m-regular">{{ item.description }}</p>
+            </div>
+
+            <p class="ul-typography-caption-l-regular ul-text-secondary">
+              {{ t('listingDetail.listedOn', { value: item.createdAt | date: 'mediumDate' }) }}
+            </p>
+
+            @if (isOwner()) {
+              <div class="ul-gap-3" style="display: flex">
+                <ul-button type="button" theme="outline-purple" size="md">
+                  {{ t('listingDetail.editListing') }}
+                </ul-button>
+                <ul-button type="button" theme="fill-red" size="md" (buttonClick)="onDeleteClick()">
+                  {{ t('listingDetail.deleteListing') }}
+                </ul-button>
+              </div>
             }
           </div>
-
-          <h1 class="ul-typography-headline-l-extrablack">{{ item.title }}</h1>
-          <p class="ul-typography-headline-m-extrabold">
-            {{ item.price | listingPrice: item.currency }}
-          </p>
-
-          <div>
-            <h2
-              class="ul-typography-headline-s-extrabold ul-mb-2"
-              i18n="@@listingDetail.description"
-            >
-              Description
-            </h2>
-            <p class="ul-typography-body-m-regular">{{ item.description }}</p>
-          </div>
-
-          <p
-            class="ul-typography-caption-l-regular ul-text-secondary"
-            i18n="@@listingDetail.listedOn"
-          >
-            Listed on {{ item.createdAt | date: 'mediumDate' }}
-          </p>
-
-          @if (isOwner()) {
-            <div class="ul-gap-3" style="display: flex">
-              <ul-button type="button" theme="outline-purple" size="md">
-                <ng-container i18n="@@listingDetail.editListing">Edit listing</ng-container>
-              </ul-button>
-              <ul-button type="button" theme="fill-red" size="md" (buttonClick)="onDeleteClick()">
-                <ng-container i18n="@@listingDetail.deleteListing">Delete listing</ng-container>
-              </ul-button>
-            </div>
-          }
-        </div>
-      </article>
+        </article>
+      </div>
     </div>
-  </div>
 
-  <ul-modal
-    [(open)]="showDeleteModal"
-    title="Delete listing?"
-    i18n-title="@@listingDetail.deleteModalTitle"
-    variant="confirmation"
-    confirmLabel="Delete"
-    i18n-confirmLabel="@@common.delete"
-    cancelLabel="Cancel"
-    i18n-cancelLabel="@@common.cancel"
-    (confirmed)="confirmDelete()"
-    (cancelled)="showDeleteModal.set(false)"
-  >
-    <p class="ul-typography-body-m-regular" i18n="@@listingDetail.deleteModalBody">
-      Are you sure you want to delete "{{ item.title }}"? This action cannot be undone.
-    </p>
-  </ul-modal>
-}
+    <ul-modal
+      [(open)]="showDeleteModal"
+      [title]="t('listingDetail.deleteModalTitle')"
+      variant="confirmation"
+      [confirmLabel]="t('common.delete')"
+      [cancelLabel]="t('common.cancel')"
+      (confirmed)="confirmDelete()"
+      (cancelled)="showDeleteModal.set(false)"
+    >
+      <p class="ul-typography-body-m-regular">
+        {{ t('listingDetail.deleteModalBody', { value: item.title }) }}
+      </p>
+    </ul-modal>
+  }
+</ng-container>

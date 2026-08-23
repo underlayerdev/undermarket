@@ -1,4 +1,5 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
+import { TranslocoService } from '@jsverse/transloco';
 import { environment } from '../../../environments/environment';
 import type { ImageStorage } from '../../domain/image-storage/image-storage.provider';
 
@@ -11,6 +12,8 @@ import type { ImageStorage } from '../../domain/image-storage/image-storage.prov
  */
 @Injectable({ providedIn: null })
 export class CloudinaryImageStorage implements ImageStorage {
+  private readonly transloco = inject(TranslocoService);
+
   async upload(file: File): Promise<string> {
     const { cloudName, uploadPreset } = environment.cloudinary;
     const formData = new FormData();
@@ -23,9 +26,7 @@ export class CloudinaryImageStorage implements ImageStorage {
     });
 
     if (!response.ok) {
-      throw new Error(
-        $localize`:@@cloudinary.uploadFailed:Failed to upload image. Please try again.`,
-      );
+      throw new Error(this.transloco.translate('cloudinary.uploadFailed'));
     }
 
     const data: { secure_url: string } = await response.json();

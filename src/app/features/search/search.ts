@@ -8,6 +8,7 @@ import {
   signal,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { ListingService } from '../../application/services/listing.service';
 import { SeoService } from '../../core/seo/seo.service';
 import { CATEGORIES } from '../../domain/category/category.model';
@@ -33,6 +34,7 @@ import type { SelectOption } from '@underlayerdev/ui';
     PillComponent,
     SelectComponent,
     ListingPricePipe,
+    TranslocoDirective,
   ],
   templateUrl: './search.html',
   styleUrl: './search.scss',
@@ -41,6 +43,7 @@ import type { SelectOption } from '@underlayerdev/ui';
 export class SearchComponent implements OnInit {
   protected readonly listingService = inject(ListingService);
   private readonly seoService = inject(SeoService);
+  private readonly transloco = inject(TranslocoService);
 
   readonly createListingSlug = createListingSlug;
 
@@ -67,8 +70,8 @@ export class SearchComponent implements OnInit {
 
   ngOnInit(): void {
     this.seoService.setPage(
-      $localize`:@@search.pageTitle:Search`,
-      $localize`:@@search.seoDescription:Search for secondhand items on Undermarket.`,
+      this.transloco.translate('search.pageTitle'),
+      this.transloco.translate('search.seoDescription'),
     );
   }
 

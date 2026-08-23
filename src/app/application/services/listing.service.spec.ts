@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { ListingService } from './listing.service';
 import { AuthService } from './auth.service';
+import { getTranslocoTestingModule } from '../../../testing/transloco-testing';
 import { AUTH_PROVIDER, IMAGE_STORAGE, LISTING_REPOSITORY } from '../../core/configuration/tokens';
 import type { AuthProvider } from '../../domain/auth/auth.provider';
 import type { ImageStorage } from '../../domain/image-storage/image-storage.provider';
@@ -75,6 +76,7 @@ describe('ListingService', () => {
     const imageStorageMock: ImageStorage = { upload: uploadSpy };
 
     TestBed.configureTestingModule({
+      imports: [getTranslocoTestingModule()],
       providers: [
         { provide: AUTH_PROVIDER, useValue: authProviderMock },
         { provide: LISTING_REPOSITORY, useValue: listingRepositoryMock },

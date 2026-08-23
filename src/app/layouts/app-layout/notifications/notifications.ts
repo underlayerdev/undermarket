@@ -1,6 +1,7 @@
 import { CdkMenu, CdkMenuItem, CdkMenuTrigger } from '@angular/cdk/menu';
 import { ChangeDetectionStrategy, Component, effect, inject, input, signal } from '@angular/core';
 import { Router } from '@angular/router';
+import { TranslocoDirective } from '@jsverse/transloco';
 import { NotificationService } from '../../../application/services/notification.service';
 import type { Notification } from '../../../domain/notification/notification.model';
 import { RelativeTimePipe } from '../../../shared/pipes/relative-time.pipe';
@@ -12,7 +13,15 @@ export type NotificationsLayout = 'icon' | 'dock';
 @Component({
   selector: 'um-notifications',
   standalone: true,
-  imports: [CdkMenuTrigger, CdkMenu, CdkMenuItem, ButtonComponent, IconComponent, RelativeTimePipe],
+  imports: [
+    CdkMenuTrigger,
+    CdkMenu,
+    CdkMenuItem,
+    ButtonComponent,
+    IconComponent,
+    RelativeTimePipe,
+    TranslocoDirective,
+  ],
   templateUrl: './notifications.html',
   styleUrl: './notifications.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

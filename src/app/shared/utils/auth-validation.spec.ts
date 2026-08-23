@@ -1,9 +1,12 @@
+import { TestBed } from '@angular/core/testing';
+import { TranslocoService } from '@jsverse/transloco';
 import {
   isValidEmail,
   validateConfirmPassword,
   validateEmail,
   validatePassword,
 } from './auth-validation';
+import { getTranslocoTestingModule } from '../../../testing/transloco-testing';
 
 describe('isValidEmail', () => {
   it('should accept a well-formed email', () => {
@@ -19,44 +22,55 @@ describe('isValidEmail', () => {
   });
 });
 
-describe('validateEmail', () => {
-  it('should return a message for an empty value', () => {
-    expect(validateEmail('')).toBe('Email is required.');
+describe('validateEmail / validatePassword / validateConfirmPassword', () => {
+  let transloco: TranslocoService;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({ imports: [getTranslocoTestingModule()] });
+    transloco = TestBed.inject(TranslocoService);
   });
 
-  it('should return a message for an invalid format', () => {
-    expect(validateEmail('not-an-email')).toBe('Please enter a valid email address.');
+  describe('validateEmail', () => {
+    it('should return a message for an empty value', () => {
+      expect(validateEmail('', transloco)).toBe('Email is required.');
+    });
+
+    it('should return a message for an invalid format', () => {
+      expect(validateEmail('not-an-email', transloco)).toBe('Please enter a valid email address.');
+    });
+
+    it('should return null for a valid email', () => {
+      expect(validateEmail('user@example.com', transloco)).toBeNull();
+    });
   });
 
-  it('should return null for a valid email', () => {
-    expect(validateEmail('user@example.com')).toBeNull();
-  });
-});
+  describe('validatePassword', () => {
+    it('should return a message for an empty value', () => {
+      expect(validatePassword('', transloco)).toBe('Password is required.');
+    });
 
-describe('validatePassword', () => {
-  it('should return a message for an empty value', () => {
-    expect(validatePassword('')).toBe('Password is required.');
-  });
+    it('should return a message for a value under the minimum length', () => {
+      expect(validatePassword('abc', transloco)).toBe('Password must be at least 6 characters.');
+    });
 
-  it('should return a message for a value under the minimum length', () => {
-    expect(validatePassword('abc')).toBe('Password must be at least 6 characters.');
-  });
-
-  it('should return null for a valid password', () => {
-    expect(validatePassword('abcdef')).toBeNull();
-  });
-});
-
-describe('validateConfirmPassword', () => {
-  it('should return a message for an empty value', () => {
-    expect(validateConfirmPassword('', 'abcdef')).toBe('Please confirm your password.');
+    it('should return null for a valid password', () => {
+      expect(validatePassword('abcdef', transloco)).toBeNull();
+    });
   });
 
-  it('should return a message when the values do not match', () => {
-    expect(validateConfirmPassword('abcdez', 'abcdef')).toBe('Passwords do not match.');
-  });
+  describe('validateConfirmPassword', () => {
+    it('should return a message for an empty value', () => {
+      expect(validateConfirmPassword('', 'abcdef', transloco)).toBe('Please confirm your password.');
+    });
 
-  it('should return null when the values match', () => {
-    expect(validateConfirmPassword('abcdef', 'abcdef')).toBeNull();
+    it('should return a message when the values do not match', () => {
+      expect(validateConfirmPassword('abcdez', 'abcdef', transloco)).toBe(
+        'Passwords do not match.',
+      );
+    });
+
+    it('should return null when the values match', () => {
+      expect(validateConfirmPassword('abcdef', 'abcdef', transloco)).toBeNull();
+    });
   });
 });

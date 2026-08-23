@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { DiscoverComponent } from './discover';
 import { ListingService } from '../../application/services/listing.service';
+import { getTranslocoTestingModule } from '../../../testing/transloco-testing';
 
 describe('DiscoverComponent', () => {
   let loadLatestSpy: ReturnType<typeof vi.fn>;
@@ -11,7 +12,7 @@ describe('DiscoverComponent', () => {
     searchSpy = vi.fn().mockResolvedValue(undefined);
 
     TestBed.configureTestingModule({
-      imports: [DiscoverComponent],
+      imports: [DiscoverComponent, getTranslocoTestingModule()],
       providers: [
         {
           provide: ListingService,

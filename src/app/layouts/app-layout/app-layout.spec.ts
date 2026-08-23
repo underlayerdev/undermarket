@@ -4,6 +4,7 @@ import { Subject } from 'rxjs';
 import { AppLayoutComponent } from './app-layout';
 import { AuthService } from '../../application/services/auth.service';
 import { NOTIFICATION_PROVIDER } from '../../core/configuration/tokens';
+import { getTranslocoTestingModule } from '../../../testing/transloco-testing';
 
 describe('AppLayoutComponent', () => {
   let navigateSpy: ReturnType<typeof vi.fn>;
@@ -16,7 +17,7 @@ describe('AppLayoutComponent', () => {
     logoutSpy = vi.fn().mockResolvedValue(undefined);
 
     TestBed.configureTestingModule({
-      imports: [AppLayoutComponent],
+      imports: [AppLayoutComponent, getTranslocoTestingModule()],
       providers: [
         { provide: AuthService, useValue: { currentUser: () => null, logout: logoutSpy } },
         {
@@ -41,7 +42,7 @@ describe('AppLayoutComponent', () => {
 
   it('should offer Home, New Listing, Settings, and Sign out in the mobile sidebar', () => {
     const fixture = TestBed.createComponent(AppLayoutComponent);
-    const items = fixture.componentInstance.sidebarItems;
+    const items = fixture.componentInstance.sidebarItems();
 
     expect(items).toHaveLength(4);
     expect(items.map((item) => item.label)).toEqual([
@@ -56,7 +57,7 @@ describe('AppLayoutComponent', () => {
     const fixture = TestBed.createComponent(AppLayoutComponent);
     fixture.componentInstance.sidebarOpen.set(true);
 
-    await fixture.componentInstance.onItemSelected(fixture.componentInstance.sidebarItems[2]);
+    await fixture.componentInstance.onItemSelected(fixture.componentInstance.sidebarItems()[2]);
 
     expect(navigateByUrlSpy).toHaveBeenCalledWith('/settings');
     expect(fixture.componentInstance.sidebarOpen()).toBe(false);
@@ -65,7 +66,7 @@ describe('AppLayoutComponent', () => {
   it('should log out and navigate to /login when the sign-out item is selected', async () => {
     const fixture = TestBed.createComponent(AppLayoutComponent);
 
-    await fixture.componentInstance.onItemSelected(fixture.componentInstance.sidebarItems[3]);
+    await fixture.componentInstance.onItemSelected(fixture.componentInstance.sidebarItems()[3]);
 
     expect(logoutSpy).toHaveBeenCalled();
     expect(navigateByUrlSpy).toHaveBeenCalledWith('/login');

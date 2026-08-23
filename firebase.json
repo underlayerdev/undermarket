@@ -4,9 +4,6 @@
   },
   "hosting": {
     "public": "dist/undermarket/browser",
-    "i18n": {
-      "root": "/"
-    },
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
     "rewrites": [
       {

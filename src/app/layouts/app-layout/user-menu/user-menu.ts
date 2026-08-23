@@ -1,6 +1,7 @@
 import { CdkMenu, CdkMenuItem, CdkMenuTrigger } from '@angular/cdk/menu';
 import { ChangeDetectionStrategy, Component, inject, input, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
+import { TranslocoDirective } from '@jsverse/transloco';
 import { AuthService } from '../../../application/services/auth.service';
 import { AvatarComponent, IconComponent, ListItemComponent } from '@underlayerdev/ui';
 
@@ -15,6 +16,7 @@ import { AvatarComponent, IconComponent, ListItemComponent } from '@underlayerde
     AvatarComponent,
     IconComponent,
     ListItemComponent,
+    TranslocoDirective,
   ],
   templateUrl: './user-menu.html',
   styleUrl: './user-menu.scss',

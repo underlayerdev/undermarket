@@ -1,34 +1,38 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
+import { TranslocoService } from '@jsverse/transloco';
 
-const ERROR_MESSAGES: Record<string, string> = {
-  'auth/email-already-in-use': $localize`:@@errors.emailInUse:This email address is already registered.`,
-  'auth/wrong-password': $localize`:@@errors.wrongPassword:Incorrect password. Please try again.`,
-  'auth/user-not-found': $localize`:@@errors.userNotFound:No account found with this email address.`,
-  'auth/invalid-credential': $localize`:@@errors.invalidCredential:Incorrect email or password. If you signed up with Google, use the button above instead.`,
-  'auth/weak-password': $localize`:@@errors.weakPassword:Password is too weak. Use at least 6 characters.`,
-  'auth/invalid-email': $localize`:@@auth.emailInvalid:Please enter a valid email address.`,
-  'permission-denied': $localize`:@@errors.permissionDenied:You do not have permission to perform this action.`,
-  'not-found': $localize`:@@errors.notFound:The requested resource was not found.`,
+const ERROR_KEYS: Record<string, string> = {
+  'auth/email-already-in-use': 'errors.emailInUse',
+  'auth/wrong-password': 'errors.wrongPassword',
+  'auth/user-not-found': 'errors.userNotFound',
+  'auth/invalid-credential': 'errors.invalidCredential',
+  'auth/weak-password': 'errors.weakPassword',
+  'auth/invalid-email': 'auth.emailInvalid',
+  'permission-denied': 'errors.permissionDenied',
+  'not-found': 'errors.notFound',
 };
 
-const FALLBACK_MESSAGE = $localize`:@@errors.fallback:Something went wrong. Please try again.`;
+const FALLBACK_KEY = 'errors.fallback';
 
 @Injectable({ providedIn: 'root' })
 export class ErrorService {
+  private readonly transloco = inject(TranslocoService);
+
   toUserMessage(error: unknown): string {
     if (error instanceof Error) {
-      for (const code of Object.keys(ERROR_MESSAGES)) {
+      for (const code of Object.keys(ERROR_KEYS)) {
         if (error.message.includes(code)) {
-          return ERROR_MESSAGES[code];
+          return this.transloco.translate(ERROR_KEYS[code]);
         }
       }
     }
 
     if (typeof error === 'object' && error !== null && 'code' in error) {
       const code = (error as { code: string }).code;
-      return ERROR_MESSAGES[code] ?? FALLBACK_MESSAGE;
+      const key = ERROR_KEYS[code] ?? FALLBACK_KEY;
+      return this.transloco.translate(key);
     }
 
-    return FALLBACK_MESSAGE;
+    return this.transloco.translate(FALLBACK_KEY);
   }
 }

@@ -1,7 +1,14 @@
+import { TestBed } from '@angular/core/testing';
 import { CloudinaryImageStorage } from './cloudinary-image-storage';
+import { getTranslocoTestingModule } from '../../../testing/transloco-testing';
 
 describe('CloudinaryImageStorage', () => {
   const file = new File(['data'], 'lamp.jpg', { type: 'image/jpeg' });
+
+  function createStorage(): CloudinaryImageStorage {
+    TestBed.configureTestingModule({ imports: [getTranslocoTestingModule()] });
+    return TestBed.runInInjectionContext(() => new CloudinaryImageStorage());
+  }
 
   afterEach(() => {
     vi.restoreAllMocks();
@@ -13,7 +20,7 @@ describe('CloudinaryImageStorage', () => {
         status: 200,
       }),
     );
-    const storage = new CloudinaryImageStorage();
+    const storage = createStorage();
 
     const url = await storage.upload(file);
 
@@ -28,7 +35,7 @@ describe('CloudinaryImageStorage', () => {
 
   it('should throw a user-facing error when the upload fails', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(null, { status: 400 }));
-    const storage = new CloudinaryImageStorage();
+    const storage = createStorage();
 
     await expect(storage.upload(file)).rejects.toThrow('Failed to upload image. Please try again.');
   });

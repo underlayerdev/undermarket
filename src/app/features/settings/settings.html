@@ -1,35 +1,29 @@
 <div class="ul-container-form">
   <div class="ul-content ul-pt-8">
-    <h1 class="ul-typography-headline-xl-extrablack ul-mb-8" i18n="@@settings.title">Settings</h1>
+    <ng-container *transloco="let t">
+      <h1 class="ul-typography-headline-xl-extrablack ul-mb-8">{{ t('settings.title') }}</h1>
 
-    <div class="ul-gap-6" style="display: flex; flex-direction: column">
-      <ul-card
-        cardTitle="Appearance"
-        i18n-cardTitle="@@settings.appearance"
-        cardDirection="vertical"
-      >
-        <ul-select
-          label="Theme"
-          i18n-label="@@settings.themeLabel"
-          placeholder="Select theme"
-          i18n-placeholder="@@settings.themePlaceholder"
-          [options]="themeOptions"
-          [(value)]="themeValue"
-          (valueChange)="onThemeChange($event)"
-        />
-      </ul-card>
+      <div class="ul-gap-6" style="display: flex; flex-direction: column">
+        <ul-card [cardTitle]="t('settings.appearance')" cardDirection="vertical">
+          <ul-select
+            [label]="t('settings.themeLabel')"
+            [placeholder]="t('settings.themePlaceholder')"
+            [options]="themeOptions()"
+            [(value)]="themeValue"
+            (valueChange)="onThemeChange($event)"
+          />
+        </ul-card>
 
-      <ul-card cardTitle="Language" i18n-cardTitle="@@settings.language" cardDirection="vertical">
-        <ul-select
-          label="Display language"
-          i18n-label="@@settings.languageLabel"
-          placeholder="Select language"
-          i18n-placeholder="@@settings.languagePlaceholder"
-          [options]="languageOptions"
-          [(value)]="languageValue"
-          (valueChange)="onLanguageChange($event)"
-        />
-      </ul-card>
-    </div>
+        <ul-card [cardTitle]="t('settings.language')" cardDirection="vertical">
+          <ul-select
+            [label]="t('settings.languageLabel')"
+            [placeholder]="t('settings.languagePlaceholder')"
+            [options]="languageOptions"
+            [(value)]="languageValue"
+            (valueChange)="onLanguageChange($event)"
+          />
+        </ul-card>
+      </div>
+    </ng-container>
   </div>
 </div>

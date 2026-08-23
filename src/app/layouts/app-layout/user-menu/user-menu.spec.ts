@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { UserMenuComponent } from './user-menu';
 import { AuthService } from '../../../application/services/auth.service';
+import { getTranslocoTestingModule } from '../../../../testing/transloco-testing';
 
 describe('UserMenuComponent', () => {
   let logoutSpy: ReturnType<typeof vi.fn>;
@@ -12,7 +13,7 @@ describe('UserMenuComponent', () => {
     navigateByUrlSpy = vi.fn().mockResolvedValue(true);
 
     TestBed.configureTestingModule({
-      imports: [UserMenuComponent],
+      imports: [UserMenuComponent, getTranslocoTestingModule()],
       providers: [
         { provide: AuthService, useValue: { logout: logoutSpy } },
         { provide: Router, useValue: { navigateByUrl: navigateByUrlSpy } },

@@ -1,3 +1,5 @@
+import type { TranslocoService } from '@jsverse/transloco';
+
 const EMAIL_PATTERN = /^[^\s@,]+@[^\s@,]+\.[^\s@,]+$/;
 const PASSWORD_MIN_LENGTH = 6;
 
@@ -5,19 +7,19 @@ export function isValidEmail(value: string): boolean {
   return !!value.trim() && EMAIL_PATTERN.test(value.trim());
 }
 
-export function validateEmail(value: string): string | null {
+export function validateEmail(value: string, transloco: TranslocoService): string | null {
   const trimmed = value.trim();
-  if (!trimmed) return $localize`:@@auth.emailRequired:Email is required.`;
+  if (!trimmed) return transloco.translate('auth.emailRequired');
   if (!EMAIL_PATTERN.test(trimmed)) {
-    return $localize`:@@auth.emailInvalid:Please enter a valid email address.`;
+    return transloco.translate('auth.emailInvalid');
   }
   return null;
 }
 
-export function validatePassword(value: string): string | null {
-  if (!value) return $localize`:@@auth.passwordRequired:Password is required.`;
+export function validatePassword(value: string, transloco: TranslocoService): string | null {
+  if (!value) return transloco.translate('auth.passwordRequired');
   if (value.length < PASSWORD_MIN_LENGTH) {
-    return $localize`:@@auth.passwordTooShort:Password must be at least ${PASSWORD_MIN_LENGTH}:minLength: characters.`;
+    return transloco.translate('auth.passwordTooShort', { minLength: PASSWORD_MIN_LENGTH });
   }
   return null;
 }
@@ -25,11 +27,11 @@ export function validatePassword(value: string): string | null {
 export function validateConfirmPassword(
   confirmValue: string,
   passwordValue: string,
+  transloco: TranslocoService,
 ): string | null {
-  if (!confirmValue)
-    return $localize`:@@auth.confirmPasswordRequired:Please confirm your password.`;
+  if (!confirmValue) return transloco.translate('auth.confirmPasswordRequired');
   if (confirmValue !== passwordValue) {
-    return $localize`:@@auth.passwordsDoNotMatch:Passwords do not match.`;
+    return transloco.translate('auth.passwordsDoNotMatch');
   }
   return null;
 }

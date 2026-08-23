@@ -1,7 +1,7 @@
-<div class="app-shell">
+<div class="app-shell" *transloco="let t">
   <ul-sidebar
     class="md:ul-hidden"
-    [items]="sidebarItems"
+    [items]="sidebarItems()"
     [selectedIndex]="selectedIndex()"
     [(open)]="sidebarOpen"
     (itemSelected)="onItemSelected($event)"
@@ -21,8 +21,7 @@
 
       <div class="app-shell__search" ul-navbar-search>
         <ul-input
-          placeholder="Search for anything..."
-          i18n-placeholder="@@common.searchPlaceholder"
+          [placeholder]="t('common.searchPlaceholder')"
           size="lg"
           [(value)]="searchQuery"
           (inputEnter)="onSearchSubmit()"

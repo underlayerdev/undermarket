@@ -1,111 +1,99 @@
-@if (step() === 'email') {
-  <h1 class="ul-typography-headline-l-extrablack ul-mb-1 auth-title" i18n="@@login.title">
-    Welcome back
-  </h1>
-  <p
-    class="ul-typography-body-m-regular ul-mb-6 ul-text-secondary auth-subtitle"
-    i18n="@@login.subtitle"
-  >
-    Sign in to buy and sell in the world's most open marketplace.
-  </p>
+<ng-container *transloco="let t">
+  @if (step() === 'email') {
+    <h1 class="ul-typography-headline-l-extrablack ul-mb-1 auth-title">{{ t('login.title') }}</h1>
+    <p class="ul-typography-body-m-regular ul-mb-6 ul-text-secondary auth-subtitle">
+      {{ t('login.subtitle') }}
+    </p>
 
-  <div class="ul-gap-4 auth-form">
-    <ul-input
-      label="Email"
-      i18n-label="@@login.emailLabel"
-      placeholder="you@example.com"
-      type="email"
-      [required]="true"
-      [(value)]="emailValue"
-      [error]="!!emailError()"
-      [errorText]="emailError()"
-      (inputEnter)="onContinue()"
-    />
+    <div class="ul-gap-4 auth-form">
+      <ul-input
+        [label]="t('login.emailLabel')"
+        placeholder="you@example.com"
+        type="email"
+        [required]="true"
+        [(value)]="emailValue"
+        [error]="!!emailError()"
+        [errorText]="emailError()"
+        (inputEnter)="onContinue()"
+      />
 
-    @if (errorMessage(); as msg) {
-      <div
-        role="alert"
-        class="ul-py-2 ul-px-3 ul-bg-grey-lvl-1 ul-border-red ul-rounded-3 ul-text-red auth-form__error-banner"
+      @if (errorMessage(); as msg) {
+        <div
+          role="alert"
+          class="ul-py-2 ul-px-3 ul-bg-grey-lvl-1 ul-border-red ul-rounded-3 ul-text-red auth-form__error-banner"
+        >
+          {{ msg }}
+        </div>
+      }
+
+      <ul-button
+        theme="fill-purple"
+        size="md"
+        type="button"
+        [disabled]="isLoading() || !isEmailValid()"
+        (buttonClick)="onContinue()"
       >
-        {{ msg }}
-      </div>
-    }
-
-    <ul-button
-      theme="fill-purple"
-      size="md"
-      type="button"
-      [disabled]="isLoading() || !isEmailValid()"
-      (buttonClick)="onContinue()"
-    >
-      <ng-container i18n="@@common.continue">Continue</ng-container>
-    </ul-button>
-  </div>
-}
-
-@if (step() === 'password') {
-  <h1 class="ul-typography-headline-l-extrablack ul-mb-1 auth-title" i18n="@@login.passwordTitle">
-    Enter your password
-  </h1>
-  <p
-    class="ul-typography-body-m-regular ul-mb-6 ul-text-secondary auth-subtitle"
-    i18n="@@login.signingInAs"
-  >
-    Signing in as <strong>{{ emailValue() }}</strong>
-  </p>
-
-  <div class="ul-gap-4 auth-form">
-    <ul-input
-      label="Password"
-      i18n-label="@@common.passwordLabel"
-      placeholder="Your password"
-      i18n-placeholder="@@login.passwordPlaceholder"
-      type="password"
-      [required]="true"
-      [(value)]="passwordValue"
-      [error]="!!passwordError()"
-      [errorText]="passwordError()"
-      (inputEnter)="onLogin()"
-    />
-
-    @if (errorMessage(); as msg) {
-      <div
-        role="alert"
-        class="ul-py-2 ul-px-3 ul-bg-grey-lvl-1 ul-border-red ul-rounded-3 ul-text-red auth-form__error-banner"
-      >
-        {{ msg }}
-      </div>
-    }
-
-    <ul-button
-      theme="fill-purple"
-      size="md"
-      type="button"
-      [disabled]="isLoading()"
-      (buttonClick)="onLogin()"
-    >
-      {{ signInButtonLabel() }}
-    </ul-button>
-
-    <ul-button theme="outline-white" size="md" type="button" (click)="onBack()">
-      <ng-container i18n="@@common.back">Back</ng-container>
-    </ul-button>
-
-    <div class="ul-typography-caption-l-regular ul-text-secondary auth-form__links">
-      <a routerLink="/forgot-password" i18n="@@login.forgotPassword">Forgot password?</a>
+        {{ t('common.continue') }}
+      </ul-button>
     </div>
+  }
+
+  @if (step() === 'password') {
+    <h1 class="ul-typography-headline-l-extrablack ul-mb-1 auth-title">
+      {{ t('login.passwordTitle') }}
+    </h1>
+    <p class="ul-typography-body-m-regular ul-mb-6 ul-text-secondary auth-subtitle">
+      {{ t('login.signingInAsText') }} <strong>{{ emailValue() }}</strong>
+    </p>
+
+    <div class="ul-gap-4 auth-form">
+      <ul-input
+        [label]="t('common.passwordLabel')"
+        [placeholder]="t('login.passwordPlaceholder')"
+        type="password"
+        [required]="true"
+        [(value)]="passwordValue"
+        [error]="!!passwordError()"
+        [errorText]="passwordError()"
+        (inputEnter)="onLogin()"
+      />
+
+      @if (errorMessage(); as msg) {
+        <div
+          role="alert"
+          class="ul-py-2 ul-px-3 ul-bg-grey-lvl-1 ul-border-red ul-rounded-3 ul-text-red auth-form__error-banner"
+        >
+          {{ msg }}
+        </div>
+      }
+
+      <ul-button
+        theme="fill-purple"
+        size="md"
+        type="button"
+        [disabled]="isLoading()"
+        (buttonClick)="onLogin()"
+      >
+        {{ signInButtonLabel() }}
+      </ul-button>
+
+      <ul-button theme="outline-white" size="md" type="button" (click)="onBack()">
+        {{ t('common.back') }}
+      </ul-button>
+
+      <div class="ul-typography-caption-l-regular ul-text-secondary auth-form__links">
+        <a routerLink="/forgot-password">{{ t('login.forgotPassword') }}</a>
+      </div>
+    </div>
+  }
+
+  <div class="ul-gap-3 ul-text-tertiary auth-form__divider">
+    <span>{{ t('common.or') }}</span>
   </div>
-}
 
-<div class="ul-gap-3 ul-text-tertiary auth-form__divider">
-  <span i18n="@@common.or">or</span>
-</div>
+  <um-google-sign-in-button />
 
-<um-google-sign-in-button />
-
-<p
-  class="ul-typography-caption-l-regular ul-text-secondary auth-form__footer"
-  i18n="@@login.noAccount"
->
-  Don't have an account? <a routerLink="/register">Create one</a>
-</p>
+  <p class="ul-typography-caption-l-regular ul-text-secondary auth-form__footer">
+    {{ t('login.noAccountText') }} <a routerLink="/register">{{ t('login.createAccountLink') }}</a>
+  </p>
+</ng-container>

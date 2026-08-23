@@ -1,9 +1,12 @@
+import { provideHttpClient } from '@angular/common/http';
 import {
   ApplicationConfig,
+  isDevMode,
   provideBrowserGlobalErrorListeners,
   provideZonelessChangeDetection,
 } from '@angular/core';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
+import { provideTransloco } from '@jsverse/transloco';
 import { initializeApp } from 'firebase/app';
 import {
   browserLocalPersistence,
@@ -29,6 +32,7 @@ import { FirestoreUserRepository } from './infrastructure/firebase/firestore/fir
 import { FirestoreListingRepository } from './infrastructure/firebase/firestore/firestore-listing.repository';
 import { CloudinaryImageStorage } from './infrastructure/cloudinary/cloudinary-image-storage';
 import { MockNotificationProvider } from './infrastructure/mock/mock-notification.provider';
+import { TranslocoHttpLoader } from './core/i18n/transloco-http-loader';
 
 const firebaseApp = initializeApp(environment.firebase);
 
@@ -37,6 +41,17 @@ export const appConfig: ApplicationConfig = {
     provideBrowserGlobalErrorListeners(),
     provideZonelessChangeDetection(),
     provideRouter(routes, withComponentInputBinding()),
+    provideHttpClient(),
+    provideTransloco({
+      config: {
+        availableLangs: ['en', 'es'],
+        defaultLang: 'en',
+        fallbackLang: 'en',
+        reRenderOnLangChange: true,
+        prodMode: !isDevMode(),
+      },
+      loader: TranslocoHttpLoader,
+    }),
     { provide: FIREBASE_APP, useValue: firebaseApp },
     {
       provide: FIREBASE_AUTH,

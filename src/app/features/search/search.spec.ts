@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { SearchComponent } from './search';
 import { ListingService } from '../../application/services/listing.service';
+import { getTranslocoTestingModule } from '../../../testing/transloco-testing';
 
 describe('SearchComponent', () => {
   let searchSpy: ReturnType<typeof vi.fn>;
@@ -9,7 +10,7 @@ describe('SearchComponent', () => {
     searchSpy = vi.fn().mockResolvedValue(undefined);
 
     TestBed.configureTestingModule({
-      imports: [SearchComponent],
+      imports: [SearchComponent, getTranslocoTestingModule()],
       providers: [
         {
           provide: ListingService,

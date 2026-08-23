@@ -4,11 +4,12 @@ import { Router } from '@angular/router';
 import { NewListingComponent } from './new-listing';
 import { AuthService } from '../../../application/services/auth.service';
 import { ListingService } from '../../../application/services/listing.service';
+import { getTranslocoTestingModule } from '../../../../testing/transloco-testing';
 
 describe('NewListingComponent', () => {
   function setup() {
     TestBed.configureTestingModule({
-      imports: [NewListingComponent],
+      imports: [NewListingComponent, getTranslocoTestingModule()],
       providers: [
         { provide: AuthService, useValue: { currentUser: () => null } },
         { provide: ListingService, useValue: { create: vi.fn() } },

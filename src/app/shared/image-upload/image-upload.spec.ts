@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import imageCompression from 'browser-image-compression';
 import { ImageUploadComponent } from './image-upload';
+import { getTranslocoTestingModule } from '../../../testing/transloco-testing';
 
 vi.mock('browser-image-compression', () => ({
   default: vi.fn(async (file: File) => file),
@@ -18,7 +19,7 @@ describe('ImageUploadComponent', () => {
     URL.revokeObjectURL = vi.fn();
 
     TestBed.configureTestingModule({
-      imports: [ImageUploadComponent],
+      imports: [ImageUploadComponent, getTranslocoTestingModule()],
     });
   });
 

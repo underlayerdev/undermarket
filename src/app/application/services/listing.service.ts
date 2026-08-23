@@ -1,4 +1,5 @@
 import { inject, Injectable, signal } from '@angular/core';
+import { TranslocoService } from '@jsverse/transloco';
 import { IMAGE_STORAGE, LISTING_REPOSITORY } from '../../core/configuration/tokens';
 import type { Listing, ListingId } from '../../domain/listing/listing.model';
 import type { ListingSearchFilters } from '../../domain/listing/listing.repository';
@@ -11,6 +12,7 @@ export class ListingService {
   private readonly listingRepository = inject(LISTING_REPOSITORY);
   private readonly imageStorage = inject(IMAGE_STORAGE);
   private readonly authService = inject(AuthService);
+  private readonly transloco = inject(TranslocoService);
 
   readonly listings = signal<Listing[]>([]);
 
@@ -29,16 +31,12 @@ export class ListingService {
   async create(data: NewListingInput, images: File[] = []): Promise<Listing> {
     const currentUser = this.authService.currentUser();
     if (!currentUser)
-      throw new Error(
-        $localize`:@@listingService.mustBeSignedIn:You must be signed in to post a listing.`,
-      );
+      throw new Error(this.transloco.translate('listingService.mustBeSignedIn'));
     if (data.ownerId !== currentUser.id) {
-      throw new Error(
-        $localize`:@@listingService.ownAccountOnly:You can only create listings for your own account.`,
-      );
+      throw new Error(this.transloco.translate('listingService.ownAccountOnly'));
     }
 
-    const validationError = validateNewListing(data);
+    const validationError = validateNewListing(data, this.transloco);
     if (validationError) throw new Error(validationError);
 
     const listing = await this.listingRepository.create({

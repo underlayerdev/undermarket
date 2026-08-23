@@ -10,6 +10,7 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
+import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { ButtonComponent, IconComponent } from '@underlayerdev/ui';
 import { compressImage } from '../utils/image-compression';
 
@@ -27,13 +28,15 @@ function isSameFile(a: File, b: File): boolean {
   selector: 'um-image-upload',
   templateUrl: './image-upload.html',
   styleUrl: './image-upload.scss',
-  imports: [ButtonComponent, IconComponent, DragDropModule],
+  imports: [ButtonComponent, IconComponent, DragDropModule, TranslocoDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ImageUploadComponent {
   readonly images = model<File[]>([]);
   readonly maxFiles = input(8);
   readonly maxFileSizeMb = input(10);
+
+  private readonly transloco = inject(TranslocoService);
 
   protected readonly fileInput = viewChild<ElementRef<HTMLInputElement>>('fileInput');
   protected readonly previews = signal<ImagePreview[]>([]);
@@ -50,7 +53,7 @@ export class ImageUploadComponent {
   }
 
   protected photoAltText(index: number): string {
-    return $localize`:@@imageUpload.photoAlt:Photo ${index + 1}:photoNumber:`;
+    return this.transloco.translate('imageUpload.photoAlt', { photoNumber: index + 1 });
   }
 
   protected async onFilesSelected(event: Event): Promise<void> {
@@ -64,14 +67,14 @@ export class ImageUploadComponent {
     const hadDuplicates = unique.length < selected.length;
 
     if (!unique.length) {
-      this.error.set($localize`:@@imageUpload.alreadyAdded:That photo has already been added.`);
+      this.error.set(this.transloco.translate('imageUpload.alreadyAdded'));
       return;
     }
 
     const remainingSlots = this.maxFiles() - this.previews().length;
     if (remainingSlots <= 0) {
       this.error.set(
-        $localize`:@@imageUpload.maxFilesReached:You can upload up to ${this.maxFiles()}:maxFiles: photos.`,
+        this.transloco.translate('imageUpload.maxFilesReached', { maxFiles: this.maxFiles() }),
       );
       return;
     }
@@ -80,9 +83,9 @@ export class ImageUploadComponent {
     const hadTooMany = unique.length > toAdd.length;
     this.error.set(
       hadTooMany
-        ? $localize`:@@imageUpload.maxFilesReached:You can upload up to ${this.maxFiles()}:maxFiles: photos.`
+        ? this.transloco.translate('imageUpload.maxFilesReached', { maxFiles: this.maxFiles() })
         : hadDuplicates
-          ? $localize`:@@imageUpload.someSkipped:Some photos were already added and were skipped.`
+          ? this.transloco.translate('imageUpload.someSkipped')
           : null,
     );
 
@@ -98,7 +101,10 @@ export class ImageUploadComponent {
       const compressed = await compressImage(preview.file);
       if (compressed.size / (1024 * 1024) > this.maxFileSizeMb()) {
         this.error.set(
-          $localize`:@@imageUpload.fileTooLarge:"${preview.file.name}:fileName:" is too large (max ${this.maxFileSizeMb()}:maxSizeMb:MB).`,
+          this.transloco.translate('imageUpload.fileTooLarge', {
+            fileName: preview.file.name,
+            maxSizeMb: this.maxFileSizeMb(),
+          }),
         );
         this.removePreview(preview);
         continue;

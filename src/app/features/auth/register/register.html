@@ -1,78 +1,68 @@
-<h1 class="ul-typography-headline-l-extrablack ul-mb-1 auth-title" i18n="@@register.title">
-  Create your account
-</h1>
-<p
-  class="ul-typography-body-m-regular ul-mb-6 ul-text-secondary auth-subtitle"
-  i18n="@@register.subtitle"
->
-  Start buying and selling today.
-</p>
-
-<div class="ul-gap-4 auth-form">
-  <ul-input
-    label="Email"
-    i18n-label="@@login.emailLabel"
-    placeholder="you@example.com"
-    type="email"
-    [required]="true"
-    [(value)]="emailValue"
-    [error]="!!emailError()"
-    [errorText]="emailError()"
-  />
-
-  <ul-input
-    label="Password"
-    i18n-label="@@common.passwordLabel"
-    placeholder="Min. 6 characters"
-    i18n-placeholder="@@register.passwordPlaceholder"
-    type="password"
-    [required]="true"
-    [(value)]="passwordValue"
-    [error]="!!passwordError()"
-    [errorText]="passwordError()"
-  />
-
-  <ul-input
-    label="Confirm password"
-    i18n-label="@@register.confirmPasswordLabel"
-    placeholder="Repeat your password"
-    i18n-placeholder="@@register.confirmPasswordPlaceholder"
-    type="password"
-    [required]="true"
-    [(value)]="confirmPasswordValue"
-    [error]="!!confirmPasswordError()"
-    [errorText]="confirmPasswordError()"
-  />
-
-  @if (errorMessage(); as msg) {
-    <div
-      role="alert"
-      class="ul-py-2 ul-px-3 ul-bg-grey-lvl-1 ul-border-red ul-rounded-3 ul-text-red auth-form__error-banner"
-    >
-      {{ msg }}
-    </div>
-  }
-
-  <ul-button
-    theme="fill-purple"
-    size="md"
-    type="button"
-    [disabled]="isLoading()"
-    (buttonClick)="onRegister()"
-  >
-    {{ registerButtonLabel() }}
-  </ul-button>
-
-  <div class="ul-gap-3 ul-text-tertiary auth-form__divider">
-    <span i18n="@@common.or">or</span>
-  </div>
-
-  <um-google-sign-in-button />
-
-  <p
-    class="ul-typography-caption-l-regular ul-text-secondary auth-form__footer"
-    i18n="@@register.hasAccount"
-  >
-    Already have an account? <a routerLink="/login">Sign in</a>
+<ng-container *transloco="let t">
+  <h1 class="ul-typography-headline-l-extrablack ul-mb-1 auth-title">{{ t('register.title') }}</h1>
+  <p class="ul-typography-body-m-regular ul-mb-6 ul-text-secondary auth-subtitle">
+    {{ t('register.subtitle') }}
   </p>
-</div>
+
+  <div class="ul-gap-4 auth-form">
+    <ul-input
+      [label]="t('login.emailLabel')"
+      placeholder="you@example.com"
+      type="email"
+      [required]="true"
+      [(value)]="emailValue"
+      [error]="!!emailError()"
+      [errorText]="emailError()"
+    />
+
+    <ul-input
+      [label]="t('common.passwordLabel')"
+      [placeholder]="t('register.passwordPlaceholder')"
+      type="password"
+      [required]="true"
+      [(value)]="passwordValue"
+      [error]="!!passwordError()"
+      [errorText]="passwordError()"
+    />
+
+    <ul-input
+      [label]="t('register.confirmPasswordLabel')"
+      [placeholder]="t('register.confirmPasswordPlaceholder')"
+      type="password"
+      [required]="true"
+      [(value)]="confirmPasswordValue"
+      [error]="!!confirmPasswordError()"
+      [errorText]="confirmPasswordError()"
+    />
+
+    @if (errorMessage(); as msg) {
+      <div
+        role="alert"
+        class="ul-py-2 ul-px-3 ul-bg-grey-lvl-1 ul-border-red ul-rounded-3 ul-text-red auth-form__error-banner"
+      >
+        {{ msg }}
+      </div>
+    }
+
+    <ul-button
+      theme="fill-purple"
+      size="md"
+      type="button"
+      [disabled]="isLoading()"
+      (buttonClick)="onRegister()"
+    >
+      {{ registerButtonLabel() }}
+    </ul-button>
+
+    <div class="ul-gap-3 ul-text-tertiary auth-form__divider">
+      <span>{{ t('common.or') }}</span>
+    </div>
+
+    <um-google-sign-in-button />
+
+    <p class="ul-typography-caption-l-regular ul-text-secondary auth-form__footer">
+      {{ t('register.hasAccountText') }}
+      <a routerLink="/login">{{ t('register.signInLink') }}</a>
+    </p>
+  </div>
+</ng-container>

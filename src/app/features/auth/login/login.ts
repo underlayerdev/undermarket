@@ -8,6 +8,7 @@ import {
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Router } from '@angular/router';
+import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { AuthService } from '../../../application/services/auth.service';
 import { ErrorService } from '../../../application/services/error.service';
 import { SeoService } from '../../../core/seo/seo.service';
@@ -24,7 +25,7 @@ type Step = 'email' | 'password';
 @Component({
   selector: 'um-login',
   standalone: true,
-  imports: [ButtonComponent, InputComponent, RouterLink, GoogleSignInButtonComponent],
+  imports: [ButtonComponent, InputComponent, RouterLink, GoogleSignInButtonComponent, TranslocoDirective],
   templateUrl: './login.html',
   styleUrl: './login.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -34,6 +35,7 @@ export class LoginComponent implements OnInit {
   private readonly errorService = inject(ErrorService);
   private readonly seoService = inject(SeoService);
   private readonly router = inject(Router);
+  private readonly transloco = inject(TranslocoService);
 
   readonly step = signal<Step>('email');
   readonly errorMessage = signal<string | null>(null);
@@ -44,24 +46,27 @@ export class LoginComponent implements OnInit {
   readonly emailTouched = signal(false);
   readonly passwordTouched = signal(false);
 
-  readonly emailError = computed(() =>
-    this.emailTouched() ? validateEmail(this.emailValue()) : null,
-  );
+  readonly emailError = computed(() => {
+    this.transloco.activeLang();
+    return this.emailTouched() ? validateEmail(this.emailValue(), this.transloco) : null;
+  });
 
-  readonly passwordError = computed(() =>
-    this.passwordTouched() ? validatePassword(this.passwordValue()) : null,
-  );
+  readonly passwordError = computed(() => {
+    this.transloco.activeLang();
+    return this.passwordTouched() ? validatePassword(this.passwordValue(), this.transloco) : null;
+  });
 
   readonly isEmailValid = computed(() => isValidEmail(this.emailValue()));
 
-  readonly signInButtonLabel = computed(() =>
-    this.isLoading()
-      ? $localize`:@@auth.signingIn:Signing in...`
-      : $localize`:@@auth.signIn:Sign In`,
-  );
+  readonly signInButtonLabel = computed(() => {
+    this.transloco.activeLang();
+    return this.isLoading()
+      ? this.transloco.translate('auth.signingIn')
+      : this.transloco.translate('auth.signIn');
+  });
 
   ngOnInit(): void {
-    this.seoService.setPage($localize`:@@auth.signInPageTitle:Sign In`);
+    this.seoService.setPage(this.transloco.translate('auth.signInPageTitle'));
   }
 
   onContinue(): void {

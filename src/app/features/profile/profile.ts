@@ -7,6 +7,7 @@ import {
   signal,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { AuthService } from '../../application/services/auth.service';
 import { ListingService } from '../../application/services/listing.service';
 import { UserService } from '../../application/services/user.service';
@@ -32,6 +33,7 @@ import {
     SkeletonComponent,
     StatusComponent,
     ListingPricePipe,
+    TranslocoDirective,
   ],
   templateUrl: './profile.html',
   styleUrl: './profile.scss',
@@ -42,6 +44,7 @@ export class ProfileComponent implements OnInit {
   protected readonly userService = inject(UserService);
   private readonly listingRepository = inject(LISTING_REPOSITORY);
   private readonly seoService = inject(SeoService);
+  private readonly transloco = inject(TranslocoService);
 
   readonly createListingSlug = createListingSlug;
   readonly userListings = signal<Listing[]>([]);
@@ -55,7 +58,7 @@ export class ProfileComponent implements OnInit {
   readonly avatarSrc = computed(() => this.userService.profile()?.photoUrl ?? undefined);
 
   async ngOnInit(): Promise<void> {
-    this.seoService.setPage($localize`:@@profile.pageTitle:My Profile`);
+    this.seoService.setPage(this.transloco.translate('profile.pageTitle'));
 
     const user = this.authService.currentUser();
     if (!user) return;

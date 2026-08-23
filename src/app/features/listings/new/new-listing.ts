@@ -8,6 +8,7 @@ import {
   signal,
 } from '@angular/core';
 import { Router } from '@angular/router';
+import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { AuthService } from '../../../application/services/auth.service';
 import { ErrorService } from '../../../application/services/error.service';
 import { ListingService } from '../../../application/services/listing.service';
@@ -87,6 +88,7 @@ function toNewListingInput(value: NewListingFormModel, ownerId: string): NewList
     ModalComponent,
     SelectComponent,
     TextareaComponent,
+    TranslocoDirective,
   ],
   providers: [ToastService],
   templateUrl: './new-listing.html',
@@ -101,15 +103,19 @@ export class NewListingComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly toastService = inject(ToastService);
   private readonly location = inject(Location);
+  private readonly transloco = inject(TranslocoService);
 
   readonly categoryOptions: SelectOption[] = CATEGORIES.map((category) => ({
     value: category,
     label: category,
   }));
-  readonly currencyOptions: SelectOption[] = CURRENCIES.map((currency) => ({
-    value: currency.code,
-    label: currency.label,
-  }));
+  readonly currencyOptions = computed<SelectOption[]>(() => {
+    this.transloco.activeLang();
+    return CURRENCIES.map((currency) => ({
+      value: currency.code,
+      label: this.transloco.translate(currency.labelKey),
+    }));
+  });
 
   readonly isLoading = signal(false);
   readonly imageFiles = signal<File[]>([]);
@@ -132,42 +138,48 @@ export class NewListingComponent implements OnInit {
     const whenTouched: LogicFn<unknown, boolean> = ({ state }) => state.touched();
 
     required(listing.title, {
-      message: $localize`:@@newListing.errors.titleRequired:Title is required.`,
+      message: this.transloco.translate('newListing.errors.titleRequired'),
       when: whenTouched,
     });
     minLength(listing.title, LISTING_TITLE_MIN_LENGTH, {
-      message: $localize`:@@newListing.errors.titleTooShort:Title must be at least ${LISTING_TITLE_MIN_LENGTH}:minLength: characters.`,
+      message: this.transloco.translate('newListing.errors.titleTooShort', {
+        minLength: LISTING_TITLE_MIN_LENGTH,
+      }),
       when: whenTouched,
     });
     maxLength(listing.title, LISTING_TITLE_MAX_LENGTH, {
-      message: $localize`:@@newListing.errors.titleTooLong:Title must be at most ${LISTING_TITLE_MAX_LENGTH}:maxLength: characters.`,
+      message: this.transloco.translate('newListing.errors.titleTooLong', {
+        maxLength: LISTING_TITLE_MAX_LENGTH,
+      }),
       when: whenTouched,
     });
 
     required(listing.description, {
-      message: $localize`:@@newListing.errors.descriptionRequired:Description is required.`,
+      message: this.transloco.translate('newListing.errors.descriptionRequired'),
       when: whenTouched,
     });
     maxLength(listing.description, LISTING_DESCRIPTION_MAX_LENGTH, {
-      message: $localize`:@@newListing.errors.descriptionTooLong:Description must be at most ${LISTING_DESCRIPTION_MAX_LENGTH}:maxLength: characters.`,
+      message: this.transloco.translate('newListing.errors.descriptionTooLong', {
+        maxLength: LISTING_DESCRIPTION_MAX_LENGTH,
+      }),
       when: whenTouched,
     });
 
     required(listing.currency, {
-      message: $localize`:@@newListing.errors.currencyRequired:Please select a currency.`,
+      message: this.transloco.translate('newListing.errors.currencyRequired'),
       when: whenTouched,
     });
     validate(listing.currency, ({ value, state }) =>
       state.touched() && value() && !CURRENCIES.some((currency) => currency.code === value())
         ? {
             kind: 'invalid',
-            message: $localize`:@@newListing.errors.currencyInvalid:Please select a valid currency.`,
+            message: this.transloco.translate('newListing.errors.currencyInvalid'),
           }
         : undefined,
     );
 
     required(listing.price, {
-      message: $localize`:@@newListing.errors.priceInvalid:Please enter a valid price.`,
+      message: this.transloco.translate('newListing.errors.priceInvalid'),
       when: whenTouched,
     });
     validate(listing.price, ({ value, valueOf, state }) => {
@@ -176,31 +188,31 @@ export class NewListingComponent implements OnInit {
       if (value() === '' || isNaN(n))
         return {
           kind: 'invalid',
-          message: $localize`:@@newListing.errors.priceInvalid:Please enter a valid price.`,
+          message: this.transloco.translate('newListing.errors.priceInvalid'),
         };
       if (n < 0)
         return {
           kind: 'min',
-          message: $localize`:@@newListing.errors.priceNegative:Price must be 0 or more.`,
+          message: this.transloco.translate('newListing.errors.priceNegative'),
         };
       const maxPrice = getMaxPriceForCurrency(valueOf(listing.currency) ?? DEFAULT_CURRENCY);
       if (n > maxPrice)
         return {
           kind: 'max',
-          message: $localize`:@@newListing.errors.priceTooHigh:Price must be at most ${maxPrice}:maxPrice:.`,
+          message: this.transloco.translate('newListing.errors.priceTooHigh', { maxPrice }),
         };
       return undefined;
     });
 
     required(listing.category, {
-      message: $localize`:@@newListing.errors.categoryRequired:Please select a category.`,
+      message: this.transloco.translate('newListing.errors.categoryRequired'),
       when: whenTouched,
     });
     validate(listing.category, ({ value, state }) =>
       state.touched() && value() && !CATEGORIES.includes(value() as Category)
         ? {
             kind: 'invalid',
-            message: $localize`:@@newListing.errors.categoryInvalid:Please select a valid category.`,
+            message: this.transloco.translate('newListing.errors.categoryInvalid'),
           }
         : undefined,
     );
@@ -210,11 +222,12 @@ export class NewListingComponent implements OnInit {
     () => this.isLoading() || this.listingForm().invalid() || !this.listingForm().touched(),
   );
 
-  readonly publishButtonLabel = computed(() =>
-    this.isLoading()
-      ? $localize`:@@newListing.publishing:Publishing...`
-      : $localize`:@@newListing.publish:Publish listing`,
-  );
+  readonly publishButtonLabel = computed(() => {
+    this.transloco.activeLang();
+    return this.isLoading()
+      ? this.transloco.translate('newListing.publishing')
+      : this.transloco.translate('newListing.publish');
+  });
 
   readonly hasUnsavedChanges = computed(() => {
     const value = this.listingModel();
@@ -228,7 +241,7 @@ export class NewListingComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    this.seoService.setPage($localize`:@@newListing.pageTitle:Post a Listing`);
+    this.seoService.setPage(this.transloco.translate('newListing.pageTitle'));
   }
 
   onClose(): void {

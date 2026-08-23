@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { ListingService } from '../../application/services/listing.service';
 import { SeoService } from '../../core/seo/seo.service';
 import { CATEGORIES } from '../../domain/category/category.model';
@@ -10,13 +11,14 @@ import { CardComponent, PillComponent } from '@underlayerdev/ui';
 @Component({
   selector: 'um-discover',
   standalone: true,
-  imports: [RouterLink, CardComponent, PillComponent, ListingPricePipe],
+  imports: [RouterLink, CardComponent, PillComponent, ListingPricePipe, TranslocoDirective],
   templateUrl: './discover.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DiscoverComponent implements OnInit {
   protected readonly listingService = inject(ListingService);
   private readonly seoService = inject(SeoService);
+  private readonly transloco = inject(TranslocoService);
 
   readonly createListingSlug = createListingSlug;
   readonly categories = CATEGORIES;
@@ -24,8 +26,8 @@ export class DiscoverComponent implements OnInit {
 
   ngOnInit(): void {
     this.seoService.setPage(
-      $localize`:@@discover.pageTitle:Discover`,
-      $localize`:@@discover.seoDescription:Browse secondhand listings by category on Undermarket.`,
+      this.transloco.translate('discover.pageTitle'),
+      this.transloco.translate('discover.seoDescription'),
     );
     this.listingService.loadLatest();
   }

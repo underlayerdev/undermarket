@@ -1,136 +1,114 @@
-<div class="new-listing__mobile-header md:ul-hidden ul-container-form">
-  <h2
-    class="ul-typography-headline-s-extrabold new-listing__mobile-title"
-    i18n="@@newListing.title"
-  >
-    Post a listing
-  </h2>
-  <ul-button
-    type="button"
-    theme="ghost-white"
-    [iconOnly]="true"
-    ariaLabel="Close"
-    i18n-ariaLabel="@@common.close"
-    (buttonClick)="onClose()"
-  >
-    <ul-icon icon="close" size="6" />
-  </ul-button>
-</div>
-
-<div class="ul-container-form">
-  <div class="ul-content ul-pt-8">
-    <h1
-      class="ul-typography-headline-xl-extrablack ul-mb-2 new-listing__desktop-title"
-      i18n="@@newListing.title"
+<ng-container *transloco="let t">
+  <div class="new-listing__mobile-header md:ul-hidden ul-container-form">
+    <h2 class="ul-typography-headline-s-extrabold new-listing__mobile-title">
+      {{ t('newListing.title') }}
+    </h2>
+    <ul-button
+      type="button"
+      theme="ghost-white"
+      [iconOnly]="true"
+      [ariaLabel]="t('common.close')"
+      (buttonClick)="onClose()"
     >
-      Post a listing
-    </h1>
-    <p
-      class="ul-typography-body-m-regular ul-text-secondary ul-hidden md:ul-flex l-mb-8"
-      i18n="@@newListing.subtitle"
-    >
-      Add photos and details so buyers know what you're selling.
-    </p>
-
-    <form (submit)="onFormSubmit($event)" class="new-listing__form ul-gap-5">
-      <div class="new-listing__photos">
-        <label
-          class="ul-form-field__label ul-form-field__label--md ul-form-field__label--requireds"
-        >
-          <ng-container i18n="@@newListing.photosLabel">Photos</ng-container>
-
-          @if (imageFiles().length > 0) {
-            ({{ imageFiles().length }})
-          }
-        </label>
-        <um-image-upload [(images)]="imageFiles" />
-      </div>
-      <div class="new-listing__fields">
-        <ul-input
-          label="Title"
-          i18n-label="@@newListing.titleLabel"
-          placeholder="What are you selling?"
-          i18n-placeholder="@@newListing.titlePlaceholder"
-          [formField]="listingForm.title"
-        />
-
-        <ul-textarea
-          label="Description"
-          i18n-label="@@newListing.descriptionLabel"
-          placeholder="Describe the item — condition, brand, size, etc."
-          i18n-placeholder="@@newListing.descriptionPlaceholder"
-          [rows]="5"
-          [formField]="listingForm.description"
-        />
-
-        <div class="ul-row">
-          <div class="ul-col-12 ul-col-md-3">
-            <ul-select
-              label="Currency"
-              i18n-label="@@newListing.currencyLabel"
-              placeholder="Select a currency"
-              i18n-placeholder="@@newListing.currencyPlaceholder"
-              [options]="currencyOptions"
-              [formField]="listingForm.currency"
-            />
-          </div>
-          <div class="ul-col-12 ul-col-md-3">
-            <ul-input
-              type="number"
-              label="Price"
-              i18n-label="@@newListing.priceLabel"
-              placeholder="0.00"
-              [formField]="listingForm.price"
-            />
-          </div>
-          <div class="ul-col-12 ul-col-md-6">
-            <ul-select
-              label="Category"
-              i18n-label="@@newListing.categoryLabel"
-              placeholder="Select a category"
-              i18n-placeholder="@@newListing.categoryPlaceholder"
-              [options]="categoryOptions"
-              [formField]="listingForm.category"
-            />
-          </div>
-        </div>
-
-        <div class="new-listing__submit ul-gap-4 ul-mt-2">
-          <ul-button
-            type="button"
-            theme="ghost-white"
-            class="new-listing__cancel"
-            (buttonClick)="onClose()"
-          >
-            <ng-container i18n="@@common.cancel">Cancel</ng-container>
-          </ul-button>
-          <ul-button
-            type="submit"
-            theme="fill-purple"
-            size="md"
-            [disabled]="publishButtonNotReady()"
-          >
-            {{ publishButtonLabel() }}
-          </ul-button>
-        </div>
-      </div>
-    </form>
+      <ul-icon icon="close" size="6" />
+    </ul-button>
   </div>
-</div>
 
-<ul-modal
-  [(open)]="showDiscardModal"
-  title="Discard changes?"
-  i18n-title="@@newListing.discardTitle"
-  variant="confirmation"
-  confirmLabel="Discard"
-  i18n-confirmLabel="@@newListing.discardConfirm"
-  cancelLabel="Keep editing"
-  i18n-cancelLabel="@@newListing.discardCancel"
-  (confirmed)="confirmDiscard()"
-  (cancelled)="showDiscardModal.set(false)"
->
-  <p class="ul-typography-body-m-regular" i18n="@@newListing.discardBody">
-    You have unsaved changes. Are you sure you want to discard them?
-  </p>
-</ul-modal>
+  <div class="ul-container-form">
+    <div class="ul-content ul-pt-8">
+      <h1 class="ul-typography-headline-xl-extrablack ul-mb-2 new-listing__desktop-title">
+        {{ t('newListing.title') }}
+      </h1>
+      <p class="ul-typography-body-m-regular ul-text-secondary ul-hidden md:ul-flex l-mb-8">
+        {{ t('newListing.subtitle') }}
+      </p>
+
+      <form (submit)="onFormSubmit($event)" class="new-listing__form ul-gap-5">
+        <div class="new-listing__photos">
+          <label
+            class="ul-form-field__label ul-form-field__label--md ul-form-field__label--requireds"
+          >
+            <ng-container>{{ t('newListing.photosLabel') }}</ng-container>
+
+            @if (imageFiles().length > 0) {
+              ({{ imageFiles().length }})
+            }
+          </label>
+          <um-image-upload [(images)]="imageFiles" />
+        </div>
+        <div class="new-listing__fields">
+          <ul-input
+            [label]="t('newListing.titleLabel')"
+            [placeholder]="t('newListing.titlePlaceholder')"
+            [formField]="listingForm.title"
+          />
+
+          <ul-textarea
+            [label]="t('newListing.descriptionLabel')"
+            [placeholder]="t('newListing.descriptionPlaceholder')"
+            [rows]="5"
+            [formField]="listingForm.description"
+          />
+
+          <div class="ul-row">
+            <div class="ul-col-12 ul-col-md-3">
+              <ul-select
+                [label]="t('newListing.currencyLabel')"
+                [placeholder]="t('newListing.currencyPlaceholder')"
+                [options]="currencyOptions()"
+                [formField]="listingForm.currency"
+              />
+            </div>
+            <div class="ul-col-12 ul-col-md-3">
+              <ul-input
+                type="number"
+                [label]="t('newListing.priceLabel')"
+                placeholder="0.00"
+                [formField]="listingForm.price"
+              />
+            </div>
+            <div class="ul-col-12 ul-col-md-6">
+              <ul-select
+                [label]="t('newListing.categoryLabel')"
+                [placeholder]="t('newListing.categoryPlaceholder')"
+                [options]="categoryOptions"
+                [formField]="listingForm.category"
+              />
+            </div>
+          </div>
+
+          <div class="new-listing__submit ul-gap-4 ul-mt-2">
+            <ul-button
+              type="button"
+              theme="ghost-white"
+              class="new-listing__cancel"
+              (buttonClick)="onClose()"
+            >
+              {{ t('common.cancel') }}
+            </ul-button>
+            <ul-button
+              type="submit"
+              theme="fill-purple"
+              size="md"
+              [disabled]="publishButtonNotReady()"
+            >
+              {{ publishButtonLabel() }}
+            </ul-button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <ul-modal
+    [(open)]="showDiscardModal"
+    [title]="t('newListing.discardTitle')"
+    variant="confirmation"
+    [confirmLabel]="t('newListing.discardConfirm')"
+    [cancelLabel]="t('newListing.discardCancel')"
+    (confirmed)="confirmDiscard()"
+    (cancelled)="showDiscardModal.set(false)"
+  >
+    <p class="ul-typography-body-m-regular">{{ t('newListing.discardBody') }}</p>
+  </ul-modal>
+</ng-container>

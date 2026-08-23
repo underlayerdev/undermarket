@@ -4,6 +4,7 @@ import { signal } from '@angular/core';
 import { NotificationsComponent } from './notifications';
 import { NotificationService } from '../../../application/services/notification.service';
 import type { Notification } from '../../../domain/notification/notification.model';
+import { getTranslocoTestingModule } from '../../../../testing/transloco-testing';
 
 const notifications: Notification[] = [
   { id: '1', message: 'First', read: false, createdAt: new Date() },
@@ -23,7 +24,7 @@ describe('NotificationsComponent', () => {
     navigateByUrlSpy = vi.fn().mockResolvedValue(true);
 
     TestBed.configureTestingModule({
-      imports: [NotificationsComponent],
+      imports: [NotificationsComponent, getTranslocoTestingModule()],
       providers: [
         {
           provide: NotificationService,

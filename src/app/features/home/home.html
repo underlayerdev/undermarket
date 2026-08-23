@@ -1,39 +1,35 @@
-<ul-hero
-  title="Find your next favourite thing"
-  i18n-title="@@home.heroTitle"
-  subtitle="Browse thousands of second-hand items listed by people near you."
-  i18n-subtitle="@@home.heroSubtitle"
-  [primaryAction]="heroPrimaryAction"
-  size="md"
-  alignment="left"
-/>
+<ng-container *transloco="let t">
+  <ul-hero
+    [title]="t('home.heroTitle')"
+    [subtitle]="t('home.heroSubtitle')"
+    [primaryAction]="heroPrimaryAction()"
+    size="md"
+    alignment="left"
+  />
 
-<section class="ul-container-gallery">
-  <div class="ul-content">
-    <h2 class="ul-typography-headline-m-extrabold ul-mb-2" i18n="@@home.latestListings">
-      Latest listings
-    </h2>
+  <section class="ul-container-gallery">
+    <div class="ul-content">
+      <h2 class="ul-typography-headline-m-extrabold ul-mb-2">{{ t('home.latestListings') }}</h2>
 
-    @if (listingService.listings().length === 0) {
-      <p class="ul-typography-body-m-regular" i18n="@@home.emptyState">
-        No listings yet. Be the first to post one!
-      </p>
-    } @else {
-      <div class="ul-row">
-        @for (listing of listingService.listings(); track listing.id) {
-          <div class="ul-col-6 ul-col-sm-4 ul-col-md-3 ul-col-lg-2 ul-col-xl-2">
-            <a [routerLink]="['/listings', createListingSlug(listing.title, listing.id)]">
-              <ul-card
-                [cardTitle]="listing.title"
-                [cardSubtitle]="listing.price | listingPrice: listing.currency"
-                [cardCaption]="listing.category"
-                cardDirection="vertical"
-                mediaAspectRatio="portrait"
-              />
-            </a>
-          </div>
-        }
-      </div>
-    }
-  </div>
-</section>
+      @if (listingService.listings().length === 0) {
+        <p class="ul-typography-body-m-regular">{{ t('home.emptyState') }}</p>
+      } @else {
+        <div class="ul-row">
+          @for (listing of listingService.listings(); track listing.id) {
+            <div class="ul-col-6 ul-col-sm-4 ul-col-md-3 ul-col-lg-2 ul-col-xl-2">
+              <a [routerLink]="['/listings', createListingSlug(listing.title, listing.id)]">
+                <ul-card
+                  [cardTitle]="listing.title"
+                  [cardSubtitle]="listing.price | listingPrice: listing.currency"
+                  [cardCaption]="listing.category"
+                  cardDirection="vertical"
+                  mediaAspectRatio="portrait"
+                />
+              </a>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </section>
+</ng-container>

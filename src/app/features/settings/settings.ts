@@ -6,6 +6,7 @@ import {
   OnInit,
   signal,
 } from '@angular/core';
+import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { UserService } from '../../application/services/user.service';
 import { AuthService } from '../../application/services/auth.service';
 import { SeoService } from '../../core/seo/seo.service';
@@ -16,7 +17,7 @@ import type { SelectOption } from '@underlayerdev/ui';
 @Component({
   selector: 'um-settings',
   standalone: true,
-  imports: [CardComponent, SelectComponent],
+  imports: [CardComponent, SelectComponent, TranslocoDirective],
   templateUrl: './settings.html',
   styleUrl: './settings.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -25,11 +26,15 @@ export class SettingsComponent implements OnInit {
   protected readonly userService = inject(UserService);
   protected readonly authService = inject(AuthService);
   private readonly seoService = inject(SeoService);
+  private readonly transloco = inject(TranslocoService);
 
-  readonly themeOptions: SelectOption[] = [
-    { value: 'light', label: $localize`:@@settings.themeLight:Light` },
-    { value: 'dark', label: $localize`:@@settings.themeDark:Dark` },
-  ];
+  readonly themeOptions = computed<SelectOption[]>(() => {
+    this.transloco.activeLang();
+    return [
+      { value: 'light', label: this.transloco.translate('settings.themeLight') },
+      { value: 'dark', label: this.transloco.translate('settings.themeDark') },
+    ];
+  });
 
   readonly languageOptions: SelectOption[] = [
     { value: 'en', label: 'English' },
@@ -43,7 +48,7 @@ export class SettingsComponent implements OnInit {
   readonly languageValue = signal<string | null>(null);
 
   ngOnInit(): void {
-    this.seoService.setPage($localize`:@@settings.pageTitle:Settings`);
+    this.seoService.setPage(this.transloco.translate('settings.pageTitle'));
     const user = this.authService.currentUser();
     if (user) {
       this.userService.loadProfile(user.id).then(() => {
@@ -67,13 +72,6 @@ export class SettingsComponent implements OnInit {
     if (!current) return;
     const updated: UserSettings = { ...current, language };
     await this.userService.updateSettings(updated);
-
-    // Each locale is a fully separate static build (@angular/localize inlines
-    // translations at build time) — there's no in-memory way to swap the
-    // active language, so switching means navigating to the sibling locale's
-    // build, preserving whatever page/path the user is currently on.
-    const { pathname, search, hash } = window.location;
-    const pathWithoutLocale = pathname.replace(/^\/(en|es)(\/|$)/, '/');
-    window.location.href = `/${language}${pathWithoutLocale}${search}${hash}`;
+    this.transloco.setActiveLang(language);
   }
 }

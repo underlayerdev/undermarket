@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { TranslocoDirective } from '@jsverse/transloco';
 import { FooterComponent } from '@underlayerdev/ui';
 
 export type FooterVariant = 'minimal' | 'full';
@@ -6,7 +7,7 @@ export type FooterVariant = 'minimal' | 'full';
 @Component({
   selector: 'um-footer',
   templateUrl: './footer.html',
-  imports: [FooterComponent],
+  imports: [FooterComponent, TranslocoDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SiteFooterComponent {

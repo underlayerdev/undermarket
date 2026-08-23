@@ -1,4 +1,4 @@
-<div class="image-upload" [class.photos-added]="images().length > 0">
+<div class="image-upload" [class.photos-added]="images().length > 0" *transloco="let t">
   <div
     class="image-upload__grid"
     cdkDropList
@@ -16,7 +16,7 @@
         }
 
         @if (idx === 0) {
-          <span class="image-upload__badge" i18n="@@imageUpload.coverPhoto">Cover photo</span>
+          <span class="image-upload__badge">{{ t('imageUpload.coverPhoto') }}</span>
         }
 
         <ul-button
@@ -24,8 +24,7 @@
           theme="ghost-white"
           size="sm"
           [iconOnly]="true"
-          ariaLabel="Remove photo"
-          i18n-ariaLabel="@@imageUpload.removePhoto"
+          [ariaLabel]="t('imageUpload.removePhoto')"
           class="image-upload__remove"
           (buttonClick)="removePreview(preview)"
         >
@@ -38,8 +37,7 @@
             theme="ghost-white"
             size="sm"
             [iconOnly]="true"
-            ariaLabel="Move photo left"
-            i18n-ariaLabel="@@imageUpload.movePhotoLeft"
+            [ariaLabel]="t('imageUpload.movePhotoLeft')"
             [disabled]="idx === 0"
             (buttonClick)="moveLeft(idx)"
           >
@@ -50,8 +48,7 @@
             theme="ghost-white"
             size="sm"
             [iconOnly]="true"
-            ariaLabel="Move photo right"
-            i18n-ariaLabel="@@imageUpload.movePhotoRight"
+            [ariaLabel]="t('imageUpload.movePhotoRight')"
             [disabled]="idx === previews().length - 1"
             (buttonClick)="moveRight(idx)"
           >
@@ -65,9 +62,7 @@
       <button type="button" class="image-upload__add" (click)="openFilePicker()">
         <ul-icon icon="plus" size="8" />
         @if (previews().length === 0) {
-          <span class="ul-typography-body-s-regular" i18n="@@imageUpload.addPhotos">
-            Add photos
-          </span>
+          <span class="ul-typography-body-s-regular">{{ t('imageUpload.addPhotos') }}</span>
         }
       </button>
     }

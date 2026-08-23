@@ -7,6 +7,7 @@ import {
   signal,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { AuthService } from '../../../application/services/auth.service';
 import { ErrorService } from '../../../application/services/error.service';
 import { SeoService } from '../../../core/seo/seo.service';
@@ -16,7 +17,7 @@ import { ButtonComponent, InputComponent, StatusComponent } from '@underlayerdev
 @Component({
   selector: 'um-forgot-password',
   standalone: true,
-  imports: [ButtonComponent, InputComponent, RouterLink, StatusComponent],
+  imports: [ButtonComponent, InputComponent, RouterLink, StatusComponent, TranslocoDirective],
   templateUrl: './forgot-password.html',
   styleUrl: './forgot-password.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -25,6 +26,7 @@ export class ForgotPasswordComponent implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly errorService = inject(ErrorService);
   private readonly seoService = inject(SeoService);
+  private readonly transloco = inject(TranslocoService);
 
   readonly emailValue = signal('');
   readonly touched = signal(false);
@@ -32,18 +34,22 @@ export class ForgotPasswordComponent implements OnInit {
   readonly errorMessage = signal<string | null>(null);
   readonly successMessage = signal<string | null>(null);
 
-  readonly emailError = computed(() => (this.touched() ? validateEmail(this.emailValue()) : null));
+  readonly emailError = computed(() => {
+    this.transloco.activeLang();
+    return this.touched() ? validateEmail(this.emailValue(), this.transloco) : null;
+  });
 
   readonly isEmailValid = computed(() => isValidEmail(this.emailValue()));
 
-  readonly sendButtonLabel = computed(() =>
-    this.isLoading()
-      ? $localize`:@@forgotPassword.sending:Sending...`
-      : $localize`:@@forgotPassword.sendLink:Send Reset Link`,
-  );
+  readonly sendButtonLabel = computed(() => {
+    this.transloco.activeLang();
+    return this.isLoading()
+      ? this.transloco.translate('forgotPassword.sending')
+      : this.transloco.translate('forgotPassword.sendLink');
+  });
 
   ngOnInit(): void {
-    this.seoService.setPage($localize`:@@forgotPassword.pageTitle:Reset Password`);
+    this.seoService.setPage(this.transloco.translate('forgotPassword.pageTitle'));
   }
 
   async onSubmit(): Promise<void> {
@@ -54,9 +60,7 @@ export class ForgotPasswordComponent implements OnInit {
     this.successMessage.set(null);
     try {
       await this.authService.sendPasswordResetEmail(this.emailValue().trim());
-      this.successMessage.set(
-        $localize`:@@forgotPassword.successMessage:Check your inbox — we sent a password reset link.`,
-      );
+      this.successMessage.set(this.transloco.translate('forgotPassword.successMessage'));
     } catch (err) {
       this.errorMessage.set(this.errorService.toUserMessage(err));
     } finally {

@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { filter, map, startWith } from 'rxjs';
 import { AuthService } from '../../application/services/auth.service';
 import {
@@ -26,27 +27,29 @@ import { UserMenuComponent } from './user-menu/user-menu';
 /** Mobile drawer only: search lives in the navbar; Home/New/Profile live in the dock. */
 type AppSidebarItem = SidebarItem & { url?: string; action?: 'sign-out' };
 
-const SIDEBAR_ITEMS: AppSidebarItem[] = [
-  { label: $localize`:@@common.home:Home`, value: 'home', url: '/home', leftIcons: ['home'] },
-  {
-    label: $localize`:@@appLayout.newListing:New Listing`,
-    value: 'new-listing',
-    url: '/listings/new',
-    leftIcons: ['plus'],
-  },
-  {
-    label: $localize`:@@userMenu.settings:Settings`,
-    value: 'settings',
-    url: '/settings',
-    leftIcons: ['settings'],
-  },
-  {
-    label: $localize`:@@userMenu.signOut:Sign out`,
-    value: 'sign-out',
-    action: 'sign-out',
-    leftIcons: ['log_out'],
-  },
-];
+function buildSidebarItems(transloco: TranslocoService): AppSidebarItem[] {
+  return [
+    { label: transloco.translate('common.home'), value: 'home', url: '/home', leftIcons: ['home'] },
+    {
+      label: transloco.translate('appLayout.newListing'),
+      value: 'new-listing',
+      url: '/listings/new',
+      leftIcons: ['plus'],
+    },
+    {
+      label: transloco.translate('userMenu.settings'),
+      value: 'settings',
+      url: '/settings',
+      leftIcons: ['settings'],
+    },
+    {
+      label: transloco.translate('userMenu.signOut'),
+      value: 'sign-out',
+      action: 'sign-out',
+      leftIcons: ['log_out'],
+    },
+  ];
+}
 
 @Component({
   selector: 'um-layout',
@@ -70,6 +73,7 @@ const SIDEBAR_ITEMS: AppSidebarItem[] = [
     DockItemContentSlotDirective,
     IconComponent,
     AvatarComponent,
+    TranslocoDirective,
   ],
   providers: [ToastService],
   templateUrl: './app-layout.html',
@@ -79,6 +83,7 @@ const SIDEBAR_ITEMS: AppSidebarItem[] = [
 export class AppLayoutComponent {
   protected readonly authService = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly transloco = inject(TranslocoService);
 
   readonly currentUser = computed(() => this.authService.currentUser());
 
@@ -90,7 +95,12 @@ export class AppLayoutComponent {
   readonly userImage = computed(() => this.currentUser()?.photoUrl);
 
   readonly sidebarOpen = signal(false);
-  readonly sidebarItems = SIDEBAR_ITEMS;
+  // Reads activeLang() so this recomputes on language switch, even though
+  // translate() itself doesn't establish a reactive dependency.
+  readonly sidebarItems = computed(() => {
+    this.transloco.activeLang();
+    return buildSidebarItems(this.transloco);
+  });
   readonly searchQuery = signal('');
 
   private readonly currentUrl = toSignal(
@@ -104,7 +114,7 @@ export class AppLayoutComponent {
 
   readonly selectedIndex = computed(() => {
     const url = this.currentUrl();
-    const index = SIDEBAR_ITEMS.findIndex((item) => !!item.url && url.startsWith(item.url));
+    const index = this.sidebarItems().findIndex((item) => !!item.url && url.startsWith(item.url));
     return index >= 0 ? index : 0;
   });
 

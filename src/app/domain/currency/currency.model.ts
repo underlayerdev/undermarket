@@ -1,6 +1,9 @@
 export interface CurrencyOption {
   code: 'ARS' | 'USD';
-  label: string;
+  // Transloco key for the display label — not the label itself, so this
+  // stays plain data usable from contexts with no TranslocoService (e.g.
+  // listing.validator.ts's pure functions).
+  labelKey: string;
   symbol: string;
   // Prices in ARS run much higher than USD due to inflation — cap per
   // currency instead of a single shared max. Also enforced in firestore.rules.
@@ -8,18 +11,8 @@ export interface CurrencyOption {
 }
 
 export const CURRENCIES: readonly CurrencyOption[] = [
-  {
-    code: 'ARS',
-    label: $localize`:@@currency.ars:Argentine Peso (ARS)`,
-    symbol: '$',
-    maxPrice: 1_000_000_000,
-  },
-  {
-    code: 'USD',
-    label: $localize`:@@currency.usd:US Dollar (USD)`,
-    symbol: 'US$',
-    maxPrice: 1_000_000,
-  },
+  { code: 'ARS', labelKey: 'currency.ars', symbol: '$', maxPrice: 1_000_000_000 },
+  { code: 'USD', labelKey: 'currency.usd', symbol: 'US$', maxPrice: 1_000_000 },
 ];
 
 export type CurrencyCode = CurrencyOption['code'];
