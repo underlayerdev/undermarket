@@ -31,13 +31,14 @@
     } @else {
       <div class="ul-row">
         @for (listing of listingService.listings(); track listing.id) {
-          <div class="ul-col-12 ul-col-md-4 ul-col-lg-3">
+          <div class="ul-col-6 ul-col-sm-4 ul-col-md-3 ul-col-lg-2 ul-col-xl-2">
             <a [routerLink]="['/listings', createListingSlug(listing.title, listing.id)]">
               <ul-card
                 [cardTitle]="listing.title"
                 [cardSubtitle]="listing.price | listingPrice: listing.currency"
                 [cardCaption]="listing.category"
                 cardDirection="vertical"
+                mediaAspectRatio="portrait"
               />
             </a>
           </div>
