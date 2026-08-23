@@ -9,6 +9,7 @@
 
   <div class="app-shell__body">
     <ul-navbar
+      class="app-shell__navbar"
       [sidebarOpen]="sidebarOpen()"
       [showSidebarToggle]="true"
       [searchCollapsible]="false"
@@ -63,7 +64,7 @@
       </ul-dock-item>
     </ul-dock>
 
-    <main class="app-shell__main ul-container-fluid">
+    <main class="app-shell__main">
       <div class="app-shell__content ul-content">
         <router-outlet />
         <um-footer class="app-shell__footer" />

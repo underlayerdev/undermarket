@@ -5,12 +5,6 @@
   min-height: 100vh;
 }
 
-.ul-navbar {
-  position: sticky;
-  top: 0;
-  z-index: tokens.$elevation-navbar; // same tier ul-dock already uses for persistent chrome
-}
-
 .ul-navbar__bar {
   padding-left: tokens.$spacing-spacing-8;
   padding-right: tokens.$spacing-spacing-8;
@@ -24,6 +18,17 @@
 .app-shell {
   display: flex;
   min-height: 100vh;
+
+  // Sticky must sit on the `ul-navbar` host, not the `.ul-navbar` <nav> inside
+  // it: a custom element defaults to `display: inline`, so the host box hugs
+  // the <nav> exactly and a sticky <nav> would have zero travel inside it.
+  // `display: block` also lets the host stretch to the body's full width.
+  &__navbar {
+    display: block;
+    position: sticky;
+    top: 0;
+    z-index: tokens.$elevation-navbar; // same tier ul-dock already uses for persistent chrome
+  }
 
   &__body {
     flex: 1;
@@ -62,12 +67,16 @@
     flex: 1;
     max-width: 640px;
     margin: 0 auto;
+
+    ul-input {
+      width: 100%;
+    }
   }
 
   &__actions {
     display: flex;
     align-items: center;
-    gap: tokens.$spacing-spacing-3;
+    gap: tokens.$spacing-spacing-8;
 
     // Bell + avatar move to the dock (notifications tab) and sidebar drawer
     // (profile/settings/sign-out) on mobile, where ul-dock is the primary
