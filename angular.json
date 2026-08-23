@@ -17,12 +17,6 @@
       "root": "",
       "sourceRoot": "src",
       "prefix": "um",
-      "i18n": {
-        "sourceLocale": "en",
-        "locales": {
-          "es": "src/locale/messages.es.xlf"
-        }
-      },
       "architect": {
         "build": {
           "builder": "@angular/build:application",
@@ -46,8 +40,7 @@
                 "output": "assets/img"
               }
             ],
-            "styles": ["node_modules/@underlayerdev/ui/styles/foundations.css", "src/styles.scss"],
-            "polyfills": ["@angular/localize/init"]
+            "styles": ["node_modules/@underlayerdev/ui/styles/foundations.css", "src/styles.scss"]
           },
           "configurations": {
             "production": {
@@ -63,19 +56,12 @@
                   "maximumError": "8kB"
                 }
               ],
-              "outputHashing": "all",
-              "localize": true
+              "outputHashing": "all"
             },
             "development": {
               "optimization": false,
               "extractLicenses": false,
               "sourceMap": true
-            },
-            "en": {
-              "localize": ["en"]
-            },
-            "es": {
-              "localize": ["es"]
             }
           },
           "defaultConfiguration": "production"
@@ -88,12 +74,6 @@
             },
             "development": {
               "buildTarget": "undermarket:build:development"
-            },
-            "en": {
-              "buildTarget": "undermarket:build:development,en"
-            },
-            "es": {
-              "buildTarget": "undermarket:build:development,es"
             }
           },
           "defaultConfiguration": "development"
