@@ -1,5 +1,5 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import { CurrencyCode, DEFAULT_CURRENCY, getCurrency } from '../../domain/currency/currency.model';
+import { CurrencyCode, DEFAULT_CURRENCY, getCurrency } from '../../../domain/currency/currency.model';
 
 @Pipe({ name: 'listingPrice' })
 export class ListingPricePipe implements PipeTransform {

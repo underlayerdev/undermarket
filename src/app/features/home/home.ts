@@ -3,7 +3,7 @@ import { RouterLink } from '@angular/router';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { ListingService } from '../../application/services/listing.service';
 import { SeoService } from '../../core/seo/seo.service';
-import { ListingPricePipe } from '../../shared/pipes/listing-price.pipe';
+import { ListingPricePipe } from '../../shared/pipes/listing-price/listing-price.pipe';
 import { createListingSlug } from '../../shared/utils/slugify';
 import { CardComponent, HeroComponent } from '@underlayerdev/ui';
 import type { HeroAction } from '@underlayerdev/ui';

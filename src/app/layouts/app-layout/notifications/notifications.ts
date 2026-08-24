@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { NotificationService } from '../../../application/services/notification.service';
 import type { Notification } from '../../../domain/notification/notification.model';
-import { RelativeTimePipe } from '../../../shared/pipes/relative-time.pipe';
+import { RelativeTimePipe } from '../../../shared/pipes/relative-time/relative-time.pipe';
 import { ButtonComponent, IconComponent } from '@underlayerdev/ui';
 
 /** 'icon' (default): standalone bell+badge button for the navbar, opens a small CDK Menu dropdown. 'dock': styled to match ul-dock-item, for placement inside the mobile ul-dock — opens a full-screen panel instead of a dropdown, matching new-listing's mobile takeover, since ul-dock is mobile-only. */

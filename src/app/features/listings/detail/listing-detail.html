@@ -49,7 +49,12 @@
             } @else {
               <div
                 class="ul-bg-grey-lvl-1 ul-rounded-2"
-                style="aspect-ratio: 4/3; display: flex; align-items: center; justify-content: center"
+                style="
+                  aspect-ratio: 4/3;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                "
               >
                 <p class="ul-typography-caption-l-regular">{{ t('listingDetail.noPhotos') }}</p>
               </div>
@@ -83,7 +88,7 @@
             </div>
 
             <p class="ul-typography-caption-l-regular ul-text-secondary">
-              {{ t('listingDetail.listedOn', { value: item.createdAt | date: 'mediumDate' }) }}
+              {{ t('listingDetail.listedOn', { value: item.createdAt | localeDate }) }}
             </p>
 
             @if (isOwner()) {

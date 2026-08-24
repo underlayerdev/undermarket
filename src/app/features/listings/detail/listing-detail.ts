@@ -6,7 +6,6 @@ import {
   OnInit,
   signal,
 } from '@angular/core';
-import { DatePipe } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { AuthService } from '../../../application/services/auth.service';
@@ -14,7 +13,8 @@ import { ListingService } from '../../../application/services/listing.service';
 import { SeoService } from '../../../core/seo/seo.service';
 import { LISTING_REPOSITORY } from '../../../core/configuration/tokens';
 import type { Listing } from '../../../domain/listing/listing.model';
-import { ListingPricePipe } from '../../../shared/pipes/listing-price.pipe';
+import { ListingPricePipe } from '../../../shared/pipes/listing-price/listing-price.pipe';
+import { LocaleDatePipe } from '../../../shared/pipes/locale-date/locale-date.pipe';
 import { extractIdFromSlug } from '../../../shared/utils/slugify';
 import {
   BreadcrumbComponent,
@@ -29,8 +29,8 @@ import type { BreadcrumbItem } from '@underlayerdev/ui';
   selector: 'um-listing-detail',
   standalone: true,
   imports: [
-    DatePipe,
     ListingPricePipe,
+    LocaleDatePipe,
     BreadcrumbComponent,
     ButtonComponent,
     ModalComponent,

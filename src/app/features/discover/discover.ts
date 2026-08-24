@@ -4,7 +4,7 @@ import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { ListingService } from '../../application/services/listing.service';
 import { SeoService } from '../../core/seo/seo.service';
 import { CATEGORIES } from '../../domain/category/category.model';
-import { ListingPricePipe } from '../../shared/pipes/listing-price.pipe';
+import { ListingPricePipe } from '../../shared/pipes/listing-price/listing-price.pipe';
 import { createListingSlug } from '../../shared/utils/slugify';
 import { CardComponent, PillComponent } from '@underlayerdev/ui';
 

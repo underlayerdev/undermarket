@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { TranslocoService } from '@jsverse/transloco';
 import { RelativeTimePipe } from './relative-time.pipe';
-import { getTranslocoTestingModule } from '../../../testing/transloco-testing';
+import { getTranslocoTestingModule } from '../../../../testing/transloco-testing';
 
 describe('RelativeTimePipe', () => {
   const now = new Date('2026-08-18T12:00:00Z');

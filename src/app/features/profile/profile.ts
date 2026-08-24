@@ -9,11 +9,10 @@ import {
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { AuthService } from '../../application/services/auth.service';
-import { ListingService } from '../../application/services/listing.service';
 import { UserService } from '../../application/services/user.service';
 import { SeoService } from '../../core/seo/seo.service';
 import { LISTING_REPOSITORY } from '../../core/configuration/tokens';
-import { ListingPricePipe } from '../../shared/pipes/listing-price.pipe';
+import { ListingPricePipe } from '../../shared/pipes/listing-price/listing-price.pipe';
 import { createListingSlug } from '../../shared/utils/slugify';
 import type { Listing } from '../../domain/listing/listing.model';
 import {
