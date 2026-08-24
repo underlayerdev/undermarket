@@ -8,7 +8,8 @@ const testUser: User = {
   id: 'u1',
   email: 'test@example.com',
   displayName: 'Test User',
-  settings: { theme: 'light', language: 'en' },
+  settings: { language: 'en' },
+  providerId: 'password',
   createdAt: new Date(),
 };
 
@@ -21,6 +22,8 @@ function createAuthProviderMock(): AuthProvider & { emitAuthState: (user: User |
     loginAnonymously: async () => testUser,
     sendPasswordResetEmail: async () => undefined,
     confirmPasswordReset: async () => undefined,
+    changePassword: async () => undefined,
+    deleteAccount: async () => undefined,
     logout: async () => undefined,
     currentUser: () => null,
     onAuthStateChange: (callback) => {

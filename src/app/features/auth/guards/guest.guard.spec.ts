@@ -8,7 +8,8 @@ const testUser: User = {
   id: 'u1',
   email: 'test@example.com',
   displayName: 'Test User',
-  settings: { theme: 'light', language: 'en' },
+  settings: { language: 'en' },
+  providerId: 'password',
   createdAt: new Date(),
 };
 

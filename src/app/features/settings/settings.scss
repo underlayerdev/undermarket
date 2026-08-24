@@ -1,0 +1,12 @@
+@use 'pkg:@underlayerdev/ui/design-tokens' as tokens;
+
+.settings__sidebar {
+  height: 100%;
+  // ul-sidebar is a slide-in drawer below md and a normal in-flow column
+  // at md+ (its own CSS already handles that) — the settings shell only
+  // ever wants the desktop column; the mobile drill-in list lives at the
+  // separate /settings index route instead.
+  @media (max-width: (tokens.$breakpoint-md - 1px)) {
+    display: none;
+  }
+}

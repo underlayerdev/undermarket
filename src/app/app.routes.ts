@@ -36,11 +36,13 @@ export const routes: Routes = [
       },
       {
         path: 'settings',
-        loadComponent: () => import('./features/settings/settings').then((m) => m.SettingsComponent),
+        loadChildren: () =>
+          import('./features/settings/settings.routes').then((m) => m.settingsRoutes),
       },
       {
         path: 'listings/new',
-        loadComponent: () => import('./features/listings/new/new-listing').then((m) => m.NewListingComponent),
+        loadComponent: () =>
+          import('./features/listings/new/new-listing').then((m) => m.NewListingComponent),
       },
       {
         path: 'listings/:slug',

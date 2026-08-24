@@ -1,28 +1,24 @@
 <div class="ul-container-form">
   <div class="ul-content ul-pt-8">
     <ng-container *transloco="let t">
-      <h1 class="ul-typography-headline-xl-extrablack ul-mb-8">{{ t('settings.title') }}</h1>
+      <h1 class="ul-typography-headline-xl-extrablack ul-mb-4">
+        {{ t('settings.title') }}
+      </h1>
 
-      <div class="ul-gap-6" style="display: flex; flex-direction: column">
-        <ul-card [cardTitle]="t('settings.appearance')" cardDirection="vertical">
-          <ul-select
-            [label]="t('settings.themeLabel')"
-            [placeholder]="t('settings.themePlaceholder')"
-            [options]="themeOptions()"
-            [(value)]="themeValue"
-            (valueChange)="onThemeChange($event)"
+      <div class="ul-row ul-gap-6">
+        <div class="ul-col-12 ul-col-md-3">
+          <ul-sidebar
+            class="settings__sidebar"
+            [items]="sidebarItems()"
+            [selectedIndex]="selectedIndex()"
+            theme="ghost-white"
+            (itemSelected)="onItemSelected($event)"
           />
-        </ul-card>
+        </div>
 
-        <ul-card [cardTitle]="t('settings.language')" cardDirection="vertical">
-          <ul-select
-            [label]="t('settings.languageLabel')"
-            [placeholder]="t('settings.languagePlaceholder')"
-            [options]="languageOptions"
-            [(value)]="languageValue"
-            (valueChange)="onLanguageChange($event)"
-          />
-        </ul-card>
+        <div class="ul-col-12 ul-col-md-9">
+          <router-outlet />
+        </div>
       </div>
     </ng-container>
   </div>

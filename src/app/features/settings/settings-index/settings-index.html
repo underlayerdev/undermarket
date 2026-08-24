@@ -1,0 +1,17 @@
+<div class="ul-content ul-pt-8">
+  <ng-container *transloco="let t">
+    <div class="settings-index">
+      @for (item of navItems; track item.path) {
+        <a class="settings-index__row" [routerLink]="item.path">
+          <div class="settings-index__text">
+            <span class="ul-typography-body-m-regular">{{ t(item.labelKey) }}</span>
+            <span class="ul-typography-caption-l-regular ul-text-secondary">
+              {{ t(item.subtitleKey) }}
+            </span>
+          </div>
+          <ul-icon icon="chevron_right" size="5" />
+        </a>
+      }
+    </div>
+  </ng-container>
+</div>

@@ -1,7 +1,9 @@
 import { provideHttpClient } from '@angular/common/http';
 import {
   ApplicationConfig,
+  inject,
   isDevMode,
+  provideAppInitializer,
   provideBrowserGlobalErrorListeners,
   provideZonelessChangeDetection,
 } from '@angular/core';
@@ -33,6 +35,8 @@ import { FirestoreListingRepository } from './infrastructure/firebase/firestore/
 import { CloudinaryImageStorage } from './infrastructure/cloudinary/cloudinary-image-storage';
 import { MockNotificationProvider } from './infrastructure/mock/mock-notification.provider';
 import { TranslocoHttpLoader } from './core/i18n/transloco-http-loader';
+import { AVAILABLE_LANGUAGES, DEFAULT_LANGUAGE } from './core/i18n/languages';
+import { LanguageService } from './application/services/language.service';
 
 const firebaseApp = initializeApp(environment.firebase);
 
@@ -44,13 +48,18 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(),
     provideTransloco({
       config: {
-        availableLangs: ['en', 'es'],
-        defaultLang: 'en',
-        fallbackLang: 'en',
+        availableLangs: [...AVAILABLE_LANGUAGES],
+        defaultLang: DEFAULT_LANGUAGE,
+        fallbackLang: DEFAULT_LANGUAGE,
         reRenderOnLangChange: true,
         prodMode: !isDevMode(),
       },
       loader: TranslocoHttpLoader,
+    }),
+    // LanguageService is otherwise only injected by the settings page, so
+    // without this the stored preference would never be applied on startup.
+    provideAppInitializer(() => {
+      inject(LanguageService);
     }),
     { provide: FIREBASE_APP, useValue: firebaseApp },
     {

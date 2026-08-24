@@ -1,0 +1,34 @@
+@use 'pkg:@underlayerdev/ui/design-tokens' as tokens;
+
+// Duplicated from settings.scss — emulated view encapsulation means a
+// sibling shell's classes don't reach this routed child's template.
+.settings__panel {
+  box-sizing: border-box;
+  border: 1px solid tokens.$color-border-white-light;
+  border-radius: tokens.$radius-radius-4;
+  padding: tokens.$spacing-spacing-6;
+}
+
+.settings-display {
+  &__mobile-header {
+    align-items: center;
+    gap: tokens.$spacing-spacing-4;
+    padding-bottom: tokens.$spacing-spacing-4;
+
+    @media (max-width: (tokens.$breakpoint-md - 1px)) {
+      display: flex;
+    }
+  }
+
+  &__mobile-title {
+    margin: 0;
+  }
+
+  &__desktop-title {
+    display: block;
+
+    @media (max-width: (tokens.$breakpoint-md - 1px)) {
+      display: none;
+    }
+  }
+}

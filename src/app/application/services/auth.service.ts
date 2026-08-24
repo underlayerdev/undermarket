@@ -49,6 +49,15 @@ export class AuthService {
     await this.authProvider.confirmPasswordReset(oobCode, newPassword);
   }
 
+  async changePassword(newPassword: string, currentPassword?: string): Promise<void> {
+    await this.authProvider.changePassword(newPassword, currentPassword);
+  }
+
+  async deleteAccount(currentPassword?: string): Promise<void> {
+    await this.authProvider.deleteAccount(currentPassword);
+    this.currentUser.set(null);
+  }
+
   async logout(): Promise<void> {
     await this.authProvider.logout();
     this.currentUser.set(null);

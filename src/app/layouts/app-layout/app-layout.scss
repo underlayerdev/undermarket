@@ -56,8 +56,24 @@
   }
 
   &__footer {
+    // `um-footer` is a custom element, so it defaults to `display: inline` and
+    // would drop the margin-bottom below. (At md+ it gets blockified anyway by
+    // being a flex item of `&__content`, which is where margin-top: auto works.)
+    display: block;
+
     @media (min-width: tokens.$breakpoint-md) {
       margin-top: auto;
+    }
+
+    // ul-dock is `position: fixed` at the bottom below md, so it sits on top of
+    // the end of the page and would otherwise cover the footer. Clear its full
+    // height — $spacing-spacing-12 is the same token behind the dock's own
+    // min-height — plus the iOS safe-area inset the dock also adds, plus a
+    // spacing-4 gap so the footer text doesn't sit flush against the bar.
+    @media (max-width: (tokens.$breakpoint-md - 1px)) {
+      margin-bottom: calc(
+        #{tokens.$spacing-spacing-12} + #{tokens.$spacing-spacing-4} + env(safe-area-inset-bottom)
+      );
     }
   }
 

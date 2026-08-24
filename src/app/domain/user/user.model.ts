@@ -1,7 +1,8 @@
 export type UserId = string;
 
+export type AuthProviderId = 'password' | 'google.com' | 'apple.com' | 'facebook.com' | 'anonymous';
+
 export interface UserSettings {
-  theme: 'light' | 'dark';
   language: string;
 }
 
@@ -11,5 +12,6 @@ export interface User {
   displayName: string;
   photoUrl?: string;
   settings: UserSettings;
+  providerId: AuthProviderId;
   createdAt: Date;
 }

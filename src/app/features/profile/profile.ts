@@ -63,7 +63,9 @@ export class ProfileComponent implements OnInit {
     if (!user) return;
 
     try {
-      await this.userService.loadProfile(user.id);
+      // ensureProfile, not loadProfile: an account with no Firestore doc yet
+      // would otherwise render an empty profile instead of the auth details.
+      await this.userService.ensureProfile(user);
       const listings = await this.listingRepository.getByOwner(user.id);
       this.userListings.set(listings);
     } finally {
