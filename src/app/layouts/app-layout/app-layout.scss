@@ -77,6 +77,26 @@
     }
   }
 
+  // The brand wordmark is the only text in the mobile navbar, so it carries the
+  // header weight there and the utility class's 16px reads as too small. It
+  // keeps that size at md+, where the navbar also holds search and the avatar
+  // actions and the wordmark should not outweigh them.
+  //
+  // brand-body-l (18px) rather than a headline step: "UNDERMARKET" is a single
+  // unbreakable word, so the wordmark cannot wrap or shrink. Measured against
+  // the real Ultra Brand metrics, the mobile row (40px toggle + 8px gap +
+  // wordmark + 2x32px bar padding) comes to 296px at 18px but 354px at
+  // brand-headline-s's 24px — which overflows a 320px viewport and leaves only
+  // 6px on a 360px one. Only the size changes; family/weight/transform stay
+  // with the utility class.
+  &__brand {
+    @media (max-width: (tokens.$breakpoint-md - 1px)) {
+      font-size: tokens.$typography-font-size-brand-body-l;
+      line-height: tokens.$typography-font-line-height-brand-body-l;
+      letter-spacing: tokens.$typography-font-letter-spacing-brand-body-l;
+    }
+  }
+
   &__search {
     width: 100%;
     display: flex;
