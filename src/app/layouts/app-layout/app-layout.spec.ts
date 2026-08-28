@@ -40,17 +40,12 @@ describe('AppLayoutComponent', () => {
     expect(fixture.componentInstance).toBeTruthy();
   });
 
-  it('should offer Home, New Listing, Settings, and Sign out in the mobile sidebar', () => {
+  it('should offer Home, New Listing, and Settings in the mobile sidebar', () => {
     const fixture = TestBed.createComponent(AppLayoutComponent);
     const items = fixture.componentInstance.sidebarItems();
 
-    expect(items).toHaveLength(4);
-    expect(items.map((item) => item.label)).toEqual([
-      'Home',
-      'New Listing',
-      'Settings',
-      'Sign out',
-    ]);
+    expect(items).toHaveLength(3);
+    expect(items.map((item) => item.label)).toEqual(['Home', 'New Listing', 'Settings']);
   });
 
   it('should navigate to a sidebar item url on selection', async () => {
@@ -63,13 +58,15 @@ describe('AppLayoutComponent', () => {
     expect(fixture.componentInstance.sidebarOpen()).toBe(false);
   });
 
-  it('should log out and navigate to /login when the sign-out item is selected', async () => {
+  it('should log out, close the sidebar, and navigate to /login on sign-out', async () => {
     const fixture = TestBed.createComponent(AppLayoutComponent);
+    fixture.componentInstance.sidebarOpen.set(true);
 
-    await fixture.componentInstance.onItemSelected(fixture.componentInstance.sidebarItems()[3]);
+    await fixture.componentInstance.onSignOut();
 
     expect(logoutSpy).toHaveBeenCalled();
     expect(navigateByUrlSpy).toHaveBeenCalledWith('/login');
+    expect(fixture.componentInstance.sidebarOpen()).toBe(false);
   });
 
   it('should navigate to /search with the trimmed query on submit', () => {

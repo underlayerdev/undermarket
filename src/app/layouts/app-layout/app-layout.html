@@ -5,7 +5,14 @@
     [selectedIndex]="selectedIndex()"
     [(open)]="sidebarOpen"
     (itemSelected)="onItemSelected($event)"
-  />
+  >
+    <ul-list-item ul-sidebar-footer [hideFocusOutline]="true" (click)="onSignOut()">
+      <ng-container ul-list-item-before-label>
+        <ul-icon size="5" icon="log_out" />
+      </ng-container>
+      <ng-container ul-list-item-label>{{ t('userMenu.signOut') }}</ng-container>
+    </ul-list-item>
+  </ul-sidebar>
 
   <div class="app-shell__body">
     <ul-navbar

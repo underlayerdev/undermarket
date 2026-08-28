@@ -11,6 +11,7 @@ import {
   DockItemContentSlotDirective,
   IconComponent,
   InputComponent,
+  ListItemComponent,
   NavbarAvatarSlotDirective,
   NavbarComponent,
   NavbarLogoSlotDirective,
@@ -24,8 +25,8 @@ import { SiteFooterComponent } from '../../shared/footer/footer';
 import { NotificationsComponent } from './notifications/notifications';
 import { UserMenuComponent } from './user-menu/user-menu';
 
-/** Mobile drawer only: search lives in the navbar; Home/New/Profile live in the dock. */
-type AppSidebarItem = SidebarItem & { url?: string; action?: 'sign-out' };
+/** Mobile drawer only: search lives in the navbar; Home/New/Profile live in the dock. Sign-out lives in the drawer footer, not this list. */
+type AppSidebarItem = SidebarItem & { url?: string };
 
 function buildSidebarItems(transloco: TranslocoService): AppSidebarItem[] {
   return [
@@ -41,12 +42,6 @@ function buildSidebarItems(transloco: TranslocoService): AppSidebarItem[] {
       value: 'settings',
       url: '/settings',
       leftIcons: ['settings'],
-    },
-    {
-      label: transloco.translate('userMenu.signOut'),
-      value: 'sign-out',
-      action: 'sign-out',
-      leftIcons: ['log_out'],
     },
   ];
 }
@@ -64,6 +59,7 @@ function buildSidebarItems(transloco: TranslocoService): AppSidebarItem[] {
     NavbarAvatarSlotDirective,
     InputComponent,
     SidebarComponent,
+    ListItemComponent,
     ToastContainerComponent,
     SiteFooterComponent,
     NotificationsComponent,
@@ -122,16 +118,17 @@ export class AppLayoutComponent {
     this.sidebarOpen.update((open) => !open);
   }
 
-  async onItemSelected(item: AppSidebarItem): Promise<void> {
+  onItemSelected(item: AppSidebarItem): void {
     this.sidebarOpen.set(false);
-    if (item.action === 'sign-out') {
-      await this.authService.logout();
-      await this.router.navigateByUrl('/login');
-      return;
-    }
     if (item.url) {
       this.router.navigateByUrl(item.url);
     }
+  }
+
+  async onSignOut(): Promise<void> {
+    this.sidebarOpen.set(false);
+    await this.authService.logout();
+    await this.router.navigateByUrl('/login');
   }
 
   onSearchSubmit(): void {
