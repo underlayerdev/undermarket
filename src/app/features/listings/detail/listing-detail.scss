@@ -1,6 +1,83 @@
 @use 'pkg:@underlayerdev/ui/design-tokens' as tokens;
+@use 'pkg:@underlayerdev/ui/breakpoints' as bp;
 
 ul-breadcrumb {
   padding-top: tokens.$spacing-spacing-4;
+  display: none;
+
+  @include bp.up('sm') {
+    display: flex;
+  }
+}
+
+// Mobile: presented like a full-screen product dialog (Vinted/Wallapop
+// style) covering the app shell's navbar/dock. Desktop keeps the normal
+// in-page layout.
+.listing-detail {
+  position: fixed;
+  inset: 0;
+  z-index: tokens.$elevation-modal;
+  overflow-y: auto;
+
+  @include bp.up('md') {
+    position: static;
+    inset: auto;
+    z-index: auto;
+    overflow-y: visible;
+  }
+}
+
+.listing-detail__gallery {
+  position: relative;
+  padding: 0;
+
+  // Break out of `.ul-container-product`'s fixed 32px side padding so the
+  // image fills the full dialog width, edge to edge, on mobile only. A
+  // 100vw + translateX(-50%) trick would be simpler but doesn't account for
+  // that ancestor padding correctly and causes horizontal scroll — cancel
+  // the known padding value directly instead.
+  @include bp.below('md') {
+    width: calc(100% + #{tokens.$spacing-spacing-8} * 2);
+    margin-left: -#{tokens.$spacing-spacing-8};
+    margin-right: -#{tokens.$spacing-spacing-8};
+  }
+}
+
+.listing-detail__back {
+  // Fixed (not absolute) so it stays pinned to the viewport corner as the
+  // user scrolls past the image, instead of scrolling away with the
+  // gallery. `.listing-detail` has no transform/filter, so `fixed` here
+  // still anchors to the real viewport, not to that ancestor's box. Only
+  // relevant on mobile — hidden on desktop via `md:ul-hidden`.
+  position: fixed;
+  top: tokens.$spacing-spacing-4;
+  left: tokens.$spacing-spacing-4;
+  z-index: 1;
+}
+
+.listing-detail__carousel,
+.listing-detail__placeholder {
+  height: 65vh;
+
+  @include bp.up('md') {
+    height: auto;
+    aspect-ratio: 4 / 3;
+  }
+}
+
+.listing-detail__placeholder {
   display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.listing-detail__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.listing-detail__info {
+  display: flex;
+  flex-direction: column;
 }

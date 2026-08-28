@@ -93,6 +93,8 @@
   "listingDetail.notFound": "Esta publicación ya no existe.",
   "listingDetail.notFoundPageTitle": "Publicación no encontrada",
   "listingDetail.loadError": "No se pudo cargar la publicación. Inténtalo de nuevo.",
+  "listingDetail.tryAgain": "Intentar de nuevo",
+  "listingDetail.browseListings": "Explorar publicaciones",
   "common.error": "Error",
   "newListing.title": "Publicar un artículo",
   "common.close": "Cerrar",

@@ -93,6 +93,8 @@
   "listingDetail.notFound": "This listing no longer exists.",
   "listingDetail.notFoundPageTitle": "Listing not found",
   "listingDetail.loadError": "Failed to load listing. Please try again.",
+  "listingDetail.tryAgain": "Try again",
+  "listingDetail.browseListings": "Browse listings",
   "common.error": "Error",
   "newListing.title": "Post a listing",
   "common.close": "Close",

@@ -6,62 +6,47 @@
         <ul-skeleton variant="text" [lines]="5" [show]="true" />
       </div>
     </div>
-  } @else if (errorMessage(); as msg) {
-    <div class="ul-container-fluid">
-      <div class="ul-content" role="alert">
-        <p class="ul-typography-body-m-regular ul-text-red">{{ msg }}</p>
-      </div>
-    </div>
+  } @else if (errorType(); as type) {
+    <um-listing-detail-error [errorType]="type" (retry)="retry()" />
   } @else if (listing(); as item) {
-    <div class="ul-container-product">
+    <div class="ul-container-product listing-detail ul-bg-main">
       <div class="ul-content">
-        <ul-breadcrumb [items]="breadcrumbItems()" />
+        <ul-breadcrumb [items]="breadcrumbItems()" class="ul-hidden md:ul-flex" />
 
-        <article class="ul-row ul-mt-8">
-          <div class="ul-col-12 ul-col-md-7">
-            @if (item.imageUrls.length > 0) {
-              <img
-                [src]="item.imageUrls[activeImageIndex()]"
-                [alt]="item.title"
-                class="ul-rounded-2"
-                style="width: 100%; aspect-ratio: 4/3; object-fit: cover"
-              />
-              @if (item.imageUrls.length > 1) {
-                <div class="ul-gap-2 ul-mt-3" style="display: flex; flex-wrap: wrap">
-                  @for (url of item.imageUrls; track url; let i = $index) {
-                    <ul-button
-                      type="button"
-                      [theme]="activeImageIndex() === i ? 'fill-purple' : 'ghost-white'"
-                      size="sm"
-                      [iconOnly]="true"
-                      (buttonClick)="setActiveImage(i)"
-                    >
-                      <img
-                        [src]="url"
-                        [alt]="photoAltText(i)"
-                        class="ul-w-12 ul-h-12"
-                        style="object-fit: cover"
-                      />
-                    </ul-button>
-                  }
-                </div>
-              }
-            } @else {
-              <div
-                class="ul-bg-grey-lvl-1 ul-rounded-2"
-                style="
-                  aspect-ratio: 4/3;
-                  display: flex;
-                  align-items: center;
-                  justify-content: center;
-                "
+        <article class="ul-row listing-detail__article md:ul-mt-8">
+          <div class="ul-col-12 ul-col-md-7 listing-detail__gallery">
+            <div class="listing-detail__back ul-bg-black-medium ul-rounded-full md:ul-hidden">
+              <ul-button
+                type="button"
+                theme="ghost-white"
+                [iconOnly]="true"
+                [ariaLabel]="t('common.back')"
+                (buttonClick)="goBack()"
               >
+                <ul-icon icon="arrow_left" size="6" weight="bold" />
+              </ul-button>
+            </div>
+
+            @if (item.imageUrls.length > 0) {
+              <ul-carousel
+                [options]="carouselOptions"
+                [autoMount]="true"
+                class="listing-detail__carousel"
+              >
+                @for (url of item.imageUrls; track url; let i = $index) {
+                  <ul-carousel-item>
+                    <img [src]="url" [alt]="photoAltText(i)" class="listing-detail__image" />
+                  </ul-carousel-item>
+                }
+              </ul-carousel>
+            } @else {
+              <div class="ul-bg-grey-lvl-1 ul-rounded-2 listing-detail__placeholder">
                 <p class="ul-typography-caption-l-regular">{{ t('listingDetail.noPhotos') }}</p>
               </div>
             }
           </div>
 
-          <div class="ul-col-12 ul-col-md-5 ul-gap-4" style="display: flex; flex-direction: column">
+          <div class="ul-col-12 ul-col-md-5 ul-gap-4 listing-detail__info">
             <div class="ul-gap-2" style="display: flex; flex-wrap: wrap">
               <ul-pill theme="outline-purple" variant="read-only">{{ item.category }}</ul-pill>
               @if (item.status === 'sold') {

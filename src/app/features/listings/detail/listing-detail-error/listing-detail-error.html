@@ -1,0 +1,25 @@
+<ng-container *transloco="let t">
+  <div class="ul-container-product">
+    <div class="ul-content ul-py-16 ul-gap-6 listing-detail-error" role="alert">
+      @if (errorType() === 'not-found') {
+        <ul-status status="info" customIcon="no_result">
+          <div ul-status-title>{{ t('listingDetail.notFoundPageTitle') }}</div>
+          <div ul-status-description>{{ t('listingDetail.notFound') }}</div>
+        </ul-status>
+
+        <ul-button theme="outline-white" size="md" type="button" routerLink="/discover">
+          {{ t('listingDetail.browseListings') }}
+        </ul-button>
+      } @else {
+        <ul-status status="error" customIcon="alert">
+          <div ul-status-title>{{ t('common.error') }}</div>
+          <div ul-status-description>{{ t('listingDetail.loadError') }}</div>
+        </ul-status>
+
+        <ul-button theme="outline-white" size="md" type="button" (buttonClick)="retry.emit()">
+          {{ t('listingDetail.tryAgain') }}
+        </ul-button>
+      }
+    </div>
+  </div>
+</ng-container>

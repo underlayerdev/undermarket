@@ -15,7 +15,6 @@ export const routes: Routes = [
   {
     path: '',
     component: AppLayoutComponent,
-    canActivate: [authGuard],
     children: [
       {
         path: 'home',
@@ -23,6 +22,7 @@ export const routes: Routes = [
       },
       {
         path: 'search',
+        canActivate: [authGuard],
         loadComponent: () => import('./features/search/search').then((m) => m.SearchComponent),
       },
       {
@@ -32,19 +32,24 @@ export const routes: Routes = [
       },
       {
         path: 'profile',
+        canActivate: [authGuard],
         loadComponent: () => import('./features/profile/profile').then((m) => m.ProfileComponent),
       },
       {
         path: 'settings',
+        canActivate: [authGuard],
         loadChildren: () =>
           import('./features/settings/settings.routes').then((m) => m.settingsRoutes),
       },
       {
         path: 'listings/new',
+        canActivate: [authGuard],
         loadComponent: () =>
           import('./features/listings/new/new-listing').then((m) => m.NewListingComponent),
       },
       {
+        // Public: anyone can view a listing. Ownership-only actions (edit/delete)
+        // are gated in the component itself via AuthService.currentUser().
         path: 'listings/:slug',
         loadComponent: () =>
           import('./features/listings/detail/listing-detail').then((m) => m.ListingDetailComponent),
