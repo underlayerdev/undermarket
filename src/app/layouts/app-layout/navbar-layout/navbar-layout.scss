@@ -1,0 +1,96 @@
+@use 'pkg:@underlayerdev/ui/design-tokens' as tokens;
+@use 'pkg:@underlayerdev/ui/breakpoints' as bp;
+
+// Matches ul-container-fluid's own padding exactly (same tokens, same single
+// breakpoint) so the navbar's logo/actions line up with page content that
+// uses the default container (home, settings). Pages using a wider container
+// (gallery/product/form) end up inset a bit further than the navbar, which
+// reads as intentional breathing room rather than misalignment.
+//
+// The `ul-navbar` ancestor is required, not stylistic: ul-navbar renders with
+// ViewEncapsulation.None and has its own 3-tier responsive padding
+// (base/1024px/1280px) on this same bare `.ul-navbar__bar` selector. A bare
+// class selector here would tie on specificity and lose at whichever tier
+// happens to come later in the build's cascade order — qualifying with the
+// host tag wins on specificity instead, regardless of source order.
+ul-navbar .ul-navbar__bar {
+  padding-left: tokens.$spacing-spacing-4;
+  padding-right: tokens.$spacing-spacing-4;
+
+  @media (min-width: tokens.$breakpoint-md) {
+    padding-left: tokens.$spacing-spacing-8;
+    padding-right: tokens.$spacing-spacing-8;
+  }
+}
+
+// ul-button's icon-only "md" size is a fixed 40px box around a 24px glyph
+// (padding: 0, centered via flex), so the glyph itself sits 8px inside the
+// button's own edge — empty tap-target space the icon never fills. Pulling
+// the button outward by that same 8px (spacing-2) puts the glyph, not the
+// invisible padding, flush with the bar's edge, matching the text containers
+// below. Library-internal markup (see navbar.html), so targeted by its
+// stable class name, qualified by the host tag for the same specificity
+// reason as .ul-navbar__bar above.
+ul-navbar .ul-navbar__sidebar_toggle {
+  margin-left: calc(-1 * #{tokens.$spacing-spacing-2});
+}
+
+.app-navbar {
+  // The brand wordmark is the only text in the mobile navbar, so it carries the
+  // header weight there and the utility class's 16px reads as too small. It
+  // keeps that size at md+, where the navbar also holds search and the avatar
+  // actions and the wordmark should not outweigh them.
+  //
+  // brand-body-l (18px) rather than a headline step: "UNDERMARKET" is a single
+  // unbreakable word, so the wordmark cannot wrap or shrink. Measured against
+  // the real Ultra Brand metrics, the mobile row (40px toggle + 8px gap +
+  // wordmark + 2x32px bar padding) comes to 296px at 18px but 354px at
+  // brand-headline-s's 24px — which overflows a 320px viewport and leaves only
+  // 6px on a 360px one. Only the size changes; family/weight/transform stay
+  // with the utility class.
+  &__brand {
+    @media (max-width: (tokens.$breakpoint-md - 1px)) {
+      font-size: tokens.$typography-font-size-brand-body-l;
+      line-height: tokens.$typography-font-line-height-brand-body-l;
+      letter-spacing: tokens.$typography-font-letter-spacing-brand-body-l;
+    }
+  }
+
+  &__search {
+    display: none;
+
+    @include bp.up('md') {
+      display: flex;
+      flex: 1;
+      max-width: 640px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    ul-input {
+      width: 100%;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: tokens.$spacing-spacing-8;
+  }
+
+  // Same icon-only optical-alignment correction as .ul-navbar__sidebar_toggle
+  // above, mirrored for the right edge.
+  &__search-toggle {
+    margin-right: calc(-1 * #{tokens.$spacing-spacing-2});
+  }
+
+  // No utility exists for "hidden below a breakpoint" (ul-hidden variants
+  // only hide from a breakpoint up), so this direction stays a manual query.
+  &__desktop-only {
+    display: none;
+
+    @include bp.up('md') {
+      display: flex;
+    }
+  }
+}

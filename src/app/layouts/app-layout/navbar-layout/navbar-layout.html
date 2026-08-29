@@ -1,0 +1,43 @@
+<ul-navbar
+  *transloco="let t"
+  [sidebarOpen]="sidebarOpen()"
+  [showSidebarToggle]="true"
+  [searchCollapsible]="false"
+  (sidebarToggle)="toggleSidebar.emit()"
+>
+  <a ul-navbar-logo routerLink="/home">
+    <span class="app-navbar__brand ul-typography-brand-body-m-extrablack ul-text-primary"
+      >UNDERMARKET</span
+    >
+  </a>
+
+  <div class="app-navbar__search" ul-navbar-search>
+    <ul-input
+      [placeholder]="t('common.searchPlaceholder')"
+      size="lg"
+      [(value)]="searchQuery"
+      (inputEnter)="submitSearch.emit(this.searchQuery().trim())"
+    />
+  </div>
+
+  <div class="app-navbar__actions" ul-navbar-avatar>
+    <ul-button
+      type="button"
+      theme="ghost-white"
+      [iconOnly]="true"
+      [ariaLabel]="t('common.searchPlaceholder')"
+      routerLink="/search"
+      class="app-navbar__search-toggle md:ul-hidden"
+    >
+      <ul-icon icon="search" size="6" />
+    </ul-button>
+    @if (!!currentUser()) {
+      <um-notifications class="app-navbar__desktop-only" />
+      <um-user-menu
+        [avatarInitials]="avatarInitials()"
+        [avatarSrc]="currentUser()?.photoUrl"
+        class="app-navbar__desktop-only"
+      />
+    }
+  </div>
+</ul-navbar>

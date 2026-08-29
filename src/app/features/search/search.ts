@@ -1,3 +1,4 @@
+import { Location } from '@angular/common';
 import { Component, effect, inject, input, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
@@ -9,6 +10,7 @@ import { createListingSlug } from '../../shared/utils/slugify';
 import {
   ButtonComponent,
   CardComponent,
+  IconComponent,
   InputComponent,
   PillComponent,
   SelectComponent,
@@ -21,6 +23,7 @@ import type { SelectOption } from '@underlayerdev/ui';
     RouterLink,
     ButtonComponent,
     CardComponent,
+    IconComponent,
     InputComponent,
     PillComponent,
     SelectComponent,
@@ -34,6 +37,7 @@ export class SearchComponent implements OnInit {
   protected readonly listingService = inject(ListingService);
   private readonly seoService = inject(SeoService);
   private readonly transloco = inject(TranslocoService);
+  private readonly location = inject(Location);
 
   readonly createListingSlug = createListingSlug;
 
@@ -75,5 +79,9 @@ export class SearchComponent implements OnInit {
   clearCategory(): void {
     this.selectedCategory.set(null);
     this.onSearch();
+  }
+
+  onClose(): void {
+    this.location.back();
   }
 }

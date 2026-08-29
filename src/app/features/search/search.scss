@@ -1,0 +1,53 @@
+@use 'pkg:@underlayerdev/ui/design-tokens' as tokens;
+
+:host {
+  display: block;
+}
+
+// Visibility is handled by the md:ul-hidden utility class in the
+// template (hidden at $breakpoint-md+) — display: flex must stay scoped
+// below that breakpoint too, otherwise it fights the utility class for
+// the display property at desktop widths.
+.search__mobile-header {
+  align-items: center;
+  justify-content: space-between;
+  gap: tokens.$spacing-spacing-4;
+  padding-bottom: tokens.$spacing-spacing-4;
+  padding-top: tokens.$spacing-spacing-4;
+  border-bottom: 1px solid tokens.$color-border-white-light;
+  position: sticky;
+  top: 0;
+  background-color: tokens.$color-background-main;
+  z-index: 1;
+
+  @media (max-width: (tokens.$breakpoint-md - 1px)) {
+    display: flex;
+  }
+}
+
+.search__mobile-title {
+  margin: 0;
+}
+
+// No utility exists for "hidden below a breakpoint" (ul-hidden variants
+// only hide from a breakpoint up), so this direction stays a manual query.
+.search__desktop-title {
+  display: block;
+
+  @media (max-width: tokens.$breakpoint-md - 1px) {
+    display: none;
+  }
+}
+
+// Below $breakpoint-md (see the same pattern in new-listing.scss) the search
+// page takes over the full screen — its own header replaces the navbar/dock
+// so results aren't squeezed under navigation chrome.
+@media (max-width: (tokens.$breakpoint-md - 1px)) {
+  :host {
+    position: fixed;
+    inset: 0;
+    z-index: tokens.$elevation-modal;
+    overflow-y: auto;
+    background-color: tokens.$color-background-main;
+  }
+}

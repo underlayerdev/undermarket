@@ -1,3 +1,4 @@
+import { Location } from '@angular/common';
 import { TestBed } from '@angular/core/testing';
 import { SearchComponent } from './search';
 import { ListingService } from '../../application/services/listing.service';
@@ -5,9 +6,11 @@ import { getTranslocoTestingModule } from '../../../testing/transloco-testing';
 
 describe('SearchComponent', () => {
   let searchSpy: ReturnType<typeof vi.fn>;
+  let locationBackSpy: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     searchSpy = vi.fn().mockResolvedValue(undefined);
+    locationBackSpy = vi.fn();
 
     TestBed.configureTestingModule({
       imports: [SearchComponent, getTranslocoTestingModule()],
@@ -16,6 +19,7 @@ describe('SearchComponent', () => {
           provide: ListingService,
           useValue: { search: searchSpy, listings: () => [] },
         },
+        { provide: Location, useValue: { back: locationBackSpy } },
       ],
     });
   });
@@ -44,5 +48,13 @@ describe('SearchComponent', () => {
     fixture.detectChanges();
 
     expect(searchSpy).not.toHaveBeenCalled();
+  });
+
+  it('should navigate back when closed', () => {
+    const fixture = TestBed.createComponent(SearchComponent);
+
+    fixture.componentInstance.onClose();
+
+    expect(locationBackSpy).toHaveBeenCalled();
   });
 });

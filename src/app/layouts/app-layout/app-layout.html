@@ -1,7 +1,7 @@
 <div class="app-shell" *transloco="let t">
   <ul-sidebar
     class="md:ul-hidden"
-    [items]="sidebarItems()"
+    [items]="getSidebarItems(t)"
     [selectedIndex]="selectedIndex()"
     [(open)]="sidebarOpen"
     (itemSelected)="onItemSelected($event)"
@@ -15,34 +15,14 @@
   </ul-sidebar>
 
   <div class="app-shell__body">
-    <ul-navbar
+
+    <um-navbar-layout 
       class="app-shell__navbar"
       [sidebarOpen]="sidebarOpen()"
-      [showSidebarToggle]="true"
-      [searchCollapsible]="false"
-      (sidebarToggle)="toggleSidebar()"
-    >
-      <a ul-navbar-logo routerLink="/home">
-        <span class="app-shell__brand ul-typography-brand-body-m-extrablack ul-text-primary"
-          >UNDERMARKET</span
-        >
-      </a>
-
-      <div class="app-shell__search" ul-navbar-search>
-        <ul-input
-          [placeholder]="t('common.searchPlaceholder')"
-          size="lg"
-          [(value)]="searchQuery"
-          (inputEnter)="onSearchSubmit()"
-        />
-      </div>
-
-      <div class="app-shell__actions" ul-navbar-avatar>
-        <um-notifications />
-        <um-user-menu [avatarInitials]="avatarInitials()" [avatarSrc]="userImage()" />
-      </div>
-    </ul-navbar>
-
+      [currentUser]="currentUser()"
+      (toggleSidebar)="toggleSidebar()"
+      (submitSearch)="onSearchSubmit($event)"
+      />
     <ul-dock>
       <ul-dock-item icon="home" routerLink="/home" routerLinkActive="ul-dock-item--active" />
 

@@ -1,7 +1,24 @@
-<div class="ul-container-gallery">
-  <div class="ul-content ul-pt-8">
-    <ng-container *transloco="let t">
-      <h1 class="ul-typography-headline-xl-extrablack ul-mb-6">{{ t('search.title') }}</h1>
+<ng-container *transloco="let t">
+  <div class="search__mobile-header md:ul-hidden ul-container-gallery">
+    <h2 class="ul-hidden md:ul-d-flex ul-typography-headline-s-extrabold search__mobile-title">
+      {{ t('search.title') }}
+    </h2>
+    <ul-button
+      type="button"
+      theme="ghost-white"
+      [iconOnly]="true"
+      [ariaLabel]="t('common.close')"
+      (buttonClick)="onClose()"
+    >
+      <ul-icon icon="close" size="6" />
+    </ul-button>
+  </div>
+
+  <div class="ul-container-gallery">
+    <div class="ul-content ul-pt-8">
+      <h1 class="ul-typography-headline-xl-extrablack ul-mb-6 search__desktop-title">
+        {{ t('search.title') }}
+      </h1>
 
       <div class="ul-row ul-mb-4">
         <div class="ul-col-12 ul-col-md-6">
@@ -20,9 +37,9 @@
           />
         </div>
         <div class="ul-col-12 ul-col-md-2" style="display: flex; align-items: flex-end">
-          <ul-button theme="fill-purple" size="md" type="button" (buttonClick)="onSearch()"
-            >{{ t('search.searchButton') }}</ul-button
-          >
+          <ul-button theme="fill-purple" size="md" type="button" (buttonClick)="onSearch()">{{
+            t('search.searchButton')
+          }}</ul-button>
         </div>
       </div>
 
@@ -56,6 +73,6 @@
           }
         </div>
       }
-    </ng-container>
+    </div>
   </div>
-</div>
+</ng-container>

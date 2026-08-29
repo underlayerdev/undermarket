@@ -5,16 +5,6 @@
   min-height: 100vh;
 }
 
-.ul-navbar__bar {
-  padding-left: tokens.$spacing-spacing-8;
-  padding-right: tokens.$spacing-spacing-8;
-
-  @media (min-width: tokens.$breakpoint-md) {
-    padding-left: tokens.$spacing-spacing-16;
-    padding-right: tokens.$spacing-spacing-16;
-  }
-}
-
 .app-shell {
   display: flex;
   min-height: 100vh;
@@ -74,58 +64,6 @@
       margin-bottom: calc(
         #{tokens.$spacing-spacing-12} + #{tokens.$spacing-spacing-4} + env(safe-area-inset-bottom)
       );
-    }
-  }
-
-  // The brand wordmark is the only text in the mobile navbar, so it carries the
-  // header weight there and the utility class's 16px reads as too small. It
-  // keeps that size at md+, where the navbar also holds search and the avatar
-  // actions and the wordmark should not outweigh them.
-  //
-  // brand-body-l (18px) rather than a headline step: "UNDERMARKET" is a single
-  // unbreakable word, so the wordmark cannot wrap or shrink. Measured against
-  // the real Ultra Brand metrics, the mobile row (40px toggle + 8px gap +
-  // wordmark + 2x32px bar padding) comes to 296px at 18px but 354px at
-  // brand-headline-s's 24px — which overflows a 320px viewport and leaves only
-  // 6px on a 360px one. Only the size changes; family/weight/transform stay
-  // with the utility class.
-  &__brand {
-    @media (max-width: (tokens.$breakpoint-md - 1px)) {
-      font-size: tokens.$typography-font-size-brand-body-l;
-      line-height: tokens.$typography-font-line-height-brand-body-l;
-      letter-spacing: tokens.$typography-font-letter-spacing-brand-body-l;
-    }
-  }
-
-  &__search {
-    width: 100%;
-    display: flex;
-    flex: 1;
-    max-width: 640px;
-    margin: 0 auto;
-
-    ul-input {
-      width: 100%;
-    }
-  }
-
-  &__actions {
-    display: flex;
-    align-items: center;
-    gap: tokens.$spacing-spacing-8;
-
-    // Bell + avatar move to the dock (notifications tab) and sidebar drawer
-    // (profile/settings/sign-out) on mobile, where ul-dock is the primary
-    // nav — keeping both visible would duplicate navigation. $breakpoint-md
-    // matches where the library's own ul-sidebar flips behavior (sidebar is
-    // hidden above that width via the md:ul-hidden utility class in the
-    // template — the base library's own ul-sidebar CSS would otherwise dock
-    // it as a permanent column there, the opposite of what desktop nav
-    // should do now that search + the avatar menu live in the navbar).
-    // No utility exists for "hidden below a breakpoint" (ul-hidden variants
-    // only hide from a breakpoint up), so this direction stays a manual query.
-    @media (max-width: (tokens.$breakpoint-md - 1px)) {
-      display: none;
     }
   }
 }
