@@ -1,11 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  inject,
-  OnInit,
-  signal,
-} from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { Location } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
@@ -36,7 +29,6 @@ import {
 
 @Component({
   selector: 'um-listing-detail',
-  standalone: true,
   imports: [
     ListingPricePipe,
     LocaleDatePipe,
@@ -53,7 +45,6 @@ import {
   ],
   templateUrl: './listing-detail.html',
   styleUrl: './listing-detail.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ListingDetailComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);

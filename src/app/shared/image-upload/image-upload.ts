@@ -1,6 +1,5 @@
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import {
-  ChangeDetectionStrategy,
   Component,
   DestroyRef,
   ElementRef,
@@ -29,7 +28,6 @@ function isSameFile(a: File, b: File): boolean {
   templateUrl: './image-upload.html',
   styleUrl: './image-upload.scss',
   imports: [ButtonComponent, IconComponent, DragDropModule, TranslocoDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ImageUploadComponent {
   readonly images = model<File[]>([]);

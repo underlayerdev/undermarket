@@ -1,11 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  inject,
-  OnInit,
-  signal,
-} from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { AuthService } from '../../../application/services/auth.service';
@@ -16,11 +9,9 @@ import { ButtonComponent, InputComponent, StatusComponent } from '@underlayerdev
 
 @Component({
   selector: 'um-reset-password',
-  standalone: true,
   imports: [ButtonComponent, InputComponent, RouterLink, StatusComponent, TranslocoDirective],
   templateUrl: './reset-password.html',
   styleUrl: './reset-password.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ResetPasswordComponent implements OnInit {
   private readonly authService = inject(AuthService);

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { ListingService } from '../../application/services/listing.service';
@@ -10,10 +10,8 @@ import { CardComponent, PillComponent } from '@underlayerdev/ui';
 
 @Component({
   selector: 'um-discover',
-  standalone: true,
   imports: [RouterLink, CardComponent, PillComponent, ListingPricePipe, TranslocoDirective],
   templateUrl: './discover.html',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DiscoverComponent implements OnInit {
   protected readonly listingService = inject(ListingService);

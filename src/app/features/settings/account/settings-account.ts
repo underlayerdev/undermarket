@@ -1,11 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  inject,
-  OnInit,
-  signal,
-} from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { UserService } from '../../../application/services/user.service';
@@ -23,7 +16,6 @@ import {
 
 @Component({
   selector: 'um-settings-account',
-  standalone: true,
   imports: [
     ButtonComponent,
     IconComponent,
@@ -35,7 +27,6 @@ import {
   ],
   templateUrl: './settings-account.html',
   styleUrl: './settings-account.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SettingsAccountComponent implements OnInit {
   protected readonly userService = inject(UserService);

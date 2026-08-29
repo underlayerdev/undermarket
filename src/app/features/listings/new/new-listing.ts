@@ -1,12 +1,5 @@
 import { Location } from '@angular/common';
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  inject,
-  OnInit,
-  signal,
-} from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { AuthService } from '../../../application/services/auth.service';
@@ -78,7 +71,6 @@ function toNewListingInput(value: NewListingFormModel, ownerId: string): NewList
 
 @Component({
   selector: 'um-new-listing',
-  standalone: true,
   imports: [
     FormField,
     ButtonComponent,
@@ -93,7 +85,6 @@ function toNewListingInput(value: NewListingFormModel, ownerId: string): NewList
   providers: [ToastService],
   templateUrl: './new-listing.html',
   styleUrl: './new-listing.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class NewListingComponent implements OnInit {
   private readonly listingService = inject(ListingService);

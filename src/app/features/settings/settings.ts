@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, OnInit } from '@angular/core';
+import { Component, computed, inject, OnInit } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { filter, map, startWith } from 'rxjs';
@@ -11,11 +11,9 @@ type SettingsSidebarItem = SidebarItem & { path?: string };
 
 @Component({
   selector: 'um-settings',
-  standalone: true,
   imports: [RouterOutlet, SidebarComponent, TranslocoDirective],
   templateUrl: './settings.html',
   styleUrl: './settings.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SettingsComponent implements OnInit {
   private readonly seoService = inject(SeoService);

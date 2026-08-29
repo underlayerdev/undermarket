@@ -1,5 +1,5 @@
 import { CdkMenu, CdkMenuItem, CdkMenuTrigger } from '@angular/cdk/menu';
-import { ChangeDetectionStrategy, Component, inject, input, signal } from '@angular/core';
+import { Component, inject, input, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { AuthService } from '../../../application/services/auth.service';
@@ -7,7 +7,6 @@ import { AvatarComponent, IconComponent, ListItemComponent } from '@underlayerde
 
 @Component({
   selector: 'um-user-menu',
-  standalone: true,
   imports: [
     CdkMenuTrigger,
     CdkMenu,
@@ -20,7 +19,6 @@ import { AvatarComponent, IconComponent, ListItemComponent } from '@underlayerde
   ],
   templateUrl: './user-menu.html',
   styleUrl: './user-menu.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class UserMenuComponent {
   private readonly authService = inject(AuthService);

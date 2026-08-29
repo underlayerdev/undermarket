@@ -1,11 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  inject,
-  OnInit,
-  signal,
-} from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Router } from '@angular/router';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
@@ -24,11 +17,15 @@ type Step = 'email' | 'password';
 
 @Component({
   selector: 'um-login',
-  standalone: true,
-  imports: [ButtonComponent, InputComponent, RouterLink, GoogleSignInButtonComponent, TranslocoDirective],
+  imports: [
+    ButtonComponent,
+    InputComponent,
+    RouterLink,
+    GoogleSignInButtonComponent,
+    TranslocoDirective,
+  ],
   templateUrl: './login.html',
   styleUrl: './login.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LoginComponent implements OnInit {
   private readonly authService = inject(AuthService);

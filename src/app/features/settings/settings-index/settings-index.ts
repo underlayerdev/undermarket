@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { IconComponent } from '@underlayerdev/ui';
@@ -16,11 +16,9 @@ const SETTINGS_INDEX_ITEMS: SettingsIndexItem[] = [
 
 @Component({
   selector: 'um-settings-index',
-  standalone: true,
   imports: [RouterLink, IconComponent, TranslocoDirective],
   templateUrl: './settings-index.html',
   styleUrl: './settings-index.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SettingsIndexComponent {
   readonly navItems = SETTINGS_INDEX_ITEMS;

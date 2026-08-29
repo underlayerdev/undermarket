@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, OnInit } from '@angular/core';
+import { Component, computed, inject, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { ListingService } from '../../application/services/listing.service';
@@ -10,11 +10,9 @@ import type { HeroAction } from '@underlayerdev/ui';
 
 @Component({
   selector: 'um-home',
-  standalone: true,
   imports: [RouterLink, CardComponent, HeroComponent, ListingPricePipe, TranslocoDirective],
   templateUrl: './home.html',
   styleUrl: './home.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HomeComponent implements OnInit {
   protected readonly listingService = inject(ListingService);

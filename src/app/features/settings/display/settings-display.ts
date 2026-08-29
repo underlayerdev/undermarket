@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, linkedSignal } from '@angular/core';
+import { Component, inject, linkedSignal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { LanguageService } from '../../../application/services/language.service';
@@ -7,11 +7,9 @@ import type { SelectOption } from '@underlayerdev/ui';
 
 @Component({
   selector: 'um-settings-display',
-  standalone: true,
   imports: [ButtonComponent, IconComponent, RouterLink, SelectComponent, TranslocoDirective],
   templateUrl: './settings-display.html',
   styleUrl: './settings-display.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SettingsDisplayComponent {
   private readonly languageService = inject(LanguageService);

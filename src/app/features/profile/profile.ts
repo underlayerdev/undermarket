@@ -1,11 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  inject,
-  OnInit,
-  signal,
-} from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { AuthService } from '../../application/services/auth.service';
@@ -14,6 +7,7 @@ import { SeoService } from '../../core/seo/seo.service';
 import { LISTING_REPOSITORY } from '../../core/configuration/tokens';
 import { ListingPricePipe } from '../../shared/pipes/listing-price/listing-price.pipe';
 import { createListingSlug } from '../../shared/utils/slugify';
+import { getInitials } from '../../shared/utils/user-display';
 import type { Listing } from '../../domain/listing/listing.model';
 import {
   AvatarComponent,
@@ -24,7 +18,6 @@ import {
 
 @Component({
   selector: 'um-profile',
-  standalone: true,
   imports: [
     RouterLink,
     AvatarComponent,
@@ -36,7 +29,6 @@ import {
   ],
   templateUrl: './profile.html',
   styleUrl: './profile.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProfileComponent implements OnInit {
   protected readonly authService = inject(AuthService);
@@ -51,7 +43,7 @@ export class ProfileComponent implements OnInit {
 
   readonly avatarInitials = computed(() => {
     const name = this.userService.profile()?.displayName;
-    return name ? name.charAt(0).toUpperCase() : undefined;
+    return name ? getInitials(name) : undefined;
   });
 
   readonly avatarSrc = computed(() => this.userService.profile()?.photoUrl ?? undefined);

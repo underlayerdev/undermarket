@@ -1,12 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  effect,
-  inject,
-  input,
-  OnInit,
-  signal,
-} from '@angular/core';
+import { Component, effect, inject, input, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { ListingService } from '../../application/services/listing.service';
@@ -25,7 +17,6 @@ import type { SelectOption } from '@underlayerdev/ui';
 
 @Component({
   selector: 'um-search',
-  standalone: true,
   imports: [
     RouterLink,
     ButtonComponent,
@@ -38,7 +29,6 @@ import type { SelectOption } from '@underlayerdev/ui';
   ],
   templateUrl: './search.html',
   styleUrl: './search.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SearchComponent implements OnInit {
   protected readonly listingService = inject(ListingService);

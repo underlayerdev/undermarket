@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { ButtonComponent } from '@underlayerdev/ui';
@@ -7,11 +7,9 @@ import { ErrorService } from '../../../../application/services/error.service';
 
 @Component({
   selector: 'um-google-sign-in-button',
-  standalone: true,
   imports: [ButtonComponent, TranslocoDirective],
   templateUrl: './google-sign-in-button.html',
   styleUrl: './google-sign-in-button.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class GoogleSignInButtonComponent {
   private readonly authService = inject(AuthService);

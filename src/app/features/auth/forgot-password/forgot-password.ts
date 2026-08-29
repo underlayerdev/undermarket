@@ -1,11 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  inject,
-  OnInit,
-  signal,
-} from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { AuthService } from '../../../application/services/auth.service';
@@ -16,11 +9,9 @@ import { ButtonComponent, InputComponent, StatusComponent } from '@underlayerdev
 
 @Component({
   selector: 'um-forgot-password',
-  standalone: true,
   imports: [ButtonComponent, InputComponent, RouterLink, StatusComponent, TranslocoDirective],
   templateUrl: './forgot-password.html',
   styleUrl: './forgot-password.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ForgotPasswordComponent implements OnInit {
   private readonly authService = inject(AuthService);

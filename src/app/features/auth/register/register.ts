@@ -1,11 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  inject,
-  OnInit,
-  signal,
-} from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Router } from '@angular/router';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
@@ -22,7 +15,6 @@ import { GoogleSignInButtonComponent } from '../components/google-sign-in-button
 
 @Component({
   selector: 'um-register',
-  standalone: true,
   imports: [
     ButtonComponent,
     InputComponent,
@@ -32,7 +24,6 @@ import { GoogleSignInButtonComponent } from '../components/google-sign-in-button
   ],
   templateUrl: './register.html',
   styleUrl: './register.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RegisterComponent implements OnInit {
   private readonly authService = inject(AuthService);
