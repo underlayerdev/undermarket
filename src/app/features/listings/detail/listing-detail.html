@@ -35,7 +35,14 @@
               >
                 @for (url of item.imageUrls; track url; let i = $index) {
                   <ul-carousel-item>
-                    <img [src]="url" [alt]="photoAltText(i)" class="listing-detail__image" />
+                    <button
+                      type="button"
+                      class="listing-detail__photo-trigger"
+                      [attr.aria-label]="photoAltText(i)"
+                      (click)="openLightbox(i)"
+                    >
+                      <img [src]="url" [alt]="photoAltText(i)" class="listing-detail__image" />
+                    </button>
                   </ul-carousel-item>
                 }
               </ul-carousel>

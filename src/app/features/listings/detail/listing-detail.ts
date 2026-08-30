@@ -7,6 +7,7 @@ import { ListingService } from '../../../application/services/listing.service';
 import { SeoService } from '../../../core/seo/seo.service';
 import { LISTING_REPOSITORY } from '../../../core/configuration/tokens';
 import type { Listing } from '../../../domain/listing/listing.model';
+import { ImageLightboxService } from '../../../shared/image-lightbox/image-lightbox.service';
 import { ListingPricePipe } from '../../../shared/pipes/listing-price/listing-price.pipe';
 import { LocaleDatePipe } from '../../../shared/pipes/locale-date/locale-date.pipe';
 import { extractIdFromSlug } from '../../../shared/utils/slugify';
@@ -54,6 +55,7 @@ export class ListingDetailComponent implements OnInit {
   private readonly listingService = inject(ListingService);
   private readonly seoService = inject(SeoService);
   private readonly transloco = inject(TranslocoService);
+  private readonly imageLightboxService = inject(ImageLightboxService);
 
   readonly listing = signal<Listing | null>(null);
   readonly isLoading = signal(true);
@@ -81,6 +83,12 @@ export class ListingDetailComponent implements OnInit {
 
   protected photoAltText(index: number): string {
     return this.transloco.translate('listingDetail.photoAlt', { photoNumber: index + 1 });
+  }
+
+  protected openLightbox(index: number): void {
+    const listing = this.listing();
+    if (!listing) return;
+    void this.imageLightboxService.open(listing.imageUrls, index, (i) => this.photoAltText(i));
   }
 
   async ngOnInit(): Promise<void> {

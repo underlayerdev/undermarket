@@ -8,6 +8,7 @@ import { ListingService } from '../../../application/services/listing.service';
 import { SeoService } from '../../../core/seo/seo.service';
 import { LISTING_REPOSITORY } from '../../../core/configuration/tokens';
 import type { Listing } from '../../../domain/listing/listing.model';
+import { ImageLightboxService } from '../../../shared/image-lightbox/image-lightbox.service';
 import { getTranslocoTestingModule } from '../../../../testing/transloco-testing';
 
 describe('ListingDetailComponent', () => {
@@ -34,6 +35,7 @@ describe('ListingDetailComponent', () => {
         { provide: AuthService, useValue: { currentUser: signal(null) } },
         { provide: SeoService, useValue: { setPage: vi.fn(), setListing: vi.fn() } },
         { provide: ActivatedRoute, useValue: { snapshot: { params: { slug } } } },
+        { provide: ImageLightboxService, useValue: { open: vi.fn() } },
       ],
     });
 
@@ -96,5 +98,35 @@ describe('ListingDetailComponent', () => {
     fixture.componentInstance.goBack();
 
     expect(backSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('should open the lightbox with the listing photos and tapped index when a photo is clicked', async () => {
+    // jsdom has no matchMedia; the carousel's underlying Splide instance
+    // calls it on mount to watch for reduced-motion/breakpoint changes.
+    window.matchMedia ??= vi.fn().mockReturnValue({
+      matches: false,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }) as unknown as typeof window.matchMedia;
+
+    const listingWithPhotos: Listing = {
+      ...listing,
+      imageUrls: ['https://example.com/a.jpg', 'https://example.com/b.jpg'],
+    };
+    const fixture = setup(vi.fn().mockResolvedValue(listingWithPhotos));
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const triggers = fixture.nativeElement.querySelectorAll('.listing-detail__photo-trigger');
+    expect(triggers.length).toBe(2);
+    (triggers[1] as HTMLButtonElement).click();
+
+    const imageLightboxService = TestBed.inject(ImageLightboxService);
+    expect(imageLightboxService.open).toHaveBeenCalledTimes(1);
+    const [images, startIndex] = (imageLightboxService.open as ReturnType<typeof vi.fn>).mock
+      .calls[0];
+    expect(images).toEqual(listingWithPhotos.imageUrls);
+    expect(startIndex).toBe(1);
   });
 });

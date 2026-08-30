@@ -57,6 +57,18 @@ ul-breadcrumb {
 
 .listing-detail__carousel,
 .listing-detail__placeholder {
+  // ul-carousel is a custom element with no display set by the library,
+  // defaulting to inline — height/aspect-ratio below are no-ops without
+  // this, and Splide falls back to sizing the track from each photo's own
+  // natural aspect ratio instead, which is why the height used to vary
+  // per listing depending on that photo's dimensions.
+  display: block;
+  // With the default overflow: visible, a taller-than-4:3 photo's intrinsic
+  // size still wins over aspect-ratio/height (the automatic minimum size
+  // defers to content unless overflow is clipped) — hidden is also correct
+  // here regardless, since object-fit: cover is meant to crop the photo to
+  // this box, not have the box grow around it.
+  overflow: hidden;
   height: 65vh;
 
   @include bp.up('md') {
@@ -69,6 +81,16 @@ ul-breadcrumb {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.listing-detail__photo-trigger {
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
 }
 
 .listing-detail__image {

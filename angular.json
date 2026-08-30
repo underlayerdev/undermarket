@@ -40,7 +40,11 @@
                 "output": "assets/img"
               }
             ],
-            "styles": ["node_modules/@underlayerdev/ui/styles/foundations.css", "src/styles.scss"]
+            "styles": [
+              "node_modules/@underlayerdev/ui/styles/foundations.css",
+              "node_modules/photoswipe/dist/photoswipe.css",
+              "src/styles.scss"
+            ]
           },
           "configurations": {
             "production": {
