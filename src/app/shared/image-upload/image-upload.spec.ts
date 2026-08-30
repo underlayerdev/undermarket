@@ -17,6 +17,13 @@ describe('ImageUploadComponent', () => {
     vi.mocked(imageCompression).mockImplementation(async (file) => file as File);
     URL.createObjectURL = vi.fn(() => 'blob:mock-url');
     URL.revokeObjectURL = vi.fn();
+    // jsdom has no matchMedia; the carousel's underlying Splide instance calls
+    // it on mount to watch for reduced-motion/breakpoint changes.
+    window.matchMedia ??= vi.fn().mockReturnValue({
+      matches: false,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }) as unknown as typeof window.matchMedia;
 
     TestBed.configureTestingModule({
       imports: [ImageUploadComponent, getTranslocoTestingModule()],
@@ -32,6 +39,18 @@ describe('ImageUploadComponent', () => {
   it('should create', () => {
     const fixture = TestBed.createComponent(ImageUploadComponent);
     expect(fixture.componentInstance).toBeTruthy();
+  });
+
+  it('should render the photo carousel once at least one file is selected', async () => {
+    const fixture = TestBed.createComponent(ImageUploadComponent);
+    const component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    await selectViaComponent(component, [createFile('a.png')]);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('ul-carousel')).toBeTruthy();
+    expect(fixture.nativeElement.querySelectorAll('ul-carousel-item').length).toBe(2); // photo + add tile
   });
 
   it('should append newly selected files to the existing value instead of replacing it', async () => {

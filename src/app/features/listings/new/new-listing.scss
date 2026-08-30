@@ -1,4 +1,5 @@
 @use 'pkg:@underlayerdev/ui/design-tokens' as tokens;
+@use 'pkg:@underlayerdev/ui/breakpoints' as bp;
 
 :host {
   display: block;
@@ -20,9 +21,10 @@
     top: 0;
     background-color: tokens.$color-background-main;
     z-index: 1;
+    display: flex;
 
-    @media (max-width: (tokens.$breakpoint-md - 1px)) {
-      display: flex;
+    @include bp.up('md') {
+      display: none;
     }
   }
 
@@ -30,35 +32,26 @@
     margin: 0;
   }
 
-  // No utility exists for "hidden below a breakpoint" (ul-hidden variants
-  // only hide from a breakpoint up), so this direction stays a manual query.
   &__desktop-title {
-    display: block;
+    display: none;
 
-    @media (max-width: tokens.$breakpoint-md - 1px) {
-      display: none;
+    @include bp.up('md') {
+      display: block;
     }
   }
 
+  // Single vertical list at every breakpoint — photos, then one field per
+  // row — like Vinted/Wallapop's create-listing flow, rather than a
+  // photos-sidebar-next-to-fields split on wider screens.
   &__form {
     display: flex;
     flex-direction: column;
-
-    @media (min-width: tokens.$breakpoint-sm) {
-      flex-direction: row-reverse;
-      align-items: flex-start;
-    }
   }
 
   &__photos {
     display: flex;
     flex-direction: column;
     gap: tokens.$spacing-spacing-1;
-
-    @media (min-width: tokens.$breakpoint-sm) {
-      flex: 0 0 280px;
-      width: 280px;
-    }
   }
 
   &__fields {
@@ -66,10 +59,6 @@
     flex-direction: column;
     gap: tokens.$spacing-spacing-5;
     min-width: 0;
-
-    @media (min-width: tokens.$breakpoint-sm) {
-      flex: 1 1 auto;
-    }
   }
 
   &__submit {

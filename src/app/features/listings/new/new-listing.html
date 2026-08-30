@@ -19,21 +19,21 @@
       <h1 class="ul-typography-headline-xl-extrablack ul-mb-2 new-listing__desktop-title">
         {{ t('newListing.title') }}
       </h1>
-      <p class="ul-typography-body-m-regular ul-text-secondary ul-hidden md:ul-flex l-mb-8">
+      <p class="ul-typography-body-l-regular ul-text-secondary ul-mb-8">
         {{ t('newListing.subtitle') }}
       </p>
 
       <form (submit)="onFormSubmit($event)" class="new-listing__form ul-gap-5">
         <div class="new-listing__photos">
-          <label
-            class="ul-form-field__label ul-form-field__label--md ul-form-field__label--requireds"
-          >
-            <ng-container>{{ t('newListing.photosLabel') }}</ng-container>
+          @if (imageFiles().length > 0) {
+            <label
+              class="ul-form-field__label ul-form-field__label--md ul-form-field__label--requireds"
+            >
+              <ng-container>{{ t('newListing.photosLabel') }}</ng-container>
 
-            @if (imageFiles().length > 0) {
               ({{ imageFiles().length }})
-            }
-          </label>
+            </label>
+          }
           <um-image-upload [(images)]="imageFiles" />
         </div>
         <div class="new-listing__fields">
@@ -50,32 +50,26 @@
             [formField]="listingForm.description"
           />
 
-          <div class="ul-row">
-            <div class="ul-col-12 ul-col-md-3">
-              <ul-select
-                [label]="t('newListing.currencyLabel')"
-                [placeholder]="t('newListing.currencyPlaceholder')"
-                [options]="currencyOptions()"
-                [formField]="listingForm.currency"
-              />
-            </div>
-            <div class="ul-col-12 ul-col-md-3">
-              <ul-input
-                type="number"
-                [label]="t('newListing.priceLabel')"
-                placeholder="0.00"
-                [formField]="listingForm.price"
-              />
-            </div>
-            <div class="ul-col-12 ul-col-md-6">
-              <ul-select
-                [label]="t('newListing.categoryLabel')"
-                [placeholder]="t('newListing.categoryPlaceholder')"
-                [options]="categoryOptions"
-                [formField]="listingForm.category"
-              />
-            </div>
-          </div>
+          <ul-select
+            [label]="t('newListing.currencyLabel')"
+            [placeholder]="t('newListing.currencyPlaceholder')"
+            [options]="currencyOptions()"
+            [formField]="listingForm.currency"
+          />
+
+          <ul-input
+            type="number"
+            [label]="t('newListing.priceLabel')"
+            placeholder="0.00"
+            [formField]="listingForm.price"
+          />
+
+          <ul-select
+            [label]="t('newListing.categoryLabel')"
+            [placeholder]="t('newListing.categoryPlaceholder')"
+            [options]="categoryOptions"
+            [formField]="listingForm.category"
+          />
 
           <div class="new-listing__submit ul-gap-4 ul-mt-2">
             <ul-button

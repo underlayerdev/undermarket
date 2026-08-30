@@ -1,72 +1,77 @@
-<div class="image-upload" [class.photos-added]="images().length > 0" *transloco="let t">
-  <div
-    class="image-upload__grid"
-    cdkDropList
-    cdkDropListOrientation="horizontal"
-    (cdkDropListDropped)="onDrop($event)"
-  >
-    @for (preview of previews(); track preview.url; let idx = $index) {
-      <div class="image-upload__thumb" cdkDrag>
-        <img [src]="preview.url" [alt]="photoAltText(idx)" class="image-upload__img" />
+<div class="image-upload" *transloco="let t">
+  @if (previews().length === 0) {
+    <button
+      type="button"
+      class="image-upload__add image-upload__add--empty"
+      (click)="openFilePicker()"
+    >
+      <ul-icon icon="plus" size="8" />
+      <span class="ul-typography-body-s-regular">{{ t('imageUpload.addPhotos') }}</span>
+    </button>
+  } @else {
+    <ul-carousel [options]="carouselOptions" class="image-upload__carousel">
+      @for (preview of previews(); track preview.url; let idx = $index) {
+        <ul-carousel-item class="image-upload__thumb">
+          <img [src]="preview.url" [alt]="photoAltText(idx)" class="image-upload__img" />
 
-        @if (preview.compressing) {
-          <div class="image-upload__overlay">
-            <ul-icon icon="refresh_cw" size="6" class="image-upload__spinner" />
+          @if (preview.compressing) {
+            <div class="image-upload__overlay">
+              <ul-icon icon="refresh_cw" size="6" class="image-upload__spinner" />
+            </div>
+          }
+
+          @if (idx === 0) {
+            <span class="image-upload__badge">{{ t('imageUpload.coverPhoto') }}</span>
+          }
+
+          <ul-button
+            type="button"
+            theme="ghost-white"
+            size="sm"
+            [iconOnly]="true"
+            [ariaLabel]="t('imageUpload.removePhoto')"
+            class="image-upload__remove"
+            (buttonClick)="removePreview(preview)"
+          >
+            <ul-icon icon="close" size="4" />
+          </ul-button>
+
+          <div class="image-upload__move">
+            <ul-button
+              type="button"
+              theme="ghost-white"
+              size="sm"
+              [iconOnly]="true"
+              [ariaLabel]="t('imageUpload.movePhotoLeft')"
+              [disabled]="idx === 0"
+              (buttonClick)="moveLeft(idx)"
+            >
+              <ul-icon icon="arrow_left" size="4" />
+            </ul-button>
+            <ul-button
+              type="button"
+              theme="ghost-white"
+              size="sm"
+              [iconOnly]="true"
+              [ariaLabel]="t('imageUpload.movePhotoRight')"
+              [disabled]="idx === previews().length - 1"
+              (buttonClick)="moveRight(idx)"
+            >
+              <ul-icon icon="arrow_right" size="4" />
+            </ul-button>
           </div>
-        }
+        </ul-carousel-item>
+      }
 
-        @if (idx === 0) {
-          <span class="image-upload__badge">{{ t('imageUpload.coverPhoto') }}</span>
-        }
-
-        <ul-button
-          type="button"
-          theme="ghost-white"
-          size="sm"
-          [iconOnly]="true"
-          [ariaLabel]="t('imageUpload.removePhoto')"
-          class="image-upload__remove"
-          (buttonClick)="removePreview(preview)"
-        >
-          <ul-icon icon="close" size="4" />
-        </ul-button>
-
-        <div class="image-upload__move">
-          <ul-button
-            type="button"
-            theme="ghost-white"
-            size="sm"
-            [iconOnly]="true"
-            [ariaLabel]="t('imageUpload.movePhotoLeft')"
-            [disabled]="idx === 0"
-            (buttonClick)="moveLeft(idx)"
-          >
-            <ul-icon icon="arrow_left" size="4" />
-          </ul-button>
-          <ul-button
-            type="button"
-            theme="ghost-white"
-            size="sm"
-            [iconOnly]="true"
-            [ariaLabel]="t('imageUpload.movePhotoRight')"
-            [disabled]="idx === previews().length - 1"
-            (buttonClick)="moveRight(idx)"
-          >
-            <ul-icon icon="arrow_right" size="4" />
-          </ul-button>
-        </div>
-      </div>
-    }
-
-    @if (previews().length < maxFiles()) {
-      <button type="button" class="image-upload__add" (click)="openFilePicker()">
-        <ul-icon icon="plus" size="8" />
-        @if (previews().length === 0) {
-          <span class="ul-typography-body-s-regular">{{ t('imageUpload.addPhotos') }}</span>
-        }
-      </button>
-    }
-  </div>
+      @if (previews().length < maxFiles()) {
+        <ul-carousel-item class="image-upload__thumb">
+          <button type="button" class="image-upload__add" (click)="openFilePicker()">
+            <ul-icon icon="plus" size="8" />
+          </button>
+        </ul-carousel-item>
+      }
+    </ul-carousel>
+  }
 
   @if (error()) {
     <p class="image-upload__error ul-typography-body-s-regular">{{ error() }}</p>

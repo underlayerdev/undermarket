@@ -5,33 +5,14 @@ $image-height: 96px;
 
 :host {
   display: block;
-
-  @media (min-width: tokens.$breakpoint-sm) {
-    height: 100%;
-  }
 }
 
 .image-upload {
   display: flex;
   flex-direction: column;
 
-  @media (min-width: tokens.$breakpoint-sm) {
-    height: 100%;
-  }
-
-  &__grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: tokens.$spacing-spacing-3;
-
-    @media (min-width: tokens.$breakpoint-sm) {
-      flex: 1 1 auto;
-
-      .photos-added & {
-        flex-direction: column;
-        flex-wrap: nowrap;
-      }
-    }
+  &__carousel {
+    width: 100%;
   }
 
   &__thumb {
@@ -41,15 +22,6 @@ $image-height: 96px;
     border-radius: tokens.$radius-radius-2;
     overflow: hidden;
     background-color: tokens.$color-background-grey-lvl-1;
-
-    @media (min-width: tokens.$breakpoint-sm) {
-      width: 120px;
-      height: 120px;
-
-      .photos-added & {
-        width: 100%;
-      }
-    }
   }
 
   &__img {
@@ -106,30 +78,19 @@ $image-height: 96px;
     justify-content: center;
     gap: tokens.$spacing-spacing-1;
     width: 100%;
-    height: $image-height;
+    height: 100%;
     border: 1px dashed tokens.$color-border-white-medium;
     border-radius: tokens.$radius-radius-2;
     background: none;
     color: tokens.$color-text-secondary;
     cursor: pointer;
 
-    .photos-added & {
-      width: $image-width;
-    }
-
-    @media (min-width: tokens.$breakpoint-sm) {
-      .image-upload:not(.photos-added) & {
-        width: 100%;
-        height: 100%;
-      }
-
-      .photos-added & {
-        width: 100%;
-      }
-    }
-
     &:hover {
       background-color: tokens.$color-background-white-extra-light;
+    }
+
+    &--empty {
+      height: $image-height;
     }
   }
 

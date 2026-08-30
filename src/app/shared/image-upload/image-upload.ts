@@ -1,4 +1,3 @@
-import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import {
   Component,
   DestroyRef,
@@ -10,7 +9,13 @@ import {
   viewChild,
 } from '@angular/core';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
-import { ButtonComponent, IconComponent } from '@underlayerdev/ui';
+import {
+  CarouselComponent,
+  CarouselItemComponent,
+  ButtonComponent,
+  IconComponent,
+} from '@underlayerdev/ui';
+import type { Options } from '@splidejs/splide';
 import { compressImage } from '../utils/image-compression';
 
 interface ImagePreview {
@@ -27,7 +32,13 @@ function isSameFile(a: File, b: File): boolean {
   selector: 'um-image-upload',
   templateUrl: './image-upload.html',
   styleUrl: './image-upload.scss',
-  imports: [ButtonComponent, IconComponent, DragDropModule, TranslocoDirective],
+  imports: [
+    ButtonComponent,
+    IconComponent,
+    CarouselComponent,
+    CarouselItemComponent,
+    TranslocoDirective,
+  ],
 })
 export class ImageUploadComponent {
   readonly images = model<File[]>([]);
@@ -39,6 +50,20 @@ export class ImageUploadComponent {
   protected readonly fileInput = viewChild<ElementRef<HTMLInputElement>>('fileInput');
   protected readonly previews = signal<ImagePreview[]>([]);
   protected readonly error = signal<string | null>(null);
+
+  // autoWidth lets each thumbnail keep its own CSS size instead of being
+  // forced into equal columns — arrows/pagination are dropped in favor of
+  // native drag-to-scroll, matching a thumbnail strip rather than a
+  // one-slide-at-a-time viewer.
+  protected readonly carouselOptions: Options = {
+    type: 'slide',
+    autoWidth: true,
+    gap: '12px',
+    arrows: false,
+    pagination: false,
+    autoplay: false,
+    drag: true,
+  };
 
   constructor() {
     inject(DestroyRef).onDestroy(() => {
@@ -137,13 +162,10 @@ export class ImageUploadComponent {
     this.reorder(index, index + 1);
   }
 
-  protected onDrop(event: CdkDragDrop<ImagePreview[]>): void {
-    this.reorder(event.previousIndex, event.currentIndex);
-  }
-
   private reorder(previousIndex: number, currentIndex: number): void {
     const updated = [...this.previews()];
-    moveItemInArray(updated, previousIndex, currentIndex);
+    const [moved] = updated.splice(previousIndex, 1);
+    updated.splice(currentIndex, 0, moved);
     this.previews.set(updated);
     this.syncValue();
   }

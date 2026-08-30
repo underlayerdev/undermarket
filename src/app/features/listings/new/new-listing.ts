@@ -266,7 +266,11 @@ export class NewListingComponent implements OnInit {
           toNewListingInput(this.listingModel(), currentUser.id),
           this.imageFiles(),
         );
-        await this.router.navigate(['/listings', createListingSlug(listing.title, listing.id)]);
+        // replaceUrl: back from the new listing should skip the now-submitted
+        // form and return to wherever the user was before creating it.
+        await this.router.navigate(['/listings', createListingSlug(listing.title, listing.id)], {
+          replaceUrl: true,
+        });
         return [];
       } catch (err) {
         this.toastService.error(this.errorService.toUserMessage(err));

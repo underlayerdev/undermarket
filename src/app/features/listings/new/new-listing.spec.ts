@@ -7,13 +7,13 @@ import { ListingService } from '../../../application/services/listing.service';
 import { getTranslocoTestingModule } from '../../../../testing/transloco-testing';
 
 describe('NewListingComponent', () => {
-  function setup() {
+  function setup(overrides?: { authService?: object; listingService?: object; router?: object }) {
     TestBed.configureTestingModule({
       imports: [NewListingComponent, getTranslocoTestingModule()],
       providers: [
-        { provide: AuthService, useValue: { currentUser: () => null } },
-        { provide: ListingService, useValue: { create: vi.fn() } },
-        { provide: Router, useValue: { navigate: vi.fn() } },
+        { provide: AuthService, useValue: overrides?.authService ?? { currentUser: () => null } },
+        { provide: ListingService, useValue: overrides?.listingService ?? { create: vi.fn() } },
+        { provide: Router, useValue: overrides?.router ?? { navigate: vi.fn() } },
         { provide: Location, useValue: { back: vi.fn() } },
       ],
     });
@@ -60,5 +60,42 @@ describe('NewListingComponent', () => {
 
     expect(listing.title().touched()).toBe(true);
     expect(listing.title().errors().length).toBeGreaterThan(0);
+  });
+
+  it('should replace the current history entry when navigating to the newly created listing', async () => {
+    const navigateSpy = vi.fn().mockResolvedValue(true);
+    const createdListing = {
+      id: 'abc123',
+      ownerId: 'user-1',
+      title: 'A perfectly valid title',
+      description: 'A perfectly valid description for this listing.',
+      price: 10,
+      currency: 'USD',
+      category: 'Electronics',
+      imageUrls: [],
+      status: 'active' as const,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    const fixture = setup({
+      authService: { currentUser: () => ({ id: 'user-1' }) },
+      listingService: { create: vi.fn().mockResolvedValue(createdListing) },
+      router: { navigate: navigateSpy },
+    });
+
+    fixture.componentInstance.listingModel.set({
+      title: createdListing.title,
+      description: createdListing.description,
+      price: String(createdListing.price),
+      currency: createdListing.currency,
+      category: createdListing.category,
+    });
+    fixture.detectChanges();
+
+    await fixture.componentInstance.onSubmit();
+
+    expect(navigateSpy).toHaveBeenCalledWith(['/listings', 'a-perfectly-valid-title-abc123'], {
+      replaceUrl: true,
+    });
   });
 });
