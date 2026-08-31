@@ -3,7 +3,7 @@
 // is registered in the MercadoLibre developer app.
 export const APP_ORIGIN = 'https://undermarket.store';
 export const REDIRECT_URI = `${APP_ORIGIN}/api/mercadolibre/callback`;
-export const SETTINGS_URL = `${APP_ORIGIN}/settings/mercado-libre`;
+export const SETTINGS_URL = `${APP_ORIGIN}/settings/integrations`;
 
 // MercadoLibre Argentina only, per the app's currency/category scope.
 export const ML_AUTH_HOST = 'https://auth.mercadolibre.com.ar';

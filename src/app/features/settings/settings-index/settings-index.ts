@@ -13,9 +13,9 @@ const SETTINGS_INDEX_ITEMS: SettingsIndexItem[] = [
   { path: 'account', labelKey: 'settings.account', subtitleKey: 'settings.accountSubtitle' },
   { path: 'display', labelKey: 'settings.display', subtitleKey: 'settings.displaySubtitle' },
   {
-    path: 'mercado-libre',
-    labelKey: 'settings.mercadoLibre',
-    subtitleKey: 'settings.mercadoLibreSubtitle',
+    path: 'integrations',
+    labelKey: 'settings.integrations',
+    subtitleKey: 'settings.integrationsSubtitle',
   },
 ];
 

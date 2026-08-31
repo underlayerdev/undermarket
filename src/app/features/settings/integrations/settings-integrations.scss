@@ -9,7 +9,7 @@
   padding: tokens.$spacing-spacing-6;
 }
 
-.settings-mercado-libre {
+.settings-integrations {
   // Visibility is handled by the md:ul-hidden utility class in the
   // template (hidden at $breakpoint-md+) — display: flex must stay
   // scoped below that breakpoint too, matching settings-account.scss's
@@ -35,6 +35,26 @@
 
     @media (max-width: (tokens.$breakpoint-md - 1px)) {
       display: none;
+    }
+  }
+
+  &__drafts {
+    display: flex;
+    flex-direction: column;
+    gap: tokens.$spacing-spacing-4;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__draft-row {
+    display: flex;
+    align-items: center;
+    gap: tokens.$spacing-spacing-4;
+
+    ul-card {
+      flex: 1;
+      min-width: 0;
     }
   }
 }
