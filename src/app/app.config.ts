@@ -17,6 +17,7 @@ import {
   initializeAuth,
 } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
+import { getFunctions } from 'firebase/functions';
 import { environment } from '../environments/environment';
 import { routes } from './app.routes';
 import {
@@ -24,14 +25,17 @@ import {
   FIREBASE_APP,
   FIREBASE_AUTH,
   FIREBASE_FIRESTORE,
+  FIREBASE_FUNCTIONS,
   IMAGE_STORAGE,
   LISTING_REPOSITORY,
+  MERCADO_LIBRE_PROVIDER,
   NOTIFICATION_PROVIDER,
   USER_REPOSITORY,
 } from './core/configuration/tokens';
 import { FirebaseAuthProvider } from './infrastructure/firebase/auth/firebase-auth.provider';
 import { FirestoreUserRepository } from './infrastructure/firebase/firestore/firestore-user.repository';
 import { FirestoreListingRepository } from './infrastructure/firebase/firestore/firestore-listing.repository';
+import { FirebaseMercadoLibreProvider } from './infrastructure/firebase/functions/firebase-mercado-libre.provider';
 import { CloudinaryImageStorage } from './infrastructure/cloudinary/cloudinary-image-storage';
 import { MockNotificationProvider } from './infrastructure/mock/mock-notification.provider';
 import { TranslocoHttpLoader } from './core/i18n/transloco-http-loader';
@@ -76,10 +80,14 @@ export const appConfig: ApplicationConfig = {
       }),
     },
     { provide: FIREBASE_FIRESTORE, useValue: getFirestore(firebaseApp) },
+    // Must match the region mercadoLibreCallback/etc. are deployed to
+    // (functions/src/mercado-libre/callback.ts).
+    { provide: FIREBASE_FUNCTIONS, useValue: getFunctions(firebaseApp, 'us-central1') },
     { provide: AUTH_PROVIDER, useClass: FirebaseAuthProvider },
     { provide: USER_REPOSITORY, useClass: FirestoreUserRepository },
     { provide: LISTING_REPOSITORY, useClass: FirestoreListingRepository },
     { provide: IMAGE_STORAGE, useClass: CloudinaryImageStorage },
+    { provide: MERCADO_LIBRE_PROVIDER, useClass: FirebaseMercadoLibreProvider },
     // TODO: swap for a Firestore-backed NotificationProvider once real
     // notification-triggering events are defined.
     { provide: NOTIFICATION_PROVIDER, useClass: MockNotificationProvider },

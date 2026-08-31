@@ -95,6 +95,13 @@ export class FirestoreListingRepository implements ListingRepository {
       status: data['status'] as Listing['status'],
       createdAt: (data['createdAt'] as Timestamp).toDate(),
       updatedAt: (data['updatedAt'] as Timestamp).toDate(),
+      // Omitted (not set to undefined) when absent: update() spreads this
+      // object straight into updateDoc(), which throws on literal undefined
+      // field values — every pre-existing listing lacks these fields.
+      ...(data['sourceProvider']
+        ? { sourceProvider: data['sourceProvider'] as Listing['sourceProvider'] }
+        : {}),
+      ...(data['sourceId'] ? { sourceId: data['sourceId'] as Listing['sourceId'] } : {}),
     };
   }
 }

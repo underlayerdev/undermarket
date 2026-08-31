@@ -22,6 +22,13 @@ export const settingsRoutes: Routes = [
         loadComponent: () =>
           import('./display/settings-display').then((m) => m.SettingsDisplayComponent),
       },
+      {
+        path: 'mercado-libre',
+        loadComponent: () =>
+          import('./mercado-libre/settings-mercado-libre').then(
+            (m) => m.SettingsMercadoLibreComponent,
+          ),
+      },
     ],
   },
 ];

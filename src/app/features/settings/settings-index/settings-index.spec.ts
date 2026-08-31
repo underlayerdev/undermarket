@@ -20,11 +20,12 @@ describe('SettingsIndexComponent', () => {
     expect(fixture.componentInstance).toBeTruthy();
   });
 
-  it('should expose account and display nav items', () => {
+  it('should expose account, display, and mercado-libre nav items', () => {
     const fixture = setup();
     expect(fixture.componentInstance.navItems.map((item) => item.path)).toEqual([
       'account',
       'display',
+      'mercado-libre',
     ]);
   });
 });

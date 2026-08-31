@@ -25,6 +25,7 @@ export class SettingsComponent implements OnInit {
     return [
       { label: this.transloco.translate('settings.account'), path: 'account' },
       { label: this.transloco.translate('settings.display'), path: 'display' },
+      { label: this.transloco.translate('settings.mercadoLibre'), path: 'mercado-libre' },
     ];
   });
 
