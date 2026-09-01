@@ -1,5 +1,5 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { AuthService } from '../../../application/services/auth.service';
 import { ListingService } from '../../../application/services/listing.service';
@@ -7,24 +7,18 @@ import { MercadoLibreService } from '../../../application/services/mercado-libre
 import { LISTING_REPOSITORY } from '../../../core/configuration/tokens';
 import type { Listing, ListingId } from '../../../domain/listing/listing.model';
 import { ListingPricePipe } from '../../../shared/pipes/listing-price/listing-price.pipe';
-import {
-  ButtonComponent,
-  CardComponent,
-  IconComponent,
-  StatusComponent,
-  ToastService,
-} from '@underlayerdev/ui';
+import { ButtonComponent, CardComponent, StatusComponent, ToastService } from '@underlayerdev/ui';
+import { SettingsLayoutComponent } from '../shared/settings-layout/settings-layout';
 
 @Component({
   selector: 'um-settings-integrations',
   imports: [
     ButtonComponent,
     CardComponent,
-    IconComponent,
     ListingPricePipe,
-    RouterLink,
     StatusComponent,
     TranslocoDirective,
+    SettingsLayoutComponent,
   ],
   templateUrl: './settings-integrations.html',
   styleUrl: './settings-integrations.scss',

@@ -1,0 +1,31 @@
+@use 'pkg:@underlayerdev/ui/design-tokens' as tokens;
+@use 'pkg:@underlayerdev/ui/breakpoints' as bp;
+
+.settings-layout {
+  &__mobile-header {
+    align-items: center;
+    gap: tokens.$spacing-spacing-4;
+    padding-bottom: tokens.$spacing-spacing-4;
+    display: flex;
+    @include bp.up('md') {
+      display: none;
+    }
+  }
+
+  // No utility exists for "hidden below a breakpoint" (ul-hidden variants
+  // only hide from a breakpoint up), so this direction stays a manual query.
+  &__desktop-title {
+    display: none;
+
+    @include bp.up('md') {
+      display: block;
+    }
+  }
+}
+
+.settings__panel {
+  box-sizing: border-box;
+  border: 1px solid tokens.$color-border-white-light;
+  border-radius: tokens.$radius-radius-4;
+  padding: tokens.$spacing-spacing-6;
+}

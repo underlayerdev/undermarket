@@ -1,12 +1,45 @@
-@use 'pkg:@underlayerdev/ui/design-tokens' as tokens;
+@use 'pkg:@underlayerdev/ui/breakpoints' as bp;
+
+// height:100% alone did nothing here: percentage heights only resolve
+// against a parent with a definite computed height, and none of the divs
+// between this host and .ul-row had one — each needs to actively grow
+// (flex, not just height) for that to reach all the way down to the row.
+:host {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.ul-container-fluid,
+.ul-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.ul-row {
+  flex: 1;
+}
+
+// No utility exists for "hidden below a breakpoint" (ul-hidden variants
+// only hide from a breakpoint up), so this direction stays a manual query.
+.settings__title {
+  display: block;
+
+  @include bp.up('md') {
+    display: block;
+  }
+}
 
 .settings__sidebar {
   height: 100%;
+  display: none;
   // ul-sidebar is a slide-in drawer below md and a normal in-flow column
   // at md+ (its own CSS already handles that) — the settings shell only
   // ever wants the desktop column; the mobile drill-in list lives at the
   // separate /settings index route instead.
-  @media (max-width: (tokens.$breakpoint-md - 1px)) {
-    display: none;
+  @include bp.up('md') {
+    display: block;
   }
 }

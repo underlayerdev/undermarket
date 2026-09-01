@@ -7,6 +7,7 @@ export type FooterVariant = 'minimal' | 'full';
 @Component({
   selector: 'um-footer',
   templateUrl: './footer.html',
+  styleUrl: './footer.scss',
   imports: [FooterComponent, TranslocoDirective],
 })
 export class SiteFooterComponent {

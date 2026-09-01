@@ -1,114 +1,100 @@
 <ng-container *transloco="let t">
-  <div class="settings-account__mobile-header md:ul-hidden">
-    <ul-button
-      type="button"
-      theme="ghost-white"
-      [iconOnly]="true"
-      [ariaLabel]="t('common.back')"
-      routerLink="/settings"
-    >
-      <ul-icon icon="arrow_left" size="6" />
-    </ul-button>
-    <h2 class="ul-typography-headline-s-extrabold settings-account__mobile-title">
-      {{ t('settings.account') }}
-    </h2>
-  </div>
-
-  <div class="settings__panel">
-    <h2 class="ul-typography-headline-s-extrabold ul-mb-4 settings-account__desktop-title">
-      {{ t('settings.account') }}
-    </h2>
-    <div class="settings-account__info">
-      <p class="ul-typography-body-m-regular ul-text-secondary settings-account__email">
-        {{ t('settings.emailLabel') }}: {{ authService.currentUser()?.email }}
-      </p>
-      @if (authService.currentUser()?.createdAt; as createdAt) {
-        <p class="ul-typography-body-m-regular ul-text-secondary">
-          {{ t('settings.memberSinceLabel') }}: {{ createdAt | localeDate }}
+  <um-settings-layout [title]="t('settings.account')">
+    <div class="settings__panel">
+      <div class="settings-account__info">
+        <p class="ul-typography-body-m-regular ul-text-secondary settings-account__email">
+          {{ t('settings.emailLabel') }}: {{ authService.currentUser()?.email }}
         </p>
-      }
-    </div>
-  </div>
-
-  @if (isEmailPasswordUser()) {
-    <div class="settings__panel ul-mt-6">
-      <h2 class="ul-typography-headline-s-extrabold ul-mb-4">{{ t('settings.changePassword') }}</h2>
-      <form
-        class="settings-account__form ul-gap-4"
-        (submit)="$event.preventDefault(); onChangePassword()"
-      >
-        <ul-input
-          [label]="t('settings.currentPasswordLabel')"
-          type="password"
-          [required]="true"
-          [(value)]="currentPasswordValue"
-          [error]="!!currentPasswordError()"
-          [errorText]="currentPasswordError()"
-        />
-        <ul-input
-          [label]="t('settings.newPasswordLabel')"
-          type="password"
-          [required]="true"
-          [(value)]="newPasswordValue"
-          [error]="!!newPasswordError()"
-          [errorText]="newPasswordError()"
-        />
-        <ul-input
-          [label]="t('settings.confirmNewPasswordLabel')"
-          type="password"
-          [required]="true"
-          [(value)]="confirmNewPasswordValue"
-          [error]="!!confirmNewPasswordError()"
-          [errorText]="confirmNewPasswordError()"
-        />
-        <ul-button type="submit" theme="fill-purple" size="md" [disabled]="isChangingPassword()">
-          {{ changePasswordButtonLabel() }}
-        </ul-button>
-      </form>
-    </div>
-  }
-
-  <div class="settings__panel ul-mt-6">
-    <h2 class="ul-typography-headline-s-extrabold ul-mb-4">{{ t('settings.dangerZone') }}</h2>
-
-    <div class="settings-account__danger-row">
-      <p class="ul-typography-body-s-regular ul-text-secondary">
-        {{ t('settings.signOutDescription') }}
-      </p>
-      <ul-button type="button" theme="outline-white" size="sm" (buttonClick)="onSignOut()">
-        {{ t('settings.signOutButton') }}
-      </ul-button>
+        @if (authService.currentUser()?.createdAt; as createdAt) {
+          <p class="ul-typography-body-m-regular ul-text-secondary">
+            {{ t('settings.memberSinceLabel') }}: {{ createdAt | localeDate }}
+          </p>
+        }
+      </div>
     </div>
 
-    <div class="settings-account__danger-row">
-      <p class="ul-typography-body-s-regular ul-text-secondary">
-        {{ t('settings.deleteAccountDescription') }}
-      </p>
-      <ul-button type="button" theme="fill-red" size="sm" (buttonClick)="onDeleteAccountClick()">
-        {{ t('settings.deleteAccountButton') }}
-      </ul-button>
-    </div>
-  </div>
-
-  <ul-modal
-    [(open)]="showDeleteModal"
-    [title]="t('settings.deleteAccountModalTitle')"
-    variant="confirmation"
-    [confirmLabel]="t('settings.deleteAccountConfirm')"
-    [cancelLabel]="t('common.cancel')"
-    (confirmed)="confirmDeleteAccount()"
-    (cancelled)="cancelDeleteAccount()"
-  >
-    <p class="ul-typography-body-m-regular ul-mb-4">
-      {{ t('settings.deleteAccountModalBody') }}
-    </p>
     @if (isEmailPasswordUser()) {
-      <ul-input
-        [label]="t('settings.deleteAccountPasswordLabel')"
-        type="password"
-        [required]="true"
-        [(value)]="deleteAccountPasswordValue"
-      />
+      <div class="settings__panel ul-mt-6">
+        <h2 class="ul-typography-headline-s-extrabold ul-mb-4">
+          {{ t('settings.changePassword') }}
+        </h2>
+        <form
+          class="settings-account__form ul-gap-4"
+          (submit)="$event.preventDefault(); onChangePassword()"
+        >
+          <ul-input
+            [label]="t('settings.currentPasswordLabel')"
+            type="password"
+            [required]="true"
+            [(value)]="currentPasswordValue"
+            [error]="!!currentPasswordError()"
+            [errorText]="currentPasswordError()"
+          />
+          <ul-input
+            [label]="t('settings.newPasswordLabel')"
+            type="password"
+            [required]="true"
+            [(value)]="newPasswordValue"
+            [error]="!!newPasswordError()"
+            [errorText]="newPasswordError()"
+          />
+          <ul-input
+            [label]="t('settings.confirmNewPasswordLabel')"
+            type="password"
+            [required]="true"
+            [(value)]="confirmNewPasswordValue"
+            [error]="!!confirmNewPasswordError()"
+            [errorText]="confirmNewPasswordError()"
+          />
+          <ul-button type="submit" theme="fill-purple" size="md" [disabled]="isChangingPassword()">
+            {{ changePasswordButtonLabel() }}
+          </ul-button>
+        </form>
+      </div>
     }
-  </ul-modal>
+
+    <div class="settings__panel ul-mt-6">
+      <h2 class="ul-typography-headline-s-extrabold ul-mb-4">{{ t('settings.dangerZone') }}</h2>
+
+      <div class="settings-account__danger-row">
+        <p class="ul-typography-body-s-regular ul-text-secondary">
+          {{ t('settings.signOutDescription') }}
+        </p>
+        <ul-button type="button" theme="outline-white" size="sm" (buttonClick)="onSignOut()">
+          {{ t('settings.signOutButton') }}
+        </ul-button>
+      </div>
+
+      <div class="settings-account__danger-row">
+        <p class="ul-typography-body-s-regular ul-text-secondary">
+          {{ t('settings.deleteAccountDescription') }}
+        </p>
+        <ul-button type="button" theme="fill-red" size="sm" (buttonClick)="onDeleteAccountClick()">
+          {{ t('settings.deleteAccountButton') }}
+        </ul-button>
+      </div>
+    </div>
+
+    <ul-modal
+      [(open)]="showDeleteModal"
+      [title]="t('settings.deleteAccountModalTitle')"
+      variant="confirmation"
+      [confirmLabel]="t('settings.deleteAccountConfirm')"
+      [cancelLabel]="t('common.cancel')"
+      (confirmed)="confirmDeleteAccount()"
+      (cancelled)="cancelDeleteAccount()"
+    >
+      <p class="ul-typography-body-m-regular ul-mb-4">
+        {{ t('settings.deleteAccountModalBody') }}
+      </p>
+      @if (isEmailPasswordUser()) {
+        <ul-input
+          [label]="t('settings.deleteAccountPasswordLabel')"
+          type="password"
+          [required]="true"
+          [(value)]="deleteAccountPasswordValue"
+        />
+      }
+    </ul-modal>
+  </um-settings-layout>
 </ng-container>

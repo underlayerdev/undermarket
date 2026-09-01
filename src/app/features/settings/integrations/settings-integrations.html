@@ -1,96 +1,79 @@
 <ng-container *transloco="let t">
-  <div class="settings-integrations__mobile-header md:ul-hidden">
-    <ul-button
-      type="button"
-      theme="ghost-white"
-      [iconOnly]="true"
-      [ariaLabel]="t('common.back')"
-      routerLink="/settings"
-    >
-      <ul-icon icon="arrow_left" size="6" />
-    </ul-button>
-    <h2 class="ul-typography-headline-s-extrabold settings-integrations__mobile-title">
-      {{ t('settings.integrations') }}
-    </h2>
-  </div>
-
-  <div class="settings__panel">
-    <h2 class="ul-typography-headline-s-extrabold ul-mb-4 settings-integrations__desktop-title">
-      {{ t('settings.integrations') }}
-    </h2>
-
-    @if (mercadoLibreService.status()?.connected) {
-      <p class="ul-typography-body-m-regular ul-text-secondary ul-mb-4">
-        {{ t('settings.mercadoLibreConnectedDescription') }}
-      </p>
-      <ul-button
-        type="button"
-        theme="fill-purple"
-        size="md"
-        class="ul-mb-6"
-        [disabled]="mercadoLibreService.importing()"
-        (buttonClick)="onImportClick()"
-      >
-        {{
-          mercadoLibreService.importing()
-            ? t('settings.mercadoLibreImporting')
-            : t('settings.mercadoLibreImportButton')
-        }}
-      </ul-button>
-
-      <h3 class="ul-typography-headline-s-extrabold ul-mb-4">
-        {{ t('settings.mercadoLibreDraftsTitle', { value: draftListings().length }) }}
-      </h3>
-
-      @if (!loadingDrafts() && draftListings().length === 0) {
-        <p class="ul-typography-body-m-regular ul-text-secondary">
-          {{ t('settings.mercadoLibreDraftsEmpty') }}
+  <um-settings-layout [title]="t('settings.integrations')">
+    <div class="settings__panel">
+      @if (mercadoLibreService.status()?.connected) {
+        <p class="ul-typography-body-m-regular ul-text-secondary ul-mb-4">
+          {{ t('settings.mercadoLibreConnectedDescription') }}
         </p>
+        <ul-button
+          type="button"
+          theme="fill-yellow"
+          size="md"
+          class="ul-mb-6"
+          [disabled]="mercadoLibreService.importing()"
+          (buttonClick)="onImportClick()"
+        >
+          {{
+            mercadoLibreService.importing()
+              ? t('settings.mercadoLibreImporting')
+              : t('settings.mercadoLibreImportButton')
+          }}
+        </ul-button>
+
+        <h3 class="ul-typography-headline-s-extrabold ul-mb-4">
+          {{ t('settings.mercadoLibreDraftsTitle', { value: draftListings().length }) }}
+        </h3>
+
+        @if (!loadingDrafts() && draftListings().length === 0) {
+          <p class="ul-typography-body-m-regular ul-text-secondary">
+            {{ t('settings.mercadoLibreDraftsEmpty') }}
+          </p>
+        } @else {
+          <ul class="settings-integrations__drafts">
+            @for (listing of draftListings(); track listing.id) {
+              <li class="settings-integrations__draft-row">
+                <ul-card
+                  [cardTitle]="listing.title"
+                  [cardSubtitle]="listing.price | listingPrice: listing.currency"
+                  [cardCaption]="listing.category"
+                  cardDirection="horizontal"
+                />
+                <ul-status status="pending" />
+                <ul-button
+                  type="button"
+                  theme="fill-yellow"
+                  size="sm"
+                  [disabled]="publishingId() === listing.id"
+                  (buttonClick)="onPublishClick(listing)"
+                >
+                  {{
+                    publishingId() === listing.id
+                      ? t('settings.mercadoLibrePublishing')
+                      : t('settings.mercadoLibrePublishButton')
+                  }}
+                </ul-button>
+              </li>
+            }
+          </ul>
+        }
       } @else {
-        <ul class="settings-integrations__drafts">
-          @for (listing of draftListings(); track listing.id) {
-            <li class="settings-integrations__draft-row">
-              <ul-card
-                [cardTitle]="listing.title"
-                [cardSubtitle]="listing.price | listingPrice: listing.currency"
-                [cardCaption]="listing.category"
-                cardDirection="horizontal"
-              />
-              <ul-status status="pending" />
-              <ul-button
-                type="button"
-                theme="fill-purple"
-                size="sm"
-                [disabled]="publishingId() === listing.id"
-                (buttonClick)="onPublishClick(listing)"
-              >
-                {{
-                  publishingId() === listing.id
-                    ? t('settings.mercadoLibrePublishing')
-                    : t('settings.mercadoLibrePublishButton')
-                }}
-              </ul-button>
-            </li>
-          }
-        </ul>
+        <p class="ul-typography-body-m-regular ul-text-secondary ul-mb-4">
+          {{ t('settings.mercadoLibreDescription') }}
+        </p>
+        <ul-button
+          type="button"
+          theme="fill-yellow"
+          size="md"
+          [disabled]="mercadoLibreService.connecting()"
+          (buttonClick)="onConnectClick()"
+        >
+          {{
+            mercadoLibreService.connecting()
+              ? t('settings.mercadoLibreConnecting')
+              : t('settings.mercadoLibreConnectButton')
+          }}
+        </ul-button>
       }
-    } @else {
-      <p class="ul-typography-body-m-regular ul-text-secondary ul-mb-4">
-        {{ t('settings.mercadoLibreDescription') }}
-      </p>
-      <ul-button
-        type="button"
-        theme="fill-purple"
-        size="md"
-        [disabled]="mercadoLibreService.connecting()"
-        (buttonClick)="onConnectClick()"
-      >
-        {{
-          mercadoLibreService.connecting()
-            ? t('settings.mercadoLibreConnecting')
-            : t('settings.mercadoLibreConnectButton')
-        }}
-      </ul-button>
-    }
-  </div>
+    </div>
+  </um-settings-layout>
 </ng-container>

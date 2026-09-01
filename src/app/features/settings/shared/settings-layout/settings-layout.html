@@ -1,0 +1,22 @@
+<ng-container *transloco="let t">
+  <div class="settings-layout__mobile-header">
+    <ul-button
+      type="button"
+      theme="ghost-white"
+      [iconOnly]="true"
+      [ariaLabel]="t('common.back')"
+      routerLink="/settings"
+    >
+      <ul-icon icon="arrow_left" size="6" />
+    </ul-button>
+    <h2 class="ul-typography-headline-s-extrabold">
+      {{ title() }}
+    </h2>
+  </div>
+
+  <h2 class="ul-typography-headline-s-extrabold ul-mb-4 settings-layout__desktop-title">
+    {{ title() }}
+  </h2>
+
+  <ng-content />
+</ng-container>

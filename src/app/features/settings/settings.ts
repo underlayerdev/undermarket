@@ -23,9 +23,21 @@ export class SettingsComponent implements OnInit {
   readonly sidebarItems = computed<SettingsSidebarItem[]>(() => {
     this.transloco.activeLang();
     return [
-      { label: this.transloco.translate('settings.account'), path: 'account' },
-      { label: this.transloco.translate('settings.display'), path: 'display' },
-      { label: this.transloco.translate('settings.integrations'), path: 'integrations' },
+      {
+        label: this.transloco.translate('settings.account'),
+        path: 'account',
+        leftIcons: ['user'],
+      },
+      {
+        label: this.transloco.translate('settings.display'),
+        path: 'display',
+        leftIcons: ['image_portrait'],
+      },
+      {
+        label: this.transloco.translate('settings.integrations'),
+        path: 'integrations',
+        leftIcons: ['apps_grid'],
+      },
     ];
   });
 

@@ -1,29 +1,13 @@
 <ng-container *transloco="let t">
-  <div class="settings-display__mobile-header md:ul-hidden">
-    <ul-button
-      type="button"
-      theme="ghost-white"
-      [iconOnly]="true"
-      [ariaLabel]="t('common.back')"
-      routerLink="/settings"
-    >
-      <ul-icon icon="arrow_left" size="6" />
-    </ul-button>
-    <h2 class="ul-typography-headline-s-extrabold settings-display__mobile-title">
-      {{ t('settings.display') }}
-    </h2>
-  </div>
-
-  <div class="settings__panel">
-    <h2 class="ul-typography-headline-s-extrabold ul-mb-4 settings-display__desktop-title">
-      {{ t('settings.display') }}
-    </h2>
-    <ul-select
-      [label]="t('settings.languageLabel')"
-      [placeholder]="t('settings.languagePlaceholder')"
-      [options]="languageOptions"
-      [(value)]="languageValue"
-      (valueChange)="onLanguageChange($event)"
-    />
-  </div>
+  <um-settings-layout [title]="t('settings.display')">
+    <div class="settings__panel">
+      <ul-select
+        [label]="t('settings.languageLabel')"
+        [placeholder]="t('settings.languagePlaceholder')"
+        [options]="languageOptions"
+        [(value)]="languageValue"
+        (valueChange)="onLanguageChange($event)"
+      />
+    </div>
+  </um-settings-layout>
 </ng-container>

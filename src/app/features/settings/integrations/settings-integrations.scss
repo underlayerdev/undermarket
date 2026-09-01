@@ -1,43 +1,14 @@
 @use 'pkg:@underlayerdev/ui/design-tokens' as tokens;
 
-// Duplicated from settings.scss — emulated view encapsulation means a
-// sibling shell's classes don't reach this routed child's template.
-.settings__panel {
-  box-sizing: border-box;
-  border: 1px solid tokens.$color-border-white-light;
-  border-radius: tokens.$radius-radius-4;
-  padding: tokens.$spacing-spacing-6;
+// A custom element defaults to display: inline, so height:100% would
+// otherwise have no effect — this is what lets the routed page fill the
+// column's full (now-stretched) height instead of just its own content.
+:host {
+  display: block;
+  height: 100%;
 }
 
 .settings-integrations {
-  // Visibility is handled by the md:ul-hidden utility class in the
-  // template (hidden at $breakpoint-md+) — display: flex must stay
-  // scoped below that breakpoint too, matching settings-account.scss's
-  // identical mobile-header pattern.
-  &__mobile-header {
-    align-items: center;
-    gap: tokens.$spacing-spacing-4;
-    padding-bottom: tokens.$spacing-spacing-4;
-
-    @media (max-width: (tokens.$breakpoint-md - 1px)) {
-      display: flex;
-    }
-  }
-
-  &__mobile-title {
-    margin: 0;
-  }
-
-  // No utility exists for "hidden below a breakpoint" (ul-hidden variants
-  // only hide from a breakpoint up), so this direction stays a manual query.
-  &__desktop-title {
-    display: block;
-
-    @media (max-width: (tokens.$breakpoint-md - 1px)) {
-      display: none;
-    }
-  }
-
   &__drafts {
     display: flex;
     flex-direction: column;

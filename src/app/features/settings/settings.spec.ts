@@ -39,6 +39,15 @@ describe('SettingsComponent', () => {
     ]);
   });
 
+  it('should give each sidebar item a left icon', () => {
+    const fixture = setup();
+    expect(fixture.componentInstance.sidebarItems().map((item) => item.leftIcons)).toEqual([
+      ['user'],
+      ['image_portrait'],
+      ['apps_grid'],
+    ]);
+  });
+
   it('should select the display item when the url is /settings/display', () => {
     const fixture = setup('/settings/display');
     expect(fixture.componentInstance.selectedIndex()).toBe(1);

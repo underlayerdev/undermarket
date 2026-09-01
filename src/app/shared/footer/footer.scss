@@ -1,0 +1,11 @@
+@use 'pkg:@underlayerdev/ui/breakpoints' as bp;
+
+// No utility exists for "hidden below a breakpoint" (ul-hidden variants
+// only hide from a breakpoint up), so this direction stays a manual query.
+ul-footer {
+  display: none;
+
+  @include bp.up('md') {
+    display: block;
+  }
+}

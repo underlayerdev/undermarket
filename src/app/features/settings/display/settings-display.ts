@@ -1,13 +1,13 @@
 import { Component, inject, linkedSignal } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { LanguageService } from '../../../application/services/language.service';
-import { ButtonComponent, IconComponent, SelectComponent } from '@underlayerdev/ui';
+import { SelectComponent } from '@underlayerdev/ui';
 import type { SelectOption } from '@underlayerdev/ui';
+import { SettingsLayoutComponent } from '../shared/settings-layout/settings-layout';
 
 @Component({
   selector: 'um-settings-display',
-  imports: [ButtonComponent, IconComponent, RouterLink, SelectComponent, TranslocoDirective],
+  imports: [SelectComponent, TranslocoDirective, SettingsLayoutComponent],
   templateUrl: './settings-display.html',
   styleUrl: './settings-display.scss',
 })

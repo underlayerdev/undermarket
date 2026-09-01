@@ -1,28 +1,22 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { UserService } from '../../../application/services/user.service';
 import { AuthService } from '../../../application/services/auth.service';
 import { ErrorService } from '../../../application/services/error.service';
 import { validateConfirmPassword, validatePassword } from '../../../shared/utils/auth-validation';
 import { LocaleDatePipe } from '../../../shared/pipes';
-import {
-  ButtonComponent,
-  IconComponent,
-  InputComponent,
-  ModalComponent,
-  ToastService,
-} from '@underlayerdev/ui';
+import { ButtonComponent, InputComponent, ModalComponent, ToastService } from '@underlayerdev/ui';
+import { SettingsLayoutComponent } from '../shared/settings-layout/settings-layout';
 
 @Component({
   selector: 'um-settings-account',
   imports: [
     ButtonComponent,
-    IconComponent,
     InputComponent,
     LocaleDatePipe,
     ModalComponent,
-    RouterLink,
+    SettingsLayoutComponent,
     TranslocoDirective,
   ],
   templateUrl: './settings-account.html',
