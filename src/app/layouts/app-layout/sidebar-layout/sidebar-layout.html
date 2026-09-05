@@ -1,0 +1,24 @@
+<ul-sidebar
+  *transloco="let t"
+  class="md:ul-hidden"
+  [items]="getSidebarItems(t)"
+  [selectedIndex]="selectedIndex()"
+  [(open)]="sidebarOpen"
+  (itemSelected)="onItemSelected($event)"
+>
+  @if (!!currentUser()) {
+    <ul-list-item ul-sidebar-footer [hideFocusOutline]="true" (click)="onSignOut()">
+      <ng-container ul-list-item-before-label>
+        <ul-icon size="5" icon="log_out" />
+      </ng-container>
+      <ng-container ul-list-item-label>{{ t('userMenu.signOut') }}</ng-container>
+    </ul-list-item>
+  } @else {
+    <ul-list-item ul-sidebar-footer [hideFocusOutline]="true" (click)="login.emit()">
+      <ng-container ul-list-item-before-label>
+        <ul-icon size="5" icon="log_in" />
+      </ng-container>
+      <ng-container ul-list-item-label>{{ t('auth.signIn') }}</ng-container>
+    </ul-list-item>
+  }
+</ul-sidebar>

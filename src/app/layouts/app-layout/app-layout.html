@@ -1,28 +1,19 @@
 <div class="app-shell" *transloco="let t">
-  <ul-sidebar
-    class="md:ul-hidden"
-    [items]="getSidebarItems(t)"
-    [selectedIndex]="selectedIndex()"
-    [(open)]="sidebarOpen"
-    (itemSelected)="onItemSelected($event)"
-  >
-    <ul-list-item ul-sidebar-footer [hideFocusOutline]="true" (click)="onSignOut()">
-      <ng-container ul-list-item-before-label>
-        <ul-icon size="5" icon="log_out" />
-      </ng-container>
-      <ng-container ul-list-item-label>{{ t('userMenu.signOut') }}</ng-container>
-    </ul-list-item>
-  </ul-sidebar>
+  <um-sidebar-layout
+    [currentUrl]="currentUrl()"
+    [(sidebarOpen)]="sidebarOpen"
+    (logout)="onSignOut()"
+    (login)="navigateToLogin()"
+  />
 
   <div class="app-shell__body">
-
-    <um-navbar-layout 
+    <um-navbar-layout
       class="app-shell__navbar"
       [sidebarOpen]="sidebarOpen()"
       [currentUser]="currentUser()"
-      (toggleSidebar)="toggleSidebar()"
+      (toggleSidebar)="sidebarOpen.update((open) => !open)"
       (submitSearch)="onSearchSubmit($event)"
-      />
+    />
     <ul-dock>
       <ul-dock-item icon="home" routerLink="/home" routerLinkActive="ul-dock-item--active" />
 

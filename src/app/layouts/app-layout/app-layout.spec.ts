@@ -1,6 +1,5 @@
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router } from '@angular/router';
-import { TranslocoService } from '@jsverse/transloco';
 import { Subject } from 'rxjs';
 import { AppLayoutComponent } from './app-layout';
 import { AuthService } from '../../application/services/auth.service';
@@ -41,37 +40,21 @@ describe('AppLayoutComponent', () => {
     expect(fixture.componentInstance).toBeTruthy();
   });
 
-  it('should offer Home and Settings in the mobile sidebar', () => {
+  it('should log out and navigate to /login on sign-out', async () => {
     const fixture = TestBed.createComponent(AppLayoutComponent);
-    const transloco = TestBed.inject(TranslocoService);
-    const items = fixture.componentInstance.getSidebarItems((key) => transloco.translate(key));
-
-    expect(items).toHaveLength(2);
-    expect(items.map((item) => item.label)).toEqual(['Home', 'Settings']);
-  });
-
-  it('should navigate to a sidebar item url on selection', async () => {
-    const fixture = TestBed.createComponent(AppLayoutComponent);
-    const transloco = TestBed.inject(TranslocoService);
-    fixture.componentInstance.sidebarOpen.set(true);
-
-    await fixture.componentInstance.onItemSelected(
-      fixture.componentInstance.getSidebarItems((key) => transloco.translate(key))[1],
-    );
-
-    expect(navigateByUrlSpy).toHaveBeenCalledWith('/settings');
-    expect(fixture.componentInstance.sidebarOpen()).toBe(false);
-  });
-
-  it('should log out, close the sidebar, and navigate to /login on sign-out', async () => {
-    const fixture = TestBed.createComponent(AppLayoutComponent);
-    fixture.componentInstance.sidebarOpen.set(true);
 
     await fixture.componentInstance.onSignOut();
 
     expect(logoutSpy).toHaveBeenCalled();
     expect(navigateByUrlSpy).toHaveBeenCalledWith('/login');
-    expect(fixture.componentInstance.sidebarOpen()).toBe(false);
+  });
+
+  it('should navigate to /login directly', () => {
+    const fixture = TestBed.createComponent(AppLayoutComponent);
+
+    fixture.componentInstance.navigateToLogin();
+
+    expect(navigateByUrlSpy).toHaveBeenCalledWith('/login');
   });
 
   it('should navigate to /search with the given query on submit', () => {
