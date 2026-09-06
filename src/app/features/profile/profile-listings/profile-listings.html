@@ -1,0 +1,121 @@
+<ng-container *transloco="let t">
+  <h2 class="ul-typography-headline-m-extrabold ul-mb-6">
+    {{ t('profile.myListings', { value: listings().length }) }}
+  </h2>
+
+  @if (isLoading()) {
+    <um-listing-list-skeleton />
+  } @else if (listings().length === 0) {
+    <p class="ul-typography-body-m-regular ul-text-secondary">
+      {{ t('profile.emptyState') }}
+    </p>
+  } @else {
+    <div class="profile-listings__toolbar">
+      <ul-input
+        class="profile-listings__search"
+        [placeholder]="t('profile.searchPlaceholder')"
+        [(value)]="searchQuery"
+      />
+      <ul-select
+        class="profile-listings__sort"
+        [placeholder]="t('profile.sortPlaceholder')"
+        [options]="sortOptions()"
+        [(value)]="sortOption"
+      />
+    </div>
+
+    <div class="profile-listings__bulk-bar">
+      <ul-checkbox
+        [checked]="allVisibleSelected()"
+        [indeterminate]="someVisibleSelected()"
+        (checkedChange)="toggleSelectAll($event)"
+      >
+        {{ t('profile.selectAllAriaLabel') }}
+      </ul-checkbox>
+      @if (hasSelection()) {
+        <ul-button type="button" theme="fill-red" size="sm" (buttonClick)="onBulkDeleteClick()">
+          {{ t('profile.bulkDeleteButton', { value: selectedIds().size }) }}
+        </ul-button>
+      }
+    </div>
+
+    @if (filteredListings().length === 0) {
+      <p class="ul-typography-body-m-regular ul-text-secondary">
+        {{ t('profile.noSearchResults') }}
+      </p>
+    } @else {
+      <ul class="profile-listings__list">
+        @for (listing of filteredListings(); track listing.id) {
+          <li class="profile-listings__row">
+            <ul-selectable-row
+              [selected]="isSelected(listing.id)"
+              [selectionActive]="hasSelection()"
+              [ariaLabel]="t('profile.selectListingAriaLabel')"
+              (selectedChange)="toggleSelect(listing.id, $event)"
+              (longPress)="toggleSelect(listing.id, true)"
+            >
+              <a
+                ul-selectable-row-media
+                class="profile-listings__thumb"
+                [routerLink]="
+                  hasSelection()
+                    ? null
+                    : ['/listings', createListingSlug(listing.title, listing.id)]
+                "
+              >
+                @if (listing.imageUrls[0]; as image) {
+                  <img [src]="image" alt="" class="profile-listings__image" />
+                } @else {
+                  <div class="profile-listings__placeholder"></div>
+                }
+              </a>
+              <a
+                ul-selectable-row-content
+                class="profile-listings__info"
+                [routerLink]="
+                  hasSelection()
+                    ? null
+                    : ['/listings', createListingSlug(listing.title, listing.id)]
+                "
+              >
+                <p class="ul-typography-caption-l-regular ul-text-secondary">
+                  {{ listing.category }}
+                </p>
+                <p class="ul-typography-body-m-extrabold ul-text-primary ul-line-clamp-1">
+                  {{ listing.title }}
+                </p>
+                <p class="ul-typography-body-m-regular ul-text-secondary">
+                  {{ listing.price | listingPrice: listing.currency }}
+                </p>
+              </a>
+            </ul-selectable-row>
+          </li>
+        }
+      </ul>
+    }
+  }
+
+  <ul-modal
+    [open]="!!pendingDeleteIds()"
+    [title]="
+      pendingDeleteCount() > 1
+        ? t('profile.bulkDeleteModalTitle')
+        : t('listingDetail.deleteModalTitle')
+    "
+    variant="confirmation"
+    [confirmLabel]="t('common.delete')"
+    [cancelLabel]="t('common.cancel')"
+    (confirmed)="confirmDelete()"
+    (cancelled)="cancelDelete()"
+  >
+    @if (pendingDeleteCount() > 1) {
+      <p class="ul-typography-body-m-regular">
+        {{ t('profile.bulkDeleteModalBody', { value: pendingDeleteCount() }) }}
+      </p>
+    } @else if (pendingDeleteSingleTitle(); as title) {
+      <p class="ul-typography-body-m-regular">
+        {{ t('listingDetail.deleteModalBody', { value: title }) }}
+      </p>
+    }
+  </ul-modal>
+</ng-container>

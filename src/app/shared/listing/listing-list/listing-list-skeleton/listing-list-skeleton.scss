@@ -1,0 +1,20 @@
+@use 'pkg:@underlayerdev/ui/design-tokens' as tokens;
+
+.listing-list-skeleton-container {
+  display: flex;
+  flex-direction: column;
+  gap: tokens.$spacing-spacing-4;
+}
+
+.listing-list-skeleton__item {
+  display: flex;
+  flex-direction: row;
+  gap: tokens.$spacing-spacing-4;
+
+  &-information {
+    display: flex;
+    flex-direction: column;
+    gap: tokens.$spacing-spacing-2;
+    flex: 1;
+  }
+}
