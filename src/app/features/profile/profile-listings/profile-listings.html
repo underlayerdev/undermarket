@@ -2,35 +2,17 @@
   <h2 class="ul-typography-headline-m-extrabold ul-mb-6">
     {{ t('profile.myListings', { value: listings().length }) }}
   </h2>
-
-  @if (isLoading()) {
-    <um-listing-list-skeleton />
-  } @else if (listings().length === 0) {
-    <p class="ul-typography-body-m-regular ul-text-secondary">
-      {{ t('profile.emptyState') }}
-    </p>
-  } @else {
-    <div class="profile-listings__toolbar">
-      <ul-input
-        class="profile-listings__search"
-        [placeholder]="t('profile.searchPlaceholder')"
-        [(value)]="searchQuery"
-      />
-      <ul-select
-        class="profile-listings__sort"
-        [placeholder]="t('profile.sortPlaceholder')"
-        [options]="sortOptions()"
-        [(value)]="sortOption"
-      />
-    </div>
-
+  @if (filteredListings().length > 0) {
     <div class="profile-listings__bulk-bar">
       <ul-checkbox
-        [checked]="allVisibleSelected()"
-        [indeterminate]="someVisibleSelected()"
-        (checkedChange)="toggleSelectAll($event)"
+        [checked]="listingList.allSelected()"
+        [indeterminate]="listingList.someSelected()"
+        (checkedChange)="listingList.toggleSelectAll($event)"
       >
         {{ t('profile.selectAllAriaLabel') }}
+        @if (hasSelection()) {
+          ({{ selectedIds().size }})
+        }
       </ul-checkbox>
       @if (hasSelection()) {
         <ul-button type="button" theme="fill-red" size="sm" (buttonClick)="onBulkDeleteClick()">
@@ -38,63 +20,39 @@
         </ul-button>
       }
     </div>
-
-    @if (filteredListings().length === 0) {
-      <p class="ul-typography-body-m-regular ul-text-secondary">
-        {{ t('profile.noSearchResults') }}
-      </p>
-    } @else {
-      <ul class="profile-listings__list">
-        @for (listing of filteredListings(); track listing.id) {
-          <li class="profile-listings__row">
-            <ul-selectable-row
-              [selected]="isSelected(listing.id)"
-              [selectionActive]="hasSelection()"
-              [ariaLabel]="t('profile.selectListingAriaLabel')"
-              (selectedChange)="toggleSelect(listing.id, $event)"
-              (longPress)="toggleSelect(listing.id, true)"
-            >
-              <a
-                ul-selectable-row-media
-                class="profile-listings__thumb"
-                [routerLink]="
-                  hasSelection()
-                    ? null
-                    : ['/listings', createListingSlug(listing.title, listing.id)]
-                "
-              >
-                @if (listing.imageUrls[0]; as image) {
-                  <img [src]="image" alt="" class="profile-listings__image" />
-                } @else {
-                  <div class="profile-listings__placeholder"></div>
-                }
-              </a>
-              <a
-                ul-selectable-row-content
-                class="profile-listings__info"
-                [routerLink]="
-                  hasSelection()
-                    ? null
-                    : ['/listings', createListingSlug(listing.title, listing.id)]
-                "
-              >
-                <p class="ul-typography-caption-l-regular ul-text-secondary">
-                  {{ listing.category }}
-                </p>
-                <p class="ul-typography-body-m-extrabold ul-text-primary ul-line-clamp-1">
-                  {{ listing.title }}
-                </p>
-                <p class="ul-typography-body-m-regular ul-text-secondary">
-                  {{ listing.price | listingPrice: listing.currency }}
-                </p>
-              </a>
-            </ul-selectable-row>
-          </li>
-        }
-      </ul>
-    }
   }
-
+  <div class="um-profile-listings__list">
+    <um-listings-list
+      #listingList
+      class="ul-d-flex"
+      [listings]="filteredListings()"
+      [isLoading]="isLoading()"
+      [ariaLabel]="t('profile.selectListingAriaLabel')"
+      [(selection)]="selectedIds"
+    >
+      @if (!isLoading() && listings().length > 0) {
+        <um-search-sort
+          toolbar
+          class="ul-mb-4"
+          [searchPlaceholder]="t('profile.searchPlaceholder')"
+          [sortPlaceholder]="t('listing.sortPlaceholder')"
+          [sortOptions]="sortOptions()"
+          [(query)]="searchQuery"
+          [(sort)]="sortOption"
+        />
+      }
+      @if (hasSearchQuery()) {
+        <span emptyListText>{{ t('profile.noSearchResults') }}</span>
+      } @else {
+        <span emptyListText>{{ t('profile.emptyState') }}</span>
+      }
+      @if (!hasSearchQuery()) {
+        <ul-button emptyList theme="fill-purple" size="md" type="button" routerLink="/listings/new">
+          {{ t('home.postListing') }}
+        </ul-button>
+      }
+    </um-listings-list>
+  </div>
   <ul-modal
     [open]="!!pendingDeleteIds()"
     [title]="

@@ -1,0 +1,16 @@
+@use 'pkg:@underlayerdev/ui/design-tokens' as tokens;
+@use 'pkg:@underlayerdev/ui/breakpoints' as bp;
+
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: tokens.$spacing-spacing-3;
+
+  @include bp.up('sm') {
+    flex-direction: row;
+
+    & > * {
+      flex: 1;
+    }
+  }
+}

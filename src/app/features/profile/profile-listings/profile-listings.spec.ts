@@ -31,12 +31,10 @@ function flushAsync(): Promise<void> {
 
 describe('ProfileListingsComponent', () => {
   let getByOwnerSpy: ReturnType<typeof vi.fn>;
-  let updateSpy: ReturnType<typeof vi.fn>;
   let deleteSpy: ReturnType<typeof vi.fn>;
 
   function setup(listings: Listing[] = [listing()]) {
     getByOwnerSpy = vi.fn().mockResolvedValue(listings);
-    updateSpy = vi.fn().mockResolvedValue(undefined);
     deleteSpy = vi.fn().mockResolvedValue(undefined);
 
     TestBed.configureTestingModule({
@@ -44,7 +42,7 @@ describe('ProfileListingsComponent', () => {
       providers: [
         provideRouter([]),
         { provide: LISTING_REPOSITORY, useValue: { getByOwner: getByOwnerSpy } },
-        { provide: ListingService, useValue: { update: updateSpy, delete: deleteSpy } },
+        { provide: ListingService, useValue: { delete: deleteSpy } },
       ],
     });
 
@@ -105,41 +103,15 @@ describe('ProfileListingsComponent', () => {
     ]);
   });
 
-  it('should track selection and report allVisibleSelected once every visible item is checked', async () => {
+  it('should track selection via selectedIds once toggled', async () => {
     const fixture = setup([listing({ id: 'a' }), listing({ id: 'b' })]);
     await flushAsync();
 
-    fixture.componentInstance.toggleSelect('a', true);
-    expect(fixture.componentInstance.allVisibleSelected()).toBe(false);
-    expect(fixture.componentInstance.someVisibleSelected()).toBe(true);
-
-    fixture.componentInstance.toggleSelect('b', true);
-    expect(fixture.componentInstance.allVisibleSelected()).toBe(true);
-    expect(fixture.componentInstance.someVisibleSelected()).toBe(false);
-  });
-
-  it('should select and deselect all visible listings', async () => {
-    const fixture = setup([listing({ id: 'a' }), listing({ id: 'b' })]);
-    await flushAsync();
-
-    fixture.componentInstance.toggleSelectAll(true);
+    fixture.componentInstance.selectedIds.set(new Set(['a']));
     expect(fixture.componentInstance.hasSelection()).toBe(true);
 
-    fixture.componentInstance.toggleSelectAll(false);
+    fixture.componentInstance.selectedIds.set(new Set());
     expect(fixture.componentInstance.hasSelection()).toBe(false);
-  });
-
-  it('should publish a draft listing and update it in place', async () => {
-    const draft = listing({ status: 'draft' });
-    const fixture = setup([draft]);
-    await flushAsync();
-
-    await fixture.componentInstance.onPublishClick(draft);
-
-    expect(updateSpy).toHaveBeenCalledWith(
-      expect.objectContaining({ id: draft.id, status: 'active' }),
-    );
-    expect(fixture.componentInstance.listings()[0].status).toBe('active');
   });
 
   it('should delete a single listing and reload from the server on confirm', async () => {
@@ -148,7 +120,7 @@ describe('ProfileListingsComponent', () => {
     await flushAsync();
     getByOwnerSpy.mockResolvedValue([]);
 
-    fixture.componentInstance.onDeleteClick(target);
+    fixture.componentInstance.pendingDeleteIds.set([target.id]);
     expect(fixture.componentInstance.pendingDeleteCount()).toBe(1);
 
     await fixture.componentInstance.confirmDelete();
@@ -164,8 +136,7 @@ describe('ProfileListingsComponent', () => {
     const fixture = setup([a, b]);
     await flushAsync();
     getByOwnerSpy.mockResolvedValue([]);
-    fixture.componentInstance.toggleSelect('a', true);
-    fixture.componentInstance.toggleSelect('b', true);
+    fixture.componentInstance.selectedIds.set(new Set(['a', 'b']));
 
     fixture.componentInstance.onBulkDeleteClick();
     expect(fixture.componentInstance.pendingDeleteCount()).toBe(2);
@@ -192,7 +163,7 @@ describe('ProfileListingsComponent', () => {
     const fixture = setup([target]);
     await flushAsync();
 
-    fixture.componentInstance.onDeleteClick(target);
+    fixture.componentInstance.pendingDeleteIds.set([target.id]);
     fixture.componentInstance.cancelDelete();
 
     expect(fixture.componentInstance.pendingDeleteIds()).toBeNull();

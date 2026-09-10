@@ -1,0 +1,78 @@
+<ng-container *transloco="let t">
+  <ng-content select="[toolbar]" />
+  @if (isLoading()) {
+    <um-listing-list-skeleton />
+  } @else if (listings().length === 0) {
+    <div class="um-listing-list__empty">
+      <p class="ul-typography-body-l-regular ul-text-secondary">
+        <ng-content select="[emptyListText]">
+          {{ t('listingList.empty') }}
+        </ng-content>
+      </p>
+      <ng-content select="[emptyList]" />
+    </div>
+  } @else {
+    <ul class="um-listing-list">
+      @for (listing of listings(); track listing.id) {
+        <li class="um-listing-list__row">
+          <ul-selectable-row
+            [selected]="isSelected(listing.id)"
+            [selectionActive]="hasSelection()"
+            [ariaLabel]="ariaLabel()"
+            (selectedChange)="toggleSelect(listing.id, $event)"
+            (longPress)="toggleSelect(listing.id, true)"
+          >
+            <a
+              ul-selectable-row-media
+              class="um-listing-list__thumb"
+              [routerLink]="
+                hasSelection() ? null : ['/listings', createListingSlug(listing.title, listing.id)]
+              "
+            >
+              @if (listing.imageUrls[0]; as image) {
+                <img [src]="image" alt="" class="um-listing-list__image" />
+              } @else {
+                <div class="um-listing-list__placeholder"></div>
+              }
+            </a>
+            <a
+              ul-selectable-row-content
+              class="um-listing-list__info"
+              [routerLink]="
+                hasSelection() ? null : ['/listings', createListingSlug(listing.title, listing.id)]
+              "
+            >
+              <p class="ul-typography-caption-l-regular ul-text-secondary">
+                {{ listing.category }}
+              </p>
+              <p class="ul-typography-body-m-extrabold ul-text-primary ul-line-clamp-1">
+                {{ listing.title }}
+              </p>
+              <p class="ul-typography-body-m-regular ul-text-secondary">
+                {{ listing.price | listingPrice: listing.currency }}
+              </p>
+              @if (listing.status !== 'active' || listing.sourceProvider) {
+                <div class="um-listing-list__badges">
+                  @if (listing.status === 'draft') {
+                    <ul-pill theme="outline-white" variant="read-only" size="sm">
+                      {{ t('listing.statusDraft') }}
+                    </ul-pill>
+                  } @else if (listing.status === 'sold') {
+                    <ul-pill theme="fill-red" variant="read-only" size="sm">
+                      {{ t('listing.statusSold') }}
+                    </ul-pill>
+                  }
+                  @if (listing.sourceProvider) {
+                    <ul-pill theme="outline-purple" variant="read-only" size="sm">
+                      {{ t('listing.importedBadge') }}
+                    </ul-pill>
+                  }
+                </div>
+              }
+            </a>
+          </ul-selectable-row>
+        </li>
+      }
+    </ul>
+  }
+</ng-container>

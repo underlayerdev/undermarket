@@ -1,0 +1,65 @@
+@use 'pkg:@underlayerdev/ui/design-tokens' as tokens;
+@use 'pkg:@underlayerdev/ui/breakpoints' as bp;
+
+.um-listing-list {
+  display: flex;
+  flex-direction: column;
+  gap: tokens.$spacing-spacing-4;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  &__empty {
+    display: flex;
+    flex-direction: column;
+    gap: tokens.$spacing-spacing-4;
+  }
+
+  &__row {
+    display: flex;
+    align-items: center;
+    gap: tokens.$spacing-spacing-2;
+
+    // ul-selectable-row owns the checkbox/long-press/hover-reveal/border
+    // orchestration and its own internal padding+gap — this just lets it
+    // (and the projected media/content inside it) take the row's available width.
+    ul-selectable-row {
+      flex: 1;
+      min-width: 0;
+    }
+  }
+
+  &__thumb {
+    display: block;
+    flex-shrink: 0;
+    width: tokens.$spacing-spacing-16;
+    height: tokens.$spacing-spacing-16;
+    border-radius: tokens.$radius-radius-2;
+    overflow: hidden;
+  }
+
+  &__image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  &__placeholder {
+    width: 100%;
+    height: 100%;
+    background-color: tokens.$color-background-grey-lvl-1;
+  }
+
+  &__info {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__badges {
+    display: flex;
+    gap: tokens.$spacing-spacing-2;
+    margin-top: tokens.$spacing-spacing-1;
+  }
+}
