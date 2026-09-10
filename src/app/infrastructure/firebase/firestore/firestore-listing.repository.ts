@@ -12,6 +12,7 @@ import {
   updateDoc,
   where,
   Firestore,
+  QueryConstraint,
   Timestamp,
 } from 'firebase/firestore';
 import { FIREBASE_FIRESTORE } from '../../../core/configuration/tokens';
@@ -19,6 +20,7 @@ import type {
   ListingRepository,
   ListingSearchFilters,
 } from '../../../domain/listing/listing.repository';
+import { filterListingsByQuery } from '../../../domain/listing/listing-query.util';
 import type { Listing, ListingId } from '../../../domain/listing/listing.model';
 import type { UserId } from '../../../domain/user/user.model';
 
@@ -28,7 +30,12 @@ export class FirestoreListingRepository implements ListingRepository {
   private readonly col = () => collection(this.firestore, 'listings');
 
   async getLatest(): Promise<Listing[]> {
-    const listingsQuery = query(this.col(), orderBy('createdAt', 'desc'), limit(20));
+    const listingsQuery = query(
+      this.col(),
+      where('status', '!=', 'draft'),
+      orderBy('createdAt', 'desc'),
+      limit(20),
+    );
     const snapshot = await getDocs(listingsQuery);
     return snapshot.docs.map((docSnapshot) => this.mapDoc(docSnapshot.id, docSnapshot.data()));
   }
@@ -50,7 +57,7 @@ export class FirestoreListingRepository implements ListingRepository {
   }
 
   async search(filters: ListingSearchFilters): Promise<Listing[]> {
-    const constraints = [];
+    const constraints: QueryConstraint[] = [where('status', '!=', 'draft')];
     if (filters.category) constraints.push(where('category', '==', filters.category));
     constraints.push(orderBy('createdAt', 'desc'));
     const listingsQuery = query(this.col(), ...constraints);
@@ -58,13 +65,7 @@ export class FirestoreListingRepository implements ListingRepository {
     const results = snapshot.docs.map((docSnapshot) =>
       this.mapDoc(docSnapshot.id, docSnapshot.data()),
     );
-    if (!filters.query) return results;
-    const lower = filters.query.toLowerCase();
-    return results.filter(
-      (listing) =>
-        listing.title.toLowerCase().includes(lower) ||
-        listing.description.toLowerCase().includes(lower),
-    );
+    return filterListingsByQuery(results, filters.query);
   }
 
   async create(listing: Omit<Listing, 'id' | 'createdAt' | 'updatedAt'>): Promise<Listing> {

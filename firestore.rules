@@ -53,9 +53,14 @@ service cloud.firestore {
     }
 
     match /listings/{listingId} {
-      // Anyone can browse listings (public marketplace); only the owner
-      // (a signed-in user) may create/update/delete their own listings.
-      allow read: if true;
+      // Anyone can browse published listings (public marketplace); a draft
+      // (own or imported, not yet reviewed/published) is only readable by
+      // its owner. Client-side query filters mirror this, but the rule is
+      // the actual enforcement — a direct read/list bypassing the app must
+      // still be blocked. Only the owner (a signed-in user) may
+      // create/update/delete their own listings.
+      allow read: if resource.data.status != 'draft'
+        || (isSignedIn() && resource.data.ownerId == request.auth.uid);
 
       allow create: if isSignedIn()
         && request.resource.data.ownerId == request.auth.uid

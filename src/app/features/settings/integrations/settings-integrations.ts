@@ -1,41 +1,22 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, inject, OnInit } from '@angular/core';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
-import { AuthService } from '../../../application/services/auth.service';
-import { ListingService } from '../../../application/services/listing.service';
 import { MercadoLibreService } from '../../../application/services/mercado-libre.service';
-import { LISTING_REPOSITORY } from '../../../core/configuration/tokens';
-import type { Listing, ListingId } from '../../../domain/listing/listing.model';
-import { ListingPricePipe } from '../../../shared/pipes/listing-price/listing-price.pipe';
-import { ButtonComponent, CardComponent, StatusComponent, ToastService } from '@underlayerdev/ui';
+import { ButtonComponent, ToastService } from '@underlayerdev/ui';
 import { SettingsLayoutComponent } from '../shared/settings-layout/settings-layout';
 
 @Component({
   selector: 'um-settings-integrations',
-  imports: [
-    ButtonComponent,
-    CardComponent,
-    ListingPricePipe,
-    StatusComponent,
-    TranslocoDirective,
-    SettingsLayoutComponent,
-  ],
+  imports: [ButtonComponent, RouterLink, SettingsLayoutComponent, TranslocoDirective],
   templateUrl: './settings-integrations.html',
   styleUrl: './settings-integrations.scss',
 })
 export class SettingsIntegrationsComponent implements OnInit {
   protected readonly mercadoLibreService = inject(MercadoLibreService);
-  private readonly listingRepository = inject(LISTING_REPOSITORY);
-  private readonly listingService = inject(ListingService);
-  private readonly authService = inject(AuthService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly transloco = inject(TranslocoService);
   private readonly toastService = inject(ToastService);
-
-  readonly draftListings = signal<Listing[]>([]);
-  readonly loadingDrafts = signal(false);
-  readonly publishingId = signal<ListingId | null>(null);
 
   async ngOnInit(): Promise<void> {
     const params = this.route.snapshot.queryParamMap;
@@ -55,10 +36,6 @@ export class SettingsIntegrationsComponent implements OnInit {
     }
 
     await this.mercadoLibreService.refreshStatus();
-
-    if (this.mercadoLibreService.status()?.connected) {
-      await this.loadDrafts();
-    }
   }
 
   async onConnectClick(): Promise<void> {
@@ -74,39 +51,8 @@ export class SettingsIntegrationsComponent implements OnInit {
           skipped: skippedCount,
         }),
       );
-      await this.loadDrafts();
     } catch {
       this.toastService.error(this.transloco.translate('settings.mercadoLibreImportError'));
-    }
-  }
-
-  async onPublishClick(listing: Listing): Promise<void> {
-    this.publishingId.set(listing.id);
-    try {
-      await this.listingService.update({ ...listing, status: 'active' });
-      this.draftListings.update((listings) => listings.filter((item) => item.id !== listing.id));
-      this.toastService.success(this.transloco.translate('settings.mercadoLibrePublished'));
-    } catch {
-      this.toastService.error(this.transloco.translate('settings.mercadoLibrePublishError'));
-    } finally {
-      this.publishingId.set(null);
-    }
-  }
-
-  private async loadDrafts(): Promise<void> {
-    const currentUser = this.authService.currentUser();
-    if (!currentUser) return;
-
-    this.loadingDrafts.set(true);
-    try {
-      const listings = await this.listingRepository.getByOwner(currentUser.id);
-      this.draftListings.set(
-        listings.filter(
-          (listing) => listing.status === 'draft' && listing.sourceProvider === 'mercadolibre',
-        ),
-      );
-    } finally {
-      this.loadingDrafts.set(false);
     }
   }
 }
