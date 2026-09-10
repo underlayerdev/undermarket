@@ -48,6 +48,15 @@ export const routes: Routes = [
           import('./features/listings/new/new-listing').then((m) => m.NewListingComponent),
       },
       {
+        // Ownership itself is checked inside NewListingComponent (redirects
+        // to /profile if the listing isn't found or isn't owned by the
+        // current user) — authGuard here only rules out signed-out access.
+        path: 'listings/:slug/edit',
+        canActivate: [authGuard],
+        loadComponent: () =>
+          import('./features/listings/new/new-listing').then((m) => m.NewListingComponent),
+      },
+      {
         // Public: anyone can view a listing. Ownership-only actions (edit/delete)
         // are gated in the component itself via AuthService.currentUser().
         path: 'listings/:slug',

@@ -54,11 +54,15 @@
           </div>
 
           <div class="ul-col-12 ul-col-md-5 ul-gap-4 listing-detail__info">
-            <div class="ul-gap-2" style="display: flex; flex-wrap: wrap">
+            <div class="listing-detail__wrap-row ul-gap-2">
               <ul-pill theme="outline-purple" variant="read-only">{{ item.category }}</ul-pill>
               @if (item.status === 'sold') {
                 <ul-pill theme="fill-red" variant="read-only">
                   {{ t('listingDetail.sold') }}
+                </ul-pill>
+              } @else if (item.status === 'draft') {
+                <ul-pill theme="outline-white" variant="read-only">
+                  {{ t('listingDetail.draft') }}
                 </ul-pill>
               } @else {
                 <ul-pill theme="transparent-green" variant="read-only">
@@ -84,8 +88,28 @@
             </p>
 
             @if (isOwner()) {
-              <div class="ul-gap-3" style="display: flex">
-                <ul-button type="button" theme="outline-purple" size="md">
+              <div class="listing-detail__wrap-row ul-gap-3">
+                @if (item.status === 'draft') {
+                  <ul-button
+                    type="button"
+                    theme="fill-yellow"
+                    size="md"
+                    [disabled]="isPublishing()"
+                    (buttonClick)="onPublishClick()"
+                  >
+                    {{
+                      isPublishing()
+                        ? t('listingDetail.publishing')
+                        : t('listingDetail.publishListing')
+                    }}
+                  </ul-button>
+                }
+                <ul-button
+                  type="button"
+                  theme="outline-purple"
+                  size="md"
+                  [routerLink]="['/listings', createListingSlug(item.title, item.id), 'edit']"
+                >
                   {{ t('listingDetail.editListing') }}
                 </ul-button>
                 <ul-button type="button" theme="fill-red" size="md" (buttonClick)="onDeleteClick()">

@@ -1,16 +1,17 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { Location } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { AuthService } from '../../../application/services/auth.service';
+import { ErrorService } from '../../../application/services/error.service';
 import { ListingService } from '../../../application/services/listing.service';
 import { SeoService } from '../../../core/seo/seo.service';
 import { LISTING_REPOSITORY } from '../../../core/configuration/tokens';
 import type { Listing } from '../../../domain/listing/listing.model';
 import { ImageLightboxService } from '../../../shared/image-lightbox/image-lightbox.service';
-import { ListingPricePipe } from '../../../shared/pipes/listing-price/listing-price.pipe';
+import { ListingPricePipe } from '../../../shared/listing/listing-price/listing-price.pipe';
 import { LocaleDatePipe } from '../../../shared/pipes/locale-date/locale-date.pipe';
-import { extractIdFromSlug } from '../../../shared/utils/slugify';
+import { createListingSlug, extractIdFromSlug } from '../../../shared/utils/slugify';
 import {
   BreadcrumbComponent,
   ButtonComponent,
@@ -20,6 +21,7 @@ import {
   ModalComponent,
   PillComponent,
   SkeletonComponent,
+  ToastService,
 } from '@underlayerdev/ui';
 import type { BreadcrumbItem } from '@underlayerdev/ui';
 import { Options } from '@splidejs/splide';
@@ -37,6 +39,7 @@ import {
     ButtonComponent,
     ModalComponent,
     PillComponent,
+    RouterLink,
     SkeletonComponent,
     TranslocoDirective,
     IconComponent,
@@ -44,6 +47,7 @@ import {
     CarouselItemComponent,
     ListingDetailErrorComponent,
   ],
+  providers: [ToastService],
   templateUrl: './listing-detail.html',
   styleUrl: './listing-detail.scss',
 })
@@ -53,14 +57,18 @@ export class ListingDetailComponent implements OnInit {
   private readonly listingRepository = inject(LISTING_REPOSITORY);
   protected readonly authService = inject(AuthService);
   private readonly listingService = inject(ListingService);
+  private readonly errorService = inject(ErrorService);
   private readonly seoService = inject(SeoService);
   private readonly transloco = inject(TranslocoService);
   private readonly imageLightboxService = inject(ImageLightboxService);
+  private readonly toastService = inject(ToastService);
 
+  readonly createListingSlug = createListingSlug;
   readonly listing = signal<Listing | null>(null);
   readonly isLoading = signal(true);
   readonly errorType = signal<ListingDetailErrorType | null>(null);
   readonly showDeleteModal = signal(false);
+  readonly isPublishing = signal(false);
 
   readonly isOwner = computed(() => {
     const listing = this.listing();
@@ -124,6 +132,23 @@ export class ListingDetailComponent implements OnInit {
 
   goBack(): void {
     this.location.back();
+  }
+
+  async onPublishClick(): Promise<void> {
+    const listing = this.listing();
+    if (!listing) return;
+
+    this.isPublishing.set(true);
+    try {
+      const updated = { ...listing, status: 'active' as const };
+      await this.listingService.update(updated);
+      this.listing.set(updated);
+      this.toastService.success(this.transloco.translate('listingDetail.published'));
+    } catch (err) {
+      this.toastService.error(this.errorService.toUserMessage(err));
+    } finally {
+      this.isPublishing.set(false);
+    }
   }
 
   onDeleteClick(): void {

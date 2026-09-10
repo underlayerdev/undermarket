@@ -54,6 +54,19 @@
     gap: tokens.$spacing-spacing-1;
   }
 
+  &__current-photos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: tokens.$spacing-spacing-2;
+  }
+
+  &__current-photo {
+    width: tokens.$spacing-spacing-24;
+    height: tokens.$spacing-spacing-24;
+    object-fit: cover;
+    border-radius: tokens.$radius-radius-2;
+  }
+
   &__fields {
     display: flex;
     flex-direction: column;

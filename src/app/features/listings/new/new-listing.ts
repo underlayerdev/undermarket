@@ -1,11 +1,12 @@
 import { Location } from '@angular/common';
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { AuthService } from '../../../application/services/auth.service';
 import { ErrorService } from '../../../application/services/error.service';
 import { ListingService } from '../../../application/services/listing.service';
 import { SeoService } from '../../../core/seo/seo.service';
+import { LISTING_REPOSITORY } from '../../../core/configuration/tokens';
 import { ImageUploadComponent } from '../../../shared/image-upload/image-upload';
 import { CATEGORIES } from '../../../domain/category/category.model';
 import type { Category } from '../../../domain/category/category.model';
@@ -14,19 +15,21 @@ import {
   DEFAULT_CURRENCY,
   getMaxPriceForCurrency,
 } from '../../../domain/currency/currency.model';
+import type { Listing } from '../../../domain/listing/listing.model';
 import type { NewListingInput } from '../../../domain/listing/listing.validator';
 import {
   LISTING_DESCRIPTION_MAX_LENGTH,
   LISTING_TITLE_MAX_LENGTH,
   LISTING_TITLE_MIN_LENGTH,
 } from '../../../domain/listing/listing-constraints';
-import { createListingSlug } from '../../../shared/utils/slugify';
+import { createListingSlug, extractIdFromSlug } from '../../../shared/utils/slugify';
 import {
   ButtonComponent,
   IconComponent,
   InputComponent,
   ModalComponent,
   SelectComponent,
+  SkeletonComponent,
   TextareaComponent,
   ToastService,
 } from '@underlayerdev/ui';
@@ -79,6 +82,7 @@ function toNewListingInput(value: NewListingFormModel, ownerId: string): NewList
     InputComponent,
     ModalComponent,
     SelectComponent,
+    SkeletonComponent,
     TextareaComponent,
     TranslocoDirective,
   ],
@@ -86,8 +90,9 @@ function toNewListingInput(value: NewListingFormModel, ownerId: string): NewList
   templateUrl: './new-listing.html',
   styleUrl: './new-listing.scss',
 })
-export class NewListingComponent implements OnInit {
+export class NewListingComponent {
   private readonly listingService = inject(ListingService);
+  private readonly listingRepository = inject(LISTING_REPOSITORY);
   private readonly authService = inject(AuthService);
   private readonly errorService = inject(ErrorService);
   private readonly seoService = inject(SeoService);
@@ -95,6 +100,17 @@ export class NewListingComponent implements OnInit {
   private readonly toastService = inject(ToastService);
   private readonly location = inject(Location);
   private readonly transloco = inject(TranslocoService);
+
+  // Presence of the :slug param is what distinguishes /listings/new from
+  // /listings/:slug/edit — both route to this same component. Bound via
+  // withComponentInputBinding() rather than read once from the route
+  // snapshot, so it stays correct if Angular ever reuses this component
+  // instance across two different :slug/edit activations (e.g. browser
+  // back/forward between two edit pages).
+  readonly slug = input<string | null>(null);
+  readonly isEditMode = computed(() => !!this.slug());
+  readonly editingListing = signal<Listing | null>(null);
+  readonly isLoadingListing = signal(false);
 
   readonly categoryOptions: SelectOption[] = CATEGORIES.map((category) => ({
     value: category,
@@ -215,6 +231,11 @@ export class NewListingComponent implements OnInit {
 
   readonly publishButtonLabel = computed(() => {
     this.transloco.activeLang();
+    if (this.isEditMode()) {
+      return this.isLoading()
+        ? this.transloco.translate('newListing.saving')
+        : this.transloco.translate('newListing.saveChanges');
+    }
     return this.isLoading()
       ? this.transloco.translate('newListing.publishing')
       : this.transloco.translate('newListing.publish');
@@ -231,8 +252,42 @@ export class NewListingComponent implements OnInit {
     );
   });
 
-  ngOnInit(): void {
-    this.seoService.setPage(this.transloco.translate('newListing.pageTitle'));
+  constructor() {
+    effect(() => {
+      const slug = this.slug();
+      if (slug) {
+        void this.loadForEdit(slug);
+      } else {
+        this.seoService.setPage(this.transloco.translate('newListing.pageTitle'));
+      }
+    });
+  }
+
+  private async loadForEdit(slug: string): Promise<void> {
+    const currentUser = this.authService.currentUser();
+    this.isLoadingListing.set(true);
+    try {
+      const listing = await this.listingRepository.getById(extractIdFromSlug(slug));
+      if (!listing || !currentUser || listing.ownerId !== currentUser.id) {
+        await this.router.navigateByUrl('/profile');
+        return;
+      }
+
+      this.editingListing.set(listing);
+      this.listingModel.set({
+        title: listing.title,
+        description: listing.description,
+        price: String(listing.price),
+        currency: listing.currency,
+        category: listing.category,
+      });
+      this.seoService.setPage(this.transloco.translate('newListing.editPageTitle'));
+    } catch (err) {
+      this.toastService.error(this.errorService.toUserMessage(err));
+      await this.router.navigateByUrl('/profile');
+    } finally {
+      this.isLoadingListing.set(false);
+    }
   }
 
   onClose(): void {
@@ -262,12 +317,15 @@ export class NewListingComponent implements OnInit {
     await submit(this.listingForm, async () => {
       this.isLoading.set(true);
       try {
-        const listing = await this.listingService.create(
-          toNewListingInput(this.listingModel(), currentUser.id),
-          this.imageFiles(),
-        );
-        // replaceUrl: back from the new listing should skip the now-submitted
-        // form and return to wherever the user was before creating it.
+        const editing = this.editingListing();
+        const listing = editing
+          ? await this.updateExisting(editing, currentUser.id)
+          : await this.listingService.create(
+              toNewListingInput(this.listingModel(), currentUser.id),
+              this.imageFiles(),
+            );
+        // replaceUrl: back from the new/edited listing should skip the
+        // now-submitted form and return to wherever the user was before.
         await this.router.navigate(['/listings', createListingSlug(listing.title, listing.id)], {
           replaceUrl: true,
         });
@@ -279,5 +337,21 @@ export class NewListingComponent implements OnInit {
         this.isLoading.set(false);
       }
     });
+  }
+
+  // Editing never touches status (publishing a draft is a separate, explicit
+  // action elsewhere) or imageUrls (photo editing isn't supported yet).
+  private async updateExisting(editing: Listing, ownerId: string): Promise<Listing> {
+    const input = toNewListingInput(this.listingModel(), ownerId);
+    const updated: Listing = {
+      ...editing,
+      ...input,
+      currency: input.currency as Listing['currency'],
+      category: input.category as Listing['category'],
+      status: editing.status,
+      imageUrls: editing.imageUrls,
+    };
+    await this.listingService.update(updated);
+    return updated;
   }
 }

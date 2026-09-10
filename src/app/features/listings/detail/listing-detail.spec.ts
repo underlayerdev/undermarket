@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, provideRouter, Router, RouterLink } from '@angular/router';
+import { By } from '@angular/platform-browser';
 import { Location } from '@angular/common';
 import { signal } from '@angular/core';
 import { ListingDetailComponent } from './listing-detail';
@@ -26,13 +27,21 @@ describe('ListingDetailComponent', () => {
     updatedAt: new Date('2026-01-01'),
   };
 
-  function setup(getById: ReturnType<typeof vi.fn>, slug = 'vintage-lamp-123') {
+  function setup(
+    getById: ReturnType<typeof vi.fn>,
+    slug = 'vintage-lamp-123',
+    currentUser: { id: string } | null = null,
+    listingServiceMock: { delete: ReturnType<typeof vi.fn>; update?: ReturnType<typeof vi.fn> } = {
+      delete: vi.fn(),
+    },
+  ) {
     TestBed.configureTestingModule({
       imports: [ListingDetailComponent, getTranslocoTestingModule()],
       providers: [
+        provideRouter([]),
         { provide: LISTING_REPOSITORY, useValue: { getById } },
-        { provide: ListingService, useValue: { delete: vi.fn() } },
-        { provide: AuthService, useValue: { currentUser: signal(null) } },
+        { provide: ListingService, useValue: listingServiceMock },
+        { provide: AuthService, useValue: { currentUser: signal(currentUser) } },
         { provide: SeoService, useValue: { setPage: vi.fn(), setListing: vi.fn() } },
         { provide: ActivatedRoute, useValue: { snapshot: { params: { slug } } } },
         { provide: ImageLightboxService, useValue: { open: vi.fn() } },
@@ -41,6 +50,24 @@ describe('ListingDetailComponent', () => {
 
     return TestBed.createComponent(ListingDetailComponent);
   }
+
+  it('should publish a draft listing and reflect the new status', async () => {
+    const draft: Listing = { ...listing, status: 'draft' };
+    const updateSpy = vi.fn().mockResolvedValue(undefined);
+    const fixture = setup(vi.fn().mockResolvedValue(draft), 'vintage-lamp-123', { id: 'owner-1' }, {
+      delete: vi.fn(),
+      update: updateSpy,
+    });
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    await fixture.componentInstance.onPublishClick();
+
+    expect(updateSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ id: draft.id, status: 'active' }),
+    );
+    expect(fixture.componentInstance.listing()?.status).toBe('active');
+  });
 
   it('should create', () => {
     const fixture = setup(vi.fn().mockResolvedValue(listing));
@@ -55,6 +82,29 @@ describe('ListingDetailComponent', () => {
     expect(fixture.componentInstance.isLoading()).toBe(false);
     expect(fixture.componentInstance.listing()?.title).toBe('Vintage lamp');
     expect(fixture.componentInstance.errorType()).toBeNull();
+  });
+
+  it('should navigate to the listing edit route when the owner clicks Edit', async () => {
+    const fixture = setup(vi.fn().mockResolvedValue(listing), 'vintage-lamp-123', {
+      id: 'owner-1',
+    });
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(fixture.componentInstance.isOwner()).toBe(true);
+
+    const navigateByUrlSpy = vi
+      .spyOn(TestBed.inject(Router), 'navigateByUrl')
+      .mockResolvedValue(true);
+    const editButton = fixture.debugElement
+      .queryAll(By.directive(RouterLink))
+      .find((debugEl) => (debugEl.nativeElement as HTMLElement).textContent?.includes('Edit'));
+
+    (editButton!.nativeElement as HTMLElement).click();
+
+    expect(navigateByUrlSpy).toHaveBeenCalled();
+    const navigatedUrl = navigateByUrlSpy.mock.calls[0][0].toString();
+    expect(navigatedUrl).toBe('/listings/vintage-lamp-123/edit');
   });
 
   it('should set a not-found error type when the repository returns null', async () => {

@@ -1,7 +1,7 @@
 <ng-container *transloco="let t">
   <div class="new-listing__mobile-header md:ul-hidden ul-container-form">
     <h2 class="ul-typography-headline-s-extrabold new-listing__mobile-title">
-      {{ t('newListing.title') }}
+      {{ isEditMode() ? t('newListing.editTitle') : t('newListing.title') }}
     </h2>
     <ul-button
       type="button"
@@ -16,81 +16,101 @@
 
   <div class="ul-container-form">
     <div class="ul-content ul-pt-8">
-      <h1 class="ul-typography-headline-xl-extrablack ul-mb-2 new-listing__desktop-title">
-        {{ t('newListing.title') }}
-      </h1>
-      <p class="ul-typography-body-l-regular ul-text-secondary ul-mb-8">
-        {{ t('newListing.subtitle') }}
-      </p>
+      @if (isLoadingListing()) {
+        <ul-skeleton variant="text" [lines]="2" [show]="true" />
+        <ul-skeleton variant="rect" height="400px" [show]="true" />
+      } @else {
+        <h1 class="ul-typography-headline-xl-extrablack ul-mb-2 new-listing__desktop-title">
+          {{ isEditMode() ? t('newListing.editTitle') : t('newListing.title') }}
+        </h1>
+        <p class="ul-typography-body-l-regular ul-text-secondary ul-mb-8">
+          {{ isEditMode() ? t('newListing.editSubtitle') : t('newListing.subtitle') }}
+        </p>
 
-      <form (submit)="onFormSubmit($event)" class="new-listing__form ul-gap-5">
-        <div class="new-listing__photos">
-          @if (imageFiles().length > 0) {
-            <label
-              class="ul-form-field__label ul-form-field__label--md ul-form-field__label--requireds"
-            >
-              <ng-container>{{ t('newListing.photosLabel') }}</ng-container>
+        <form (submit)="onFormSubmit($event)" class="new-listing__form ul-gap-5">
+          @if (isEditMode()) {
+            @if (editingListing()?.imageUrls?.length) {
+              <div class="new-listing__photos">
+                <label class="ul-form-field__label ul-form-field__label--md">
+                  {{ t('newListing.currentPhotosLabel') }}
+                </label>
+                <div class="new-listing__current-photos">
+                  @for (url of editingListing()?.imageUrls; track url) {
+                    <img [src]="url" alt="" class="new-listing__current-photo" />
+                  }
+                </div>
+              </div>
+            }
+          } @else {
+            <div class="new-listing__photos">
+              @if (imageFiles().length > 0) {
+                <label
+                  class="ul-form-field__label ul-form-field__label--md ul-form-field__label--requireds"
+                >
+                  <ng-container>{{ t('newListing.photosLabel') }}</ng-container>
 
-              ({{ imageFiles().length }})
-            </label>
+                  ({{ imageFiles().length }})
+                </label>
+              }
+              <um-image-upload [(images)]="imageFiles" />
+            </div>
           }
-          <um-image-upload [(images)]="imageFiles" />
-        </div>
-        <div class="new-listing__fields">
-          <ul-input
-            [label]="t('newListing.titleLabel')"
-            [placeholder]="t('newListing.titlePlaceholder')"
-            [formField]="listingForm.title"
-          />
+          <div class="new-listing__fields">
+            <ul-input
+              [label]="t('newListing.titleLabel')"
+              [placeholder]="t('newListing.titlePlaceholder')"
+              [formField]="listingForm.title"
+            />
 
-          <ul-textarea
-            [label]="t('newListing.descriptionLabel')"
-            [placeholder]="t('newListing.descriptionPlaceholder')"
-            [rows]="5"
-            [formField]="listingForm.description"
-          />
+            <ul-textarea
+              [label]="t('newListing.descriptionLabel')"
+              [placeholder]="t('newListing.descriptionPlaceholder')"
+              [rows]="5"
+              [formField]="listingForm.description"
+            />
 
-          <ul-select
-            [label]="t('newListing.currencyLabel')"
-            [placeholder]="t('newListing.currencyPlaceholder')"
-            [options]="currencyOptions()"
-            [formField]="listingForm.currency"
-          />
+            <ul-select
+              [label]="t('newListing.currencyLabel')"
+              [placeholder]="t('newListing.currencyPlaceholder')"
+              [options]="currencyOptions()"
+              [formField]="listingForm.currency"
+            />
 
-          <ul-input
-            type="number"
-            [label]="t('newListing.priceLabel')"
-            placeholder="0.00"
-            [formField]="listingForm.price"
-          />
+            <ul-input
+              type="number"
+              [label]="t('newListing.priceLabel')"
+              placeholder="0.00"
+              [formField]="listingForm.price"
+            />
 
-          <ul-select
-            [label]="t('newListing.categoryLabel')"
-            [placeholder]="t('newListing.categoryPlaceholder')"
-            [options]="categoryOptions"
-            [formField]="listingForm.category"
-          />
+            <ul-select
+              [label]="t('newListing.categoryLabel')"
+              [placeholder]="t('newListing.categoryPlaceholder')"
+              [options]="categoryOptions"
+              [formField]="listingForm.category"
+            />
 
-          <div class="new-listing__submit ul-gap-4 ul-mt-2">
-            <ul-button
-              type="button"
-              theme="ghost-white"
-              class="new-listing__cancel"
-              (buttonClick)="onClose()"
-            >
-              {{ t('common.cancel') }}
-            </ul-button>
-            <ul-button
-              type="submit"
-              theme="fill-purple"
-              size="md"
-              [disabled]="publishButtonNotReady()"
-            >
-              {{ publishButtonLabel() }}
-            </ul-button>
+            <div class="new-listing__submit ul-gap-4 ul-mt-2">
+              <ul-button
+                type="button"
+                theme="ghost-white"
+                class="new-listing__cancel"
+                (buttonClick)="onClose()"
+              >
+                {{ t('common.cancel') }}
+              </ul-button>
+              <ul-button
+                type="submit"
+                theme="fill-purple"
+                size="md"
+                [disabled]="publishButtonNotReady()"
+              >
+                {{ publishButtonLabel() }}
+              </ul-button>
+            </div>
           </div>
-        </div>
-      </form>
+        </form>
+      }
     </div>
   </div>
 
