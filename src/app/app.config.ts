@@ -37,6 +37,7 @@ import { FirestoreUserRepository } from './infrastructure/firebase/firestore/fir
 import { FirestoreListingRepository } from './infrastructure/firebase/firestore/firestore-listing.repository';
 import { FirebaseMercadoLibreProvider } from './infrastructure/firebase/functions/firebase-mercado-libre.provider';
 import { CloudinaryImageStorage } from './infrastructure/cloudinary/cloudinary-image-storage';
+import { provideCloudinaryImageLoader } from './infrastructure/cloudinary/cloudinary-image-loader';
 import { MockNotificationProvider } from './infrastructure/mock/mock-notification.provider';
 import { TranslocoHttpLoader } from './core/i18n/transloco-http-loader';
 import { AVAILABLE_LANGUAGES, DEFAULT_LANGUAGE } from './core/i18n/languages';
@@ -54,6 +55,7 @@ export const appConfig: ApplicationConfig = {
       withInMemoryScrolling({ scrollPositionRestoration: 'enabled', anchorScrolling: 'enabled' }),
     ),
     provideHttpClient(),
+    provideCloudinaryImageLoader(),
     provideTransloco({
       config: {
         availableLangs: [...AVAILABLE_LANGUAGES],

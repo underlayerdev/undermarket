@@ -11,11 +11,19 @@
     <div class="ul-content">
       <h2 class="ul-typography-headline-m-extrabold ul-mb-2">{{ t('home.latestListings') }}</h2>
 
-      @if (listingService.listings().length === 0) {
+      @if (isLoading()) {
+        <div class="ul-row">
+          @for (row of skeletonRows(); track $index) {
+            <div class="ul-col-6 ul-col-sm-4 ul-col-md-3 ul-col-lg-2 ul-col-xl-2">
+              <ul-card [loading]="true" cardDirection="vertical" mediaAspectRatio="portrait" />
+            </div>
+          }
+        </div>
+      } @else if (listingService.listings().length === 0) {
         <p class="ul-typography-body-m-regular">{{ t('home.emptyState') }}</p>
       } @else {
         <div class="ul-row">
-          @for (listing of listingService.listings(); track listing.id) {
+          @for (listing of listingService.listings(); track listing.id; let i = $index) {
             <div class="ul-col-6 ul-col-sm-4 ul-col-md-3 ul-col-lg-2 ul-col-xl-2">
               <a [routerLink]="['/listings', createListingSlug(listing.title, listing.id)]">
                 <ul-card
@@ -24,7 +32,20 @@
                   [cardCaption]="listing.category"
                   cardDirection="vertical"
                   mediaAspectRatio="portrait"
-                />
+                >
+                  @if (listing.imageUrls[0]; as image) {
+                    <img
+                      udsCardMedia
+                      [ngSrc]="image"
+                      fill
+                      sizes="(min-width: 1280px) 16vw, (min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw"
+                      [priority]="i < 4"
+                      [alt]="listing.title"
+                    />
+                  } @else {
+                    <div udsCardMedia class="home__placeholder"></div>
+                  }
+                </ul-card>
               </a>
             </div>
           }
