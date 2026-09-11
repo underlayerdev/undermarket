@@ -1,40 +1,24 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { filter, map, startWith } from 'rxjs';
 import { AuthService } from '../../application/services/auth.service';
-import {
-  AvatarComponent,
-  DockComponent,
-  DockItemComponent,
-  DockItemContentSlotDirective,
-  IconComponent,
-  ToastContainerComponent,
-  ToastService,
-} from '@underlayerdev/ui';
+import { ToastContainerComponent, ToastService } from '@underlayerdev/ui';
 import { SiteFooterComponent } from '../../shared/footer/footer';
-import { getInitials } from '../../shared/utils/user-display';
-import { NotificationsComponent } from './notifications/notifications';
 import { NavbarLayoutComponent } from './navbar-layout/navbar-layout';
 import { SidebarLayoutComponent } from './sidebar-layout/sidebar-layout';
+import { DockLayout } from './dock-layout/dock-layout';
 @Component({
   selector: 'um-layout',
   imports: [
     RouterOutlet,
-    RouterLink,
-    RouterLinkActive,
     NavbarLayoutComponent,
     ToastContainerComponent,
     SiteFooterComponent,
-    NotificationsComponent,
-    DockComponent,
-    DockItemComponent,
-    DockItemContentSlotDirective,
-    IconComponent,
-    AvatarComponent,
     TranslocoDirective,
     SidebarLayoutComponent,
+    DockLayout,
   ],
   providers: [ToastService],
   templateUrl: './app-layout.html',
@@ -45,13 +29,6 @@ export class AppLayoutComponent {
   private readonly router = inject(Router);
 
   readonly currentUser = computed(() => this.authService.currentUser());
-
-  readonly avatarInitials = computed(() => {
-    const name = this.currentUser()?.displayName;
-    return name ? getInitials(name) : undefined;
-  });
-
-  readonly userImage = computed(() => this.currentUser()?.photoUrl);
 
   readonly sidebarOpen = signal(false);
 

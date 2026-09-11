@@ -1,25 +1,22 @@
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
-import { TranslocoService } from '@jsverse/transloco';
 import { SidebarLayoutComponent } from './sidebar-layout';
-import { AuthService } from '../../../application/services/auth.service';
+import type { User } from '../../../domain/user/user.model';
 import { getTranslocoTestingModule } from '../../../../testing/transloco-testing';
 
 describe('SidebarLayoutComponent', () => {
   let navigateByUrlSpy: ReturnType<typeof vi.fn>;
 
-  function setup(currentUser: { id: string } | null = null) {
+  function setup(currentUser: User | null = null) {
     navigateByUrlSpy = vi.fn().mockResolvedValue(true);
 
     TestBed.configureTestingModule({
       imports: [SidebarLayoutComponent, getTranslocoTestingModule()],
-      providers: [
-        { provide: AuthService, useValue: { currentUser: () => currentUser } },
-        { provide: Router, useValue: { navigateByUrl: navigateByUrlSpy } },
-      ],
+      providers: [{ provide: Router, useValue: { navigateByUrl: navigateByUrlSpy } }],
     });
 
     const fixture = TestBed.createComponent(SidebarLayoutComponent);
+    fixture.componentRef.setInput('currentUser', currentUser);
     fixture.detectChanges();
     return fixture;
   }
@@ -29,24 +26,30 @@ describe('SidebarLayoutComponent', () => {
     expect(fixture.componentInstance).toBeTruthy();
   });
 
-  it('should offer Home and Settings in the sidebar', () => {
-    const fixture = setup();
-    const transloco = TestBed.inject(TranslocoService);
-    const items = fixture.componentInstance.getSidebarItems((key) => transloco.translate(key));
+  it('should offer only Home for a signed-out visitor', () => {
+    const fixture = setup(null);
 
-    expect(items).toHaveLength(2);
-    expect(items.map((item) => item.label)).toEqual(['Home', 'Settings']);
+    expect(fixture.componentInstance.sidebarItems().map((item) => item.label)).toEqual(['Home']);
+  });
+
+  it('should offer Home and Settings for a signed-in user', () => {
+    const fixture = setup({ id: 'user-1' } as User);
+
+    expect(fixture.componentInstance.sidebarItems().map((item) => item.label)).toEqual([
+      'Home',
+      'Settings',
+    ]);
   });
 
   it('should select the item matching the current url', () => {
-    const fixture = setup();
+    const fixture = setup({ id: 'user-1' } as User);
     fixture.componentRef.setInput('currentUrl', '/settings/account');
 
     expect(fixture.componentInstance.selectedIndex()).toBe(1);
   });
 
   it('should default to the first item for an unrecognized url', () => {
-    const fixture = setup();
+    const fixture = setup({ id: 'user-1' } as User);
     fixture.componentRef.setInput('currentUrl', '/discover');
 
     expect(fixture.componentInstance.selectedIndex()).toBe(0);

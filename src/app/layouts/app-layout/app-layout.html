@@ -1,6 +1,7 @@
 <div class="app-shell" *transloco="let t">
   <um-sidebar-layout
     [currentUrl]="currentUrl()"
+    [currentUser]="currentUser()"
     [(sidebarOpen)]="sidebarOpen"
     (logout)="onSignOut()"
     (login)="navigateToLogin()"
@@ -14,35 +15,9 @@
       (toggleSidebar)="sidebarOpen.update((open) => !open)"
       (submitSearch)="onSearchSubmit($event)"
     />
-    <ul-dock>
-      <ul-dock-item icon="home" routerLink="/home" routerLinkActive="ul-dock-item--active" />
-
-      <ul-dock-item
-        icon="view_grid"
-        routerLink="/discover"
-        routerLinkActive="ul-dock-item--active"
-      />
-
-      <ul-dock-item
-        variant="accent"
-        routerLink="/listings/new"
-        routerLinkActive="ul-dock-item--active"
-      >
-        <span ul-dock-item-content class="app-shell__dock-new-listing">
-          <ul-icon icon="plus" size="6" />
-        </span>
-      </ul-dock-item>
-      <um-notifications layout="dock" />
-      <ul-dock-item routerLink="/profile" routerLinkActive="ul-dock-item--active">
-        <ul-avatar
-          [src]="userImage()"
-          [initials]="avatarInitials()"
-          size="md"
-          ul-dock-item-content
-        />
-      </ul-dock-item>
-    </ul-dock>
-
+    @if(currentUser()){
+      <um-dock-layout [currentUser]="currentUser()!" />
+    }
     <main class="app-shell__main">
       <div class="app-shell__content ul-content">
         <router-outlet />

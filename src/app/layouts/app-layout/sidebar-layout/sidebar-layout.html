@@ -1,7 +1,7 @@
 <ul-sidebar
   *transloco="let t"
   class="md:ul-hidden"
-  [items]="getSidebarItems(t)"
+  [items]="sidebarItems()"
   [selectedIndex]="selectedIndex()"
   [(open)]="sidebarOpen"
   (itemSelected)="onItemSelected($event)"

@@ -1,10 +1,20 @@
 import { TestBed } from '@angular/core/testing';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, provideRouter, Router } from '@angular/router';
 import { Subject } from 'rxjs';
 import { AppLayoutComponent } from './app-layout';
 import { AuthService } from '../../application/services/auth.service';
 import { NOTIFICATION_PROVIDER } from '../../core/configuration/tokens';
+import type { User } from '../../domain/user/user.model';
 import { getTranslocoTestingModule } from '../../../testing/transloco-testing';
+
+const user: User = {
+  id: '1',
+  email: 'user@example.com',
+  displayName: 'Lucas Yamone',
+  settings: { language: 'en' },
+  providerId: 'password',
+  createdAt: new Date(),
+};
 
 describe('AppLayoutComponent', () => {
   let navigateSpy: ReturnType<typeof vi.fn>;
@@ -71,5 +81,38 @@ describe('AppLayoutComponent', () => {
     fixture.componentInstance.onSearchSubmit('');
 
     expect(navigateSpy).toHaveBeenCalledWith(['/search'], { queryParams: { q: null } });
+  });
+
+  describe('dock layout rendering', () => {
+    // Needs a real Router (routerLink/routerLinkActive on every ul-dock-item
+    // call into it during rendering) rather than the plain-object mock the
+    // tests above use just to spy on navigate/navigateByUrl calls.
+    function setupRendered(currentUser: User | null) {
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({
+        imports: [AppLayoutComponent, getTranslocoTestingModule()],
+        providers: [
+          provideRouter([]),
+          { provide: AuthService, useValue: { currentUser: () => currentUser, logout: logoutSpy } },
+          { provide: NOTIFICATION_PROVIDER, useValue: { observe: () => () => {} } },
+        ],
+      });
+
+      const fixture = TestBed.createComponent(AppLayoutComponent);
+      fixture.detectChanges();
+      return fixture;
+    }
+
+    it('should not render the dock for a signed-out visitor', () => {
+      const fixture = setupRendered(null);
+
+      expect(fixture.nativeElement.querySelector('um-dock-layout')).toBeNull();
+    });
+
+    it('should render the dock for a signed-in user', () => {
+      const fixture = setupRendered(user);
+
+      expect(fixture.nativeElement.querySelector('um-dock-layout')).toBeTruthy();
+    });
   });
 });

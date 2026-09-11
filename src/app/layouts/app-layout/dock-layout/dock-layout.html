@@ -1,0 +1,15 @@
+<ul-dock>
+  <ul-dock-item icon="home" routerLink="/home" routerLinkActive="ul-dock-item--active" />
+
+  <ul-dock-item icon="view_grid" routerLink="/discover" routerLinkActive="ul-dock-item--active" />
+
+  <ul-dock-item variant="accent" routerLink="/listings/new" routerLinkActive="ul-dock-item--active">
+    <span ul-dock-item-content class="app-shell__dock-new-listing">
+      <ul-icon icon="plus" size="6" />
+    </span>
+  </ul-dock-item>
+  <um-notifications layout="dock" />
+  <ul-dock-item routerLink="/profile" routerLinkActive="ul-dock-item--active">
+    <ul-avatar [src]="userImage()" [initials]="avatarInitials()" size="md" ul-dock-item-content />
+  </ul-dock-item>
+</ul-dock>
