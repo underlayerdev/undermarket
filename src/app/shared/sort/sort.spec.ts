@@ -1,11 +1,11 @@
 import { TestBed } from '@angular/core/testing';
-import { SearchSortComponent } from './search-sort';
+import { SortComponent } from './sort';
 
-describe('SearchSortComponent', () => {
+describe('SortComponent', () => {
   function setup(sortOptions = [{ value: 'newest', label: 'Newest' }]) {
-    TestBed.configureTestingModule({ imports: [SearchSortComponent] });
+    TestBed.configureTestingModule({ imports: [SortComponent] });
 
-    const fixture = TestBed.createComponent(SearchSortComponent);
+    const fixture = TestBed.createComponent(SortComponent);
     fixture.componentRef.setInput('sortOptions', sortOptions);
     fixture.detectChanges();
     return fixture;
@@ -25,12 +25,6 @@ describe('SearchSortComponent', () => {
       'newest',
       'oldest',
     ]);
-  });
-
-  it('should update the query model when set', () => {
-    const fixture = setup();
-    fixture.componentInstance.query.set('lamp');
-    expect(fixture.componentInstance.query()).toBe('lamp');
   });
 
   it('should update the sort model when set', () => {
