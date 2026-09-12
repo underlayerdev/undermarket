@@ -3,12 +3,16 @@ import { TestBed } from '@angular/core/testing';
 import { SearchComponent } from './search';
 import { ListingService } from '../../application/services/listing.service';
 import { getTranslocoTestingModule } from '../../../testing/transloco-testing';
+import { installFakeLocalStorage } from '../../../testing/fake-local-storage';
+import { getRecentSearches } from '../../shared/search/recent-searches.util';
 
 describe('SearchComponent', () => {
   let searchSpy: ReturnType<typeof vi.fn>;
   let locationBackSpy: ReturnType<typeof vi.fn>;
+  let restoreLocalStorage: () => void;
 
   beforeEach(() => {
+    restoreLocalStorage = installFakeLocalStorage();
     searchSpy = vi.fn().mockResolvedValue(undefined);
     locationBackSpy = vi.fn();
 
@@ -22,6 +26,10 @@ describe('SearchComponent', () => {
         { provide: Location, useValue: { back: locationBackSpy } },
       ],
     });
+  });
+
+  afterEach(() => {
+    restoreLocalStorage();
   });
 
   it('should create', () => {
@@ -50,11 +58,51 @@ describe('SearchComponent', () => {
     expect(searchSpy).not.toHaveBeenCalled();
   });
 
-  it('should navigate back when closed', () => {
+  it('should navigate back when the back button is clicked', () => {
     const fixture = TestBed.createComponent(SearchComponent);
 
-    fixture.componentInstance.onClose();
+    fixture.componentInstance.goBack();
 
     expect(locationBackSpy).toHaveBeenCalled();
+  });
+
+  it('should render a ul-search-input for both the mobile header and desktop row', () => {
+    const fixture = TestBed.createComponent(SearchComponent);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelectorAll('ul-search-input').length).toBe(2);
+  });
+
+  it('should record a submitted search into recent searches and trigger the search', () => {
+    const fixture = TestBed.createComponent(SearchComponent);
+    // Mirrors ul-search-input's [(value)] already having synced `query` from
+    // typing by the time it emits searchSubmit on Enter.
+    fixture.componentInstance.query.set('lamp');
+
+    fixture.componentInstance.onSearchSubmit('lamp');
+
+    expect(getRecentSearches('listings')).toEqual(['lamp']);
+    expect(fixture.componentInstance.recentSearchSuggestions()).toEqual([
+      { value: 'lamp', label: 'lamp' },
+    ]);
+    expect(searchSpy).toHaveBeenCalledWith({ query: 'lamp', category: undefined });
+  });
+
+  it('should record a picked suggestion into recent searches and trigger the search', () => {
+    const fixture = TestBed.createComponent(SearchComponent);
+    fixture.componentInstance.query.set('lamp');
+
+    fixture.componentInstance.onSuggestionSelected({ value: 'lamp', label: 'lamp' });
+
+    expect(getRecentSearches('listings')).toEqual(['lamp']);
+    expect(searchSpy).toHaveBeenCalled();
+  });
+
+  it('should not record a blank submitted search', () => {
+    const fixture = TestBed.createComponent(SearchComponent);
+
+    fixture.componentInstance.onSearchSubmit('   ');
+
+    expect(getRecentSearches('listings')).toEqual([]);
   });
 });

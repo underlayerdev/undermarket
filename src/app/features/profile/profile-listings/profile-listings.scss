@@ -1,4 +1,5 @@
 @use 'pkg:@underlayerdev/ui/design-tokens' as tokens;
+@use 'pkg:@underlayerdev/ui/breakpoints' as bp;
 
 :host {
   display: block;

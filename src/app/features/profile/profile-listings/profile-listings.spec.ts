@@ -5,6 +5,8 @@ import { ListingService } from '../../../application/services/listing.service';
 import { LISTING_REPOSITORY } from '../../../core/configuration/tokens';
 import type { Listing } from '../../../domain/listing/listing.model';
 import { getTranslocoTestingModule } from '../../../../testing/transloco-testing';
+import { installFakeLocalStorage } from '../../../../testing/fake-local-storage';
+import { getRecentSearches } from '../../../shared/search/recent-searches.util';
 
 function listing(overrides: Partial<Listing> = {}): Listing {
   return {
@@ -29,9 +31,33 @@ function flushAsync(): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, 0));
 }
 
+// jsdom doesn't implement matchMedia at all — ul-search-input's mobile
+// breakpoint check needs it assigned outright, not spied on.
+function mockMatchMedia(matches: boolean): void {
+  window.matchMedia = vi.fn().mockImplementation((query: string) => ({
+    matches,
+    media: query,
+    addListener: () => {},
+    removeListener: () => {},
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    onchange: null,
+    dispatchEvent: () => false,
+  }));
+}
+
 describe('ProfileListingsComponent', () => {
   let getByOwnerSpy: ReturnType<typeof vi.fn>;
   let deleteSpy: ReturnType<typeof vi.fn>;
+  let restoreLocalStorage: () => void;
+
+  beforeEach(() => {
+    restoreLocalStorage = installFakeLocalStorage();
+  });
+
+  afterEach(() => {
+    restoreLocalStorage();
+  });
 
   function setup(listings: Listing[] = [listing()]) {
     getByOwnerSpy = vi.fn().mockResolvedValue(listings);
@@ -101,6 +127,67 @@ describe('ProfileListingsComponent', () => {
       'newer',
       'older',
     ]);
+  });
+
+  it('should record a submitted search into recent searches', async () => {
+    const fixture = setup();
+    await flushAsync();
+
+    fixture.componentInstance.onSearchSubmit('lamp');
+
+    expect(getRecentSearches('profile-listings')).toEqual(['lamp']);
+    expect(fixture.componentInstance.recentSearchSuggestions()).toEqual([
+      { value: 'lamp', label: 'lamp' },
+    ]);
+  });
+
+  it('should record a picked suggestion into recent searches', async () => {
+    const fixture = setup();
+    await flushAsync();
+
+    fixture.componentInstance.onSuggestionSelected({ value: 'lamp', label: 'lamp' });
+
+    expect(getRecentSearches('profile-listings')).toEqual(['lamp']);
+  });
+
+  it('should not record a blank submitted search', async () => {
+    const fixture = setup();
+    await flushAsync();
+
+    fixture.componentInstance.onSearchSubmit('   ');
+
+    expect(getRecentSearches('profile-listings')).toEqual([]);
+  });
+
+  it('should show a second listings list with live results inside the mobile search takeover', async () => {
+    mockMatchMedia(true);
+    const fixture = setup([
+      listing({ id: 'a', title: 'Vintage lamp' }),
+      listing({ id: 'b', title: 'Mountain bike' }),
+    ]);
+    await flushAsync();
+    fixture.detectChanges();
+
+    const trigger: HTMLInputElement = fixture.nativeElement.querySelector('ul-search-input input');
+    trigger.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    fixture.detectChanges();
+
+    const takeoverInput: HTMLInputElement = fixture.nativeElement.querySelector(
+      '.ul-search-input__combobox--takeover input',
+    );
+    takeoverInput.value = 'lamp';
+    takeoverInput.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+
+    // The takeover's projected content is a DOM descendant of the toolbar's
+    // own um-listings-list (content projection doesn't move it elsewhere),
+    // so scope the assertion to the takeover panel specifically rather than
+    // counting um-listings-list elements page-wide.
+    const takeoverRows = fixture.nativeElement.querySelectorAll(
+      '.ul-search-input__list--takeover .um-listing-list__row',
+    );
+    expect(takeoverRows.length).toBe(1);
+    expect(takeoverRows[0].textContent).toContain('Vintage lamp');
   });
 
   it('should track selection via selectedIds once toggled', async () => {

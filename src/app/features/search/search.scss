@@ -10,7 +10,6 @@
 // the display property at desktop widths.
 .search__mobile-header {
   align-items: center;
-  justify-content: space-between;
   gap: tokens.$spacing-spacing-4;
   padding-bottom: tokens.$spacing-spacing-4;
   padding-top: tokens.$spacing-spacing-4;
@@ -25,8 +24,9 @@
   }
 }
 
-.search__mobile-title {
-  margin: 0;
+.search__mobile-input {
+  flex: 1;
+  min-width: 0;
 }
 
 // No utility exists for "hidden below a breakpoint" (ul-hidden variants
@@ -34,6 +34,13 @@
 .search__desktop-title {
   display: block;
 
+  @media (max-width: tokens.$breakpoint-md - 1px) {
+    display: none;
+  }
+}
+
+// Redundant with the sticky header's input once that takes over on mobile.
+.search__desktop-search-col {
   @media (max-width: tokens.$breakpoint-md - 1px) {
     display: none;
   }

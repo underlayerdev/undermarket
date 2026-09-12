@@ -1,8 +1,8 @@
 <ng-container *transloco="let t">
   <h2 class="ul-typography-headline-m-extrabold ul-mb-6">
-    {{ t('profile.myListings', { value: listings().length }) }}
+    {{ title() }}
   </h2>
-  @if (filteredListings().length > 0) {
+  <!-- @if (filteredListings().length > 0) {
     <div class="profile-listings__bulk-bar">
       <ul-checkbox
         [checked]="listingList.allSelected()"
@@ -20,26 +20,51 @@
         </ul-button>
       }
     </div>
-  }
+  } -->
   <div class="um-profile-listings__list">
     <um-listings-list
       #listingList
-      class="ul-d-flex"
       [listings]="filteredListings()"
       [isLoading]="isLoading()"
       [ariaLabel]="t('profile.selectListingAriaLabel')"
       [(selection)]="selectedIds"
     >
-      @if (!isLoading() && listings().length > 0) {
-        <um-search-sort
-          toolbar
-          class="ul-mb-4"
-          [searchPlaceholder]="t('profile.searchPlaceholder')"
-          [sortPlaceholder]="t('listing.sortPlaceholder')"
-          [sortOptions]="sortOptions()"
-          [(query)]="searchQuery"
-          [(sort)]="sortOption"
-        />
+      @if (!isLoading()) {
+        <ng-container toolbar>
+          <ul-search-input
+            [placeholder]="t('profile.searchPlaceholder')"
+            [suggestions]="recentSearchSuggestions()"
+            [suggestionsLabel]="t('common.recentSearchesLabel')"
+            [backLabel]="t('common.back')"
+            [clearLabel]="t('common.clear')"
+            [resultsTemplate]="mobileSearchResults"
+            [(value)]="searchQuery"
+            (searchSubmit)="onSearchSubmit($event)"
+            (suggestionSelected)="onSuggestionSelected($event)"
+          />
+          <ng-template #mobileSearchResults>
+            <um-listings-list
+              [listings]="filteredListings()"
+              [isLoading]="isLoading()"
+              [ariaLabel]="t('profile.selectListingAriaLabel')"
+              [(selection)]="selectedIds"
+            >
+              @if (hasSearchQuery()) {
+                <span emptyListText>{{ t('profile.noSearchResults') }}</span>
+              } @else {
+                <span emptyListText>{{ t('profile.emptyState') }}</span>
+              }
+            </um-listings-list>
+          </ng-template>
+
+          <um-sort
+            toolbar
+            class="ul-mb-4 profile-listings__inline-toolbar"
+            [placeholder]="t('listing.sortPlaceholder')"
+            [sortOptions]="sortOptions()"
+            [(sort)]="sortOption"
+          />
+        </ng-container>
       }
       @if (hasSearchQuery()) {
         <span emptyListText>{{ t('profile.noSearchResults') }}</span>
@@ -53,6 +78,7 @@
       }
     </um-listings-list>
   </div>
+
   <ul-modal
     [open]="!!pendingDeleteIds()"
     [title]="

@@ -16,10 +16,13 @@ import {
   ToastService,
   ButtonComponent,
   CheckboxComponent,
+  IconComponent,
+  SearchInputComponent,
 } from '@underlayerdev/ui';
-import type { SelectOption } from '@underlayerdev/ui';
+import type { SearchSuggestion, SelectOption } from '@underlayerdev/ui';
 import { ListingListComponent } from '../../../shared/listing';
-import { SearchSortComponent } from '../../../shared/search-sort/search-sort';
+import { SortComponent } from '../../../shared/sort/sort';
+import { addRecentSearch, getRecentSearches } from '../../../shared/search/recent-searches.util';
 import { RouterLink } from '@angular/router';
 
 @Component({
@@ -28,9 +31,11 @@ import { RouterLink } from '@angular/router';
     ModalComponent,
     TranslocoDirective,
     ListingListComponent,
-    SearchSortComponent,
+    SortComponent,
+    SearchInputComponent,
     ButtonComponent,
     CheckboxComponent,
+    IconComponent,
     RouterLink,
   ],
   providers: [ToastService],
@@ -38,6 +43,10 @@ import { RouterLink } from '@angular/router';
   styleUrl: './profile-listings.scss',
 })
 export class ProfileListingsComponent implements OnInit {
+  // Separate history bucket from the public search page's own search input
+  // so unrelated searches never mix in the same recent-searches list.
+  private static readonly HISTORY_KEY = 'profile-listings';
+
   readonly ownerId = input.required<UserId>();
 
   private readonly listingRepository = inject(LISTING_REPOSITORY);
@@ -47,7 +56,10 @@ export class ProfileListingsComponent implements OnInit {
   private readonly transloco = inject(TranslocoService);
 
   readonly createListingSlug = createListingSlug;
-
+  // Title with amount of listings.
+  readonly title = computed(() =>
+    this.transloco.translate('profile.myListings', { value: this.listings().length }),
+  );
   readonly listings = signal<Listing[]>([]);
   readonly isLoading = signal(true);
   readonly searchQuery = signal('');
@@ -57,6 +69,11 @@ export class ProfileListingsComponent implements OnInit {
   readonly selectedIds = signal<ReadonlySet<ListingId>>(new Set());
   readonly pendingDeleteIds = signal<ListingId[] | null>(null);
   readonly isDeleting = signal(false);
+
+  private readonly recentSearches = signal(getRecentSearches(ProfileListingsComponent.HISTORY_KEY));
+  readonly recentSearchSuggestions = computed<SearchSuggestion[]>(() =>
+    this.recentSearches().map((recentQuery) => ({ value: recentQuery, label: recentQuery })),
+  );
 
   readonly sortOptions = computed<SelectOption[]>(() => {
     this.transloco.activeLang();
@@ -109,6 +126,21 @@ export class ProfileListingsComponent implements OnInit {
     } finally {
       this.isLoading.set(false);
     }
+  }
+
+  onSearchSubmit(value: string): void {
+    this.recordRecentSearch(value);
+  }
+
+  onSuggestionSelected(suggestion: SearchSuggestion): void {
+    this.recordRecentSearch(suggestion.value);
+  }
+
+  private recordRecentSearch(value: string): void {
+    const trimmed = value.trim();
+    if (!trimmed) return;
+    addRecentSearch(ProfileListingsComponent.HISTORY_KEY, trimmed);
+    this.recentSearches.set(getRecentSearches(ProfileListingsComponent.HISTORY_KEY));
   }
 
   onBulkDeleteClick(): void {

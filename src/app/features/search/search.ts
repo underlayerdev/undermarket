@@ -1,21 +1,22 @@
 import { Location } from '@angular/common';
-import { Component, effect, inject, input, OnInit, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { ListingService } from '../../application/services/listing.service';
 import { SeoService } from '../../core/seo/seo.service';
 import { CATEGORIES } from '../../domain/category/category.model';
 import { ListingPricePipe } from '../../shared/listing/listing-price/listing-price.pipe';
+import { addRecentSearch, getRecentSearches } from '../../shared/search/recent-searches.util';
 import { createListingSlug } from '../../shared/utils/slugify';
 import {
   ButtonComponent,
   CardComponent,
   IconComponent,
-  InputComponent,
   PillComponent,
+  SearchInputComponent,
   SelectComponent,
 } from '@underlayerdev/ui';
-import type { SelectOption } from '@underlayerdev/ui';
+import type { SearchSuggestion, SelectOption } from '@underlayerdev/ui';
 
 @Component({
   selector: 'um-search',
@@ -24,9 +25,9 @@ import type { SelectOption } from '@underlayerdev/ui';
     ButtonComponent,
     CardComponent,
     IconComponent,
-    InputComponent,
     PillComponent,
     SelectComponent,
+    SearchInputComponent,
     ListingPricePipe,
     TranslocoDirective,
   ],
@@ -34,6 +35,10 @@ import type { SelectOption } from '@underlayerdev/ui';
   styleUrl: './search.scss',
 })
 export class SearchComponent implements OnInit {
+  // Separate history bucket from profile-listings' own search input so
+  // unrelated searches never mix in the same recent-searches list.
+  private static readonly HISTORY_KEY = 'listings';
+
   protected readonly listingService = inject(ListingService);
   private readonly seoService = inject(SeoService);
   private readonly transloco = inject(TranslocoService);
@@ -51,6 +56,10 @@ export class SearchComponent implements OnInit {
 
   readonly query = signal('');
   readonly selectedCategory = signal<string | null>(null);
+  private readonly recentSearches = signal(getRecentSearches(SearchComponent.HISTORY_KEY));
+  readonly recentSearchSuggestions = computed<SearchSuggestion[]>(() =>
+    this.recentSearches().map((recentQuery) => ({ value: recentQuery, label: recentQuery })),
+  );
 
   constructor() {
     effect(() => {
@@ -76,12 +85,29 @@ export class SearchComponent implements OnInit {
     });
   }
 
+  onSearchSubmit(value: string): void {
+    this.recordRecentSearch(value);
+    this.onSearch();
+  }
+
+  onSuggestionSelected(suggestion: SearchSuggestion): void {
+    this.recordRecentSearch(suggestion.value);
+    this.onSearch();
+  }
+
+  private recordRecentSearch(value: string): void {
+    const trimmed = value.trim();
+    if (!trimmed) return;
+    addRecentSearch(SearchComponent.HISTORY_KEY, trimmed);
+    this.recentSearches.set(getRecentSearches(SearchComponent.HISTORY_KEY));
+  }
+
   clearCategory(): void {
     this.selectedCategory.set(null);
     this.onSearch();
   }
 
-  onClose(): void {
+  goBack(): void {
     this.location.back();
   }
 }
