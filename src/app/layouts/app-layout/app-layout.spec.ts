@@ -4,17 +4,11 @@ import { Subject } from 'rxjs';
 import { AppLayoutComponent } from './app-layout';
 import { AuthService } from '../../application/services/auth.service';
 import { NOTIFICATION_PROVIDER } from '../../core/configuration/tokens';
+import { mockUser } from '../../domain/user/user.mock';
 import type { User } from '../../domain/user/user.model';
 import { getTranslocoTestingModule } from '../../../testing/transloco-testing';
 
-const user: User = {
-  id: '1',
-  email: 'user@example.com',
-  displayName: 'Lucas Yamone',
-  settings: { language: 'en' },
-  providerId: 'password',
-  createdAt: new Date(),
-};
+const user = mockUser();
 
 describe('AppLayoutComponent', () => {
   let navigateSpy: ReturnType<typeof vi.fn>;

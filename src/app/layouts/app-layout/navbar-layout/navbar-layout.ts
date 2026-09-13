@@ -11,7 +11,7 @@ import {
   NavbarSearchSlotDirective,
 } from '@underlayerdev/ui';
 import { User } from '../../../domain/user/user.model';
-import { getInitials } from '../../../shared/utils/user-display';
+import { getInitials } from '../../../domain/user/user-display';
 import { NotificationsComponent } from '../notifications/notifications';
 import { UserMenuComponent } from '../user-menu/user-menu';
 
@@ -46,6 +46,6 @@ export class NavbarLayoutComponent {
   readonly toggleSidebar = output();
   readonly submitSearch = output<string>();
 
-  readonly avatarInitials = computed(() => getInitials(this.currentUser()?.displayName));
+  readonly avatarInitials = computed(() => getInitials(this.currentUser()));
   readonly searchQuery = signal('');
 }

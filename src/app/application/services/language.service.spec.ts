@@ -7,19 +7,8 @@ import { UserService } from './user.service';
 import { LANGUAGE_STORAGE_KEY } from '../../core/i18n/languages';
 import { getTranslocoTestingModule } from '../../../testing/transloco-testing';
 import { installFakeLocalStorage } from '../../../testing/fake-local-storage';
+import { mockUser } from '../../domain/user/user.mock';
 import type { User } from '../../domain/user/user.model';
-
-function createUser(overrides: Partial<User> = {}): User {
-  return {
-    id: 'user-1',
-    email: 'test@example.com',
-    displayName: 'Test User',
-    settings: { language: 'en' },
-    providerId: 'password',
-    createdAt: new Date('2024-03-15T10:00:00Z'),
-    ...overrides,
-  };
-}
 
 describe('LanguageService', () => {
   let currentUser: ReturnType<typeof signal<User | null>>;
@@ -89,10 +78,10 @@ describe('LanguageService', () => {
   });
 
   it('should apply the stored preference once a session is restored', async () => {
-    const service = setup(createUser({ settings: { language: 'es' } }));
+    const service = setup(mockUser({ settings: { language: 'es' } }));
     expect(transloco.getActiveLang()).toBe('en');
 
-    currentUser.set(createUser());
+    currentUser.set(mockUser());
     TestBed.tick();
     await service.whenSynced();
 
@@ -102,7 +91,7 @@ describe('LanguageService', () => {
   it('should create the profile doc for an account that has none', async () => {
     setup(null);
 
-    currentUser.set(createUser());
+    currentUser.set(mockUser());
     TestBed.tick();
     await Promise.resolve();
 
@@ -112,8 +101,8 @@ describe('LanguageService', () => {
   });
 
   it('should apply and persist a language change', async () => {
-    const service = setup(createUser());
-    currentUser.set(createUser());
+    const service = setup(mockUser());
+    currentUser.set(mockUser());
     TestBed.tick();
 
     await service.setLanguage('es');
@@ -134,7 +123,7 @@ describe('LanguageService', () => {
     });
 
     const service = setup(null);
-    const user = createUser();
+    const user = mockUser();
     ensureProfileSpy.mockImplementation(async (u: User) => {
       await created;
       writes.push('create');

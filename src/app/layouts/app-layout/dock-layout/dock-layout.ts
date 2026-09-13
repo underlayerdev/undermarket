@@ -9,7 +9,7 @@ import {
 import { NotificationsComponent } from '../notifications/notifications';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { User } from '../../../domain/user/user.model';
-import { getInitials } from '../../../shared/utils/user-display';
+import { getInitials } from '../../../domain/user/user-display';
 
 @Component({
   selector: 'um-dock-layout',
@@ -27,11 +27,6 @@ import { getInitials } from '../../../shared/utils/user-display';
 })
 export class DockLayout {
   readonly currentUser = input.required<User>();
-
-  readonly avatarInitials = computed(() => {
-    const name = this.currentUser()?.displayName;
-    return name ? getInitials(name) : undefined;
-  });
-
+  readonly avatarInitials = computed(() => getInitials(this.currentUser()));
   readonly userImage = computed(() => this.currentUser()?.photoUrl);
 }

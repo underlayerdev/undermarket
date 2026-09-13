@@ -6,6 +6,7 @@ import { ListingService } from '../../application/services/listing.service';
 import { UserService } from '../../application/services/user.service';
 import { LISTING_REPOSITORY } from '../../core/configuration/tokens';
 import { getTranslocoTestingModule } from '../../../testing/transloco-testing';
+import { mockUser } from '../../domain/user/user.mock';
 
 describe('ProfileComponent', () => {
   let ensureProfileSpy: ReturnType<typeof vi.fn>;
@@ -22,7 +23,7 @@ describe('ProfileComponent', () => {
         {
           provide: UserService,
           useValue: {
-            profile: () => (currentUser ? { displayName: 'Test User', photoUrl: null } : null),
+            profile: () => (currentUser ? mockUser({ id: currentUser.id }) : null),
             ensureProfile: ensureProfileSpy,
           },
         },

@@ -5,19 +5,8 @@ import { SettingsAccountComponent } from './settings-account';
 import { AuthService } from '../../../application/services/auth.service';
 import { UserService } from '../../../application/services/user.service';
 import { getTranslocoTestingModule } from '../../../../testing/transloco-testing';
+import { mockUser } from '../../../domain/user/user.mock';
 import type { User } from '../../../domain/user/user.model';
-
-function createUser(overrides: Partial<User> = {}): User {
-  return {
-    id: 'user-1',
-    email: 'test@example.com',
-    displayName: 'Test User',
-    settings: { language: 'en' },
-    providerId: 'password',
-    createdAt: new Date(),
-    ...overrides,
-  };
-}
 
 describe('SettingsAccountComponent', () => {
   let currentUser: User | null;
@@ -67,13 +56,13 @@ describe('SettingsAccountComponent', () => {
   }
 
   it('should create', () => {
-    currentUser = createUser();
+    currentUser = mockUser();
     const fixture = setup();
     expect(fixture.componentInstance).toBeTruthy();
   });
 
   it('should render the account creation date', () => {
-    currentUser = createUser({ createdAt: new Date('2024-03-15T10:00:00Z') });
+    currentUser = mockUser({ createdAt: new Date('2024-03-15T10:00:00Z') });
     const fixture = setup();
 
     const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
@@ -82,19 +71,19 @@ describe('SettingsAccountComponent', () => {
   });
 
   it('should show change password for an email/password user', () => {
-    currentUser = createUser({ providerId: 'password' });
+    currentUser = mockUser({ providerId: 'password' });
     const fixture = setup();
     expect(fixture.componentInstance.isEmailPasswordUser()).toBe(true);
   });
 
   it('should hide change password for a Google user', () => {
-    currentUser = createUser({ providerId: 'google.com' });
+    currentUser = mockUser({ providerId: 'google.com' });
     const fixture = setup();
     expect(fixture.componentInstance.isEmailPasswordUser()).toBe(false);
   });
 
   it('should require the current password before submitting a password change', async () => {
-    currentUser = createUser();
+    currentUser = mockUser();
     const fixture = setup();
 
     await fixture.componentInstance.onChangePassword();
@@ -104,7 +93,7 @@ describe('SettingsAccountComponent', () => {
   });
 
   it('should call authService.changePassword with valid input', async () => {
-    currentUser = createUser();
+    currentUser = mockUser();
     const fixture = setup();
     const toastService = TestBed.inject(ToastService);
     const successSpy = vi.spyOn(toastService, 'success');
@@ -119,7 +108,7 @@ describe('SettingsAccountComponent', () => {
   });
 
   it('should open and close the delete-account modal', () => {
-    currentUser = createUser();
+    currentUser = mockUser();
     const fixture = setup();
 
     fixture.componentInstance.onDeleteAccountClick();
@@ -130,7 +119,7 @@ describe('SettingsAccountComponent', () => {
   });
 
   it('should delete the account and navigate to /login on confirm', async () => {
-    currentUser = createUser();
+    currentUser = mockUser();
     const fixture = setup();
     fixture.componentInstance.deleteAccountPasswordValue.set('mypassword');
 
@@ -142,7 +131,7 @@ describe('SettingsAccountComponent', () => {
   });
 
   it('should sign out and navigate to /login', async () => {
-    currentUser = createUser();
+    currentUser = mockUser();
     const fixture = setup();
 
     await fixture.componentInstance.onSignOut();

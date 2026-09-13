@@ -2,16 +2,10 @@ import { TestBed } from '@angular/core/testing';
 import { AuthService } from './auth.service';
 import { AUTH_PROVIDER } from '../../core/configuration/tokens';
 import type { AuthProvider } from '../../domain/auth/auth.provider';
+import { mockUser } from '../../domain/user/user.mock';
 import type { User } from '../../domain/user/user.model';
 
-const testUser: User = {
-  id: 'u1',
-  email: 'test@example.com',
-  displayName: 'Test User',
-  settings: { language: 'en' },
-  providerId: 'password',
-  createdAt: new Date(),
-};
+const testUser = mockUser();
 
 function createAuthProviderMock(): AuthProvider & { emitAuthState: (user: User | null) => void } {
   let listener: ((user: User | null) => void) | null = null;

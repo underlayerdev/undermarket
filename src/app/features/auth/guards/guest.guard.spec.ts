@@ -2,16 +2,10 @@ import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { guestGuard } from './guest.guard';
 import { AuthService } from '../../../application/services/auth.service';
+import { mockUser } from '../../../domain/user/user.mock';
 import type { User } from '../../../domain/user/user.model';
 
-const testUser: User = {
-  id: 'u1',
-  email: 'test@example.com',
-  displayName: 'Test User',
-  settings: { language: 'en' },
-  providerId: 'password',
-  createdAt: new Date(),
-};
+const testUser = mockUser();
 
 describe('guestGuard', () => {
   function setup(currentUser: User | null) {

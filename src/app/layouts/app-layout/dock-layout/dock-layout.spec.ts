@@ -3,18 +3,14 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { DockLayout } from './dock-layout';
 import { NotificationService } from '../../../application/services/notification.service';
+import { mockUser } from '../../../domain/user/user.mock';
 import type { User } from '../../../domain/user/user.model';
 import { getTranslocoTestingModule } from '../../../../testing/transloco-testing';
 
-const user: User = {
-  id: '1',
-  email: 'user@example.com',
+const user = mockUser({
   displayName: 'Lucas Yamone',
   photoUrl: 'https://example.com/avatar.png',
-  settings: { language: 'en' },
-  providerId: 'password',
-  createdAt: new Date(),
-};
+});
 
 describe('DockLayout', () => {
   function setup(currentUser: User = user) {

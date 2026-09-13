@@ -7,17 +7,11 @@ import type { AuthProvider } from '../../domain/auth/auth.provider';
 import type { ImageStorage } from '../../domain/image-storage/image-storage.provider';
 import type { ListingRepository } from '../../domain/listing/listing.repository';
 import type { Listing } from '../../domain/listing/listing.model';
+import { mockUser } from '../../domain/user/user.mock';
 import type { User } from '../../domain/user/user.model';
 import type { NewListingInput } from '../../domain/listing/listing.validator';
 
-const testUser: User = {
-  id: 'user-1',
-  email: 'test@example.com',
-  displayName: 'Test User',
-  settings: { language: 'en' },
-  providerId: 'password',
-  createdAt: new Date(),
-};
+const testUser = mockUser();
 
 function validInput(overrides: Partial<NewListingInput> = {}): NewListingInput {
   return {

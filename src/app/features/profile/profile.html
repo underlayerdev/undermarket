@@ -1,23 +1,14 @@
-<div class="ul-container-fluid md:ul-container-product">
+<div class="um-profile">
   <div class="ul-content ul-pt-8">
-    <ng-container *transloco="let t">
-      @if (userService.profile(); as user) {
-        <div class="ul-gap-6 ul-mb-10" style="display: flex; align-items: center">
-          <ul-avatar [initials]="avatarInitials()" [src]="avatarSrc()" size="xl" />
-          <div>
-            <h1 class="ul-typography-headline-l-extrablack">{{ user.displayName }}</h1>
-            <p class="ul-typography-body-m-regular ul-text-secondary">{{ user.email }}</p>
-          </div>
-        </div>
-
-        <um-profile-listings [ownerId]="user.id" />
-      } @else {
-        <div class="ul-gap-4 ul-mb-6" style="display: flex; align-items: center">
-          <ul-skeleton variant="rect" width="80px" height="80px" [show]="true" />
-          <ul-skeleton variant="text" [lines]="2" [show]="true" />
-        </div>
-        <ul-skeleton variant="rect" height="200px" [show]="true" />
-      }
-    </ng-container>
+    @if (currentUser(); as user) {
+      <um-profile-info [user]="user" />
+      <um-profile-listings [ownerId]="user.id" />
+    } @else {
+      <div class="ul-gap-4 ul-mb-6" style="display: flex; align-items: center">
+        <ul-skeleton variant="rect" width="80px" height="80px" [show]="true" />
+        <ul-skeleton variant="text" [lines]="2" [show]="true" />
+      </div>
+      <ul-skeleton variant="rect" height="200px" [show]="true" />
+    }
   </div>
 </div>

@@ -1,16 +1,16 @@
-import { Component, computed, inject, OnInit } from '@angular/core';
-import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
+import { Component, inject, OnInit } from '@angular/core';
+import { TranslocoService } from '@jsverse/transloco';
 import { AuthService } from '../../application/services/auth.service';
 import { UserService } from '../../application/services/user.service';
 import { ErrorService } from '../../application/services/error.service';
 import { SeoService } from '../../core/seo/seo.service';
-import { getInitials } from '../../shared/utils/user-display';
-import { AvatarComponent, SkeletonComponent, ToastService } from '@underlayerdev/ui';
+import { SkeletonComponent, ToastService } from '@underlayerdev/ui';
 import { ProfileListingsComponent } from './profile-listings/profile-listings';
+import { ProfileInfoComponent } from './profile-info/profile-info';
 
 @Component({
   selector: 'um-profile',
-  imports: [AvatarComponent, SkeletonComponent, ProfileListingsComponent, TranslocoDirective],
+  imports: [SkeletonComponent, ProfileListingsComponent, ProfileInfoComponent],
   providers: [ToastService],
   templateUrl: './profile.html',
   styleUrl: './profile.scss',
@@ -22,13 +22,7 @@ export class ProfileComponent implements OnInit {
   private readonly transloco = inject(TranslocoService);
   private readonly errorService = inject(ErrorService);
   private readonly toastService = inject(ToastService);
-
-  readonly avatarInitials = computed(() => {
-    const name = this.userService.profile()?.displayName;
-    return name ? getInitials(name) : undefined;
-  });
-
-  readonly avatarSrc = computed(() => this.userService.profile()?.photoUrl ?? undefined);
+  readonly currentUser = this.userService.profile;
 
   async ngOnInit(): Promise<void> {
     this.seoService.setPage(this.transloco.translate('profile.pageTitle'));

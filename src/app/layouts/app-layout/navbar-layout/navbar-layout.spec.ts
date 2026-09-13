@@ -4,17 +4,10 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { NavbarLayoutComponent } from './navbar-layout';
 import { AuthService } from '../../../application/services/auth.service';
 import { NOTIFICATION_PROVIDER } from '../../../core/configuration/tokens';
-import type { User } from '../../../domain/user/user.model';
+import { mockUser } from '../../../domain/user/user.mock';
 import { getTranslocoTestingModule } from '../../../../testing/transloco-testing';
 
-const user: User = {
-  id: '1',
-  email: 'user@example.com',
-  displayName: 'Lucas Yamone',
-  settings: { language: 'en' },
-  providerId: 'password',
-  createdAt: new Date(),
-};
+const user = mockUser({ displayName: 'Lucas Yamone' });
 
 describe('NavbarLayoutComponent', () => {
   beforeEach(() => {
