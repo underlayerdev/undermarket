@@ -2,32 +2,11 @@
   <h2 class="ul-typography-headline-m-extrabold ul-mb-6">
     {{ title() }}
   </h2>
-  <!-- @if (filteredListings().length > 0) {
-    <div class="profile-listings__bulk-bar">
-      <ul-checkbox
-        [checked]="listingList.allSelected()"
-        [indeterminate]="listingList.someSelected()"
-        (checkedChange)="listingList.toggleSelectAll($event)"
-      >
-        {{ t('profile.selectAllAriaLabel') }}
-        @if (hasSelection()) {
-          ({{ selectedIds().size }})
-        }
-      </ul-checkbox>
-      @if (hasSelection()) {
-        <ul-button type="button" theme="fill-red" size="sm" (buttonClick)="onBulkDeleteClick()">
-          {{ t('profile.bulkDeleteButton', { value: selectedIds().size }) }}
-        </ul-button>
-      }
-    </div>
-  } -->
   <div class="um-profile-listings__list">
     <um-listings-list
-      #listingList
       [listings]="filteredListings()"
       [isLoading]="isLoading()"
       [ariaLabel]="t('profile.selectListingAriaLabel')"
-      [(selection)]="selectedIds"
     >
       @if (!isLoading()) {
         <ng-container toolbar>
@@ -47,13 +26,10 @@
               [listings]="filteredListings()"
               [isLoading]="isLoading()"
               [ariaLabel]="t('profile.selectListingAriaLabel')"
-              [(selection)]="selectedIds"
             >
-              @if (hasSearchQuery()) {
-                <span emptyListText>{{ t('profile.noSearchResults') }}</span>
-              } @else {
-                <span emptyListText>{{ t('profile.emptyState') }}</span>
-              }
+              <span emptyListText>{{
+                hasSearchQuery() ? t('profile.noSearchResults') : t('profile.emptyState')
+              }}</span>
             </um-listings-list>
           </ng-template>
 
@@ -66,11 +42,10 @@
           />
         </ng-container>
       }
-      @if (hasSearchQuery()) {
-        <span emptyListText>{{ t('profile.noSearchResults') }}</span>
-      } @else {
-        <span emptyListText>{{ t('profile.emptyState') }}</span>
-      }
+      <span emptyListText>{{
+        hasSearchQuery() ? t('profile.noSearchResults') : t('profile.emptyState')
+      }}</span>
+
       @if (!hasSearchQuery()) {
         <ul-button emptyList theme="fill-purple" size="md" type="button" routerLink="/listings/new">
           {{ t('home.postListing') }}
@@ -78,28 +53,4 @@
       }
     </um-listings-list>
   </div>
-
-  <ul-modal
-    [open]="!!pendingDeleteIds()"
-    [title]="
-      pendingDeleteCount() > 1
-        ? t('profile.bulkDeleteModalTitle')
-        : t('listingDetail.deleteModalTitle')
-    "
-    variant="confirmation"
-    [confirmLabel]="t('common.delete')"
-    [cancelLabel]="t('common.cancel')"
-    (confirmed)="confirmDelete()"
-    (cancelled)="cancelDelete()"
-  >
-    @if (pendingDeleteCount() > 1) {
-      <p class="ul-typography-body-m-regular">
-        {{ t('profile.bulkDeleteModalBody', { value: pendingDeleteCount() }) }}
-      </p>
-    } @else if (pendingDeleteSingleTitle(); as title) {
-      <p class="ul-typography-body-m-regular">
-        {{ t('listingDetail.deleteModalBody', { value: title }) }}
-      </p>
-    }
-  </ul-modal>
 </ng-container>

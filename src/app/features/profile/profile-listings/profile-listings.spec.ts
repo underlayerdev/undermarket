@@ -1,7 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { ProfileListingsComponent } from './profile-listings';
-import { ListingService } from '../../../application/services/listing.service';
 import { LISTING_REPOSITORY } from '../../../core/configuration/tokens';
 import type { Listing } from '../../../domain/listing/listing.model';
 import { getTranslocoTestingModule } from '../../../../testing/transloco-testing';
@@ -48,7 +47,6 @@ function mockMatchMedia(matches: boolean): void {
 
 describe('ProfileListingsComponent', () => {
   let getByOwnerSpy: ReturnType<typeof vi.fn>;
-  let deleteSpy: ReturnType<typeof vi.fn>;
   let restoreLocalStorage: () => void;
 
   beforeEach(() => {
@@ -61,14 +59,12 @@ describe('ProfileListingsComponent', () => {
 
   function setup(listings: Listing[] = [listing()]) {
     getByOwnerSpy = vi.fn().mockResolvedValue(listings);
-    deleteSpy = vi.fn().mockResolvedValue(undefined);
 
     TestBed.configureTestingModule({
       imports: [ProfileListingsComponent, getTranslocoTestingModule()],
       providers: [
         provideRouter([]),
         { provide: LISTING_REPOSITORY, useValue: { getByOwner: getByOwnerSpy } },
-        { provide: ListingService, useValue: { delete: deleteSpy } },
       ],
     });
 
@@ -188,71 +184,5 @@ describe('ProfileListingsComponent', () => {
     );
     expect(takeoverRows.length).toBe(1);
     expect(takeoverRows[0].textContent).toContain('Vintage lamp');
-  });
-
-  it('should track selection via selectedIds once toggled', async () => {
-    const fixture = setup([listing({ id: 'a' }), listing({ id: 'b' })]);
-    await flushAsync();
-
-    fixture.componentInstance.selectedIds.set(new Set(['a']));
-    expect(fixture.componentInstance.hasSelection()).toBe(true);
-
-    fixture.componentInstance.selectedIds.set(new Set());
-    expect(fixture.componentInstance.hasSelection()).toBe(false);
-  });
-
-  it('should delete a single listing and reload from the server on confirm', async () => {
-    const target = listing();
-    const fixture = setup([target]);
-    await flushAsync();
-    getByOwnerSpy.mockResolvedValue([]);
-
-    fixture.componentInstance.pendingDeleteIds.set([target.id]);
-    expect(fixture.componentInstance.pendingDeleteCount()).toBe(1);
-
-    await fixture.componentInstance.confirmDelete();
-
-    expect(deleteSpy).toHaveBeenCalledWith(target.id);
-    expect(getByOwnerSpy).toHaveBeenCalledTimes(2);
-    expect(fixture.componentInstance.listings()).toEqual([]);
-  });
-
-  it('should bulk-delete selected listings and clear the selection', async () => {
-    const a = listing({ id: 'a' });
-    const b = listing({ id: 'b' });
-    const fixture = setup([a, b]);
-    await flushAsync();
-    getByOwnerSpy.mockResolvedValue([]);
-    fixture.componentInstance.selectedIds.set(new Set(['a', 'b']));
-
-    fixture.componentInstance.onBulkDeleteClick();
-    expect(fixture.componentInstance.pendingDeleteCount()).toBe(2);
-
-    await fixture.componentInstance.confirmDelete();
-
-    expect(deleteSpy).toHaveBeenCalledWith('a');
-    expect(deleteSpy).toHaveBeenCalledWith('b');
-    expect(fixture.componentInstance.hasSelection()).toBe(false);
-    expect(fixture.componentInstance.listings()).toEqual([]);
-  });
-
-  it('should do nothing when bulk delete is clicked with no selection', async () => {
-    const fixture = setup();
-    await flushAsync();
-
-    fixture.componentInstance.onBulkDeleteClick();
-
-    expect(fixture.componentInstance.pendingDeleteIds()).toBeNull();
-  });
-
-  it('should clear the pending delete on cancel', async () => {
-    const target = listing();
-    const fixture = setup([target]);
-    await flushAsync();
-
-    fixture.componentInstance.pendingDeleteIds.set([target.id]);
-    fixture.componentInstance.cancelDelete();
-
-    expect(fixture.componentInstance.pendingDeleteIds()).toBeNull();
   });
 });
