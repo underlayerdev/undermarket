@@ -1,6 +1,27 @@
 <ng-container *transloco="let t">
   <um-settings-layout [title]="t('settings.account')">
     <div class="settings__panel">
+      <h2 class="ul-typography-headline-s-extrabold ul-mb-4">
+        {{ t('settings.displayNameLabel') }}
+      </h2>
+      <form
+        class="settings-account__form ul-gap-4"
+        (submit)="$event.preventDefault(); onSaveDisplayName()"
+      >
+        <ul-input
+          [label]="t('settings.displayNameLabel')"
+          [required]="true"
+          [(value)]="displayNameValue"
+          [error]="!!displayNameError()"
+          [errorText]="displayNameError()"
+        />
+        <ul-button type="submit" theme="fill-purple" size="md" [disabled]="isSavingDisplayName()">
+          {{ saveDisplayNameButtonLabel() }}
+        </ul-button>
+      </form>
+    </div>
+
+    <div class="settings__panel ul-mt-6">
       <div class="settings-account__info">
         <p class="ul-typography-body-m-regular ul-text-secondary settings-account__email">
           {{ t('settings.emailLabel') }}: {{ authService.currentUser()?.email }}

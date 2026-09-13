@@ -82,6 +82,11 @@ export class FirebaseAuthProvider implements AuthProvider {
     await updatePassword(user, newPassword);
   }
 
+  async updateDisplayName(displayName: string): Promise<void> {
+    const user = this.requireCurrentFirebaseUser();
+    await updateProfile(user, { displayName });
+  }
+
   async deleteAccount(currentPassword?: string): Promise<void> {
     const user = this.requireCurrentFirebaseUser();
     await this.reauthenticate(user, currentPassword);

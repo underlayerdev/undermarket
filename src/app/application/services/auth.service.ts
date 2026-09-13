@@ -53,6 +53,14 @@ export class AuthService {
     await this.authProvider.changePassword(newPassword, currentPassword);
   }
 
+  // Firebase Auth's own updateProfile() doesn't trigger onAuthStateChange, so
+  // currentUser() is patched locally here rather than waiting for an event
+  // that never comes.
+  async updateDisplayName(displayName: string): Promise<void> {
+    await this.authProvider.updateDisplayName(displayName);
+    this.currentUser.update((user) => (user ? { ...user, displayName } : user));
+  }
+
   async deleteAccount(currentPassword?: string): Promise<void> {
     await this.authProvider.deleteAccount(currentPassword);
     this.currentUser.set(null);

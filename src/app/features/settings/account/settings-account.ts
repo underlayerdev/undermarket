@@ -20,6 +20,8 @@ import {
 } from '@underlayerdev/ui';
 import { SettingsLayoutComponent } from '../shared/settings-layout/settings-layout';
 
+const DISPLAY_NAME_MAX_LENGTH = 50;
+
 @Component({
   selector: 'um-settings-account',
   imports: [
@@ -100,15 +102,41 @@ export class SettingsAccountComponent implements OnInit {
   readonly selectedCity = signal<PublicCityInfo | null>(null);
   readonly citySuggestions = signal<LocationSuggestion[]>([]);
   readonly isResolvingCurrentCity = signal(false);
-  private cityInitialized = false;
+
+  // Also seeded once from the loaded profile — unlike city above, this
+  // waits for an explicit Save rather than persisting per keystroke.
+  readonly displayNameValue = signal('');
+  readonly displayNameTouched = signal(false);
+  readonly isSavingDisplayName = signal(false);
+  private profileFieldsInitialized = false;
+
+  readonly displayNameError = computed(() => {
+    if (!this.displayNameTouched()) return null;
+    const trimmed = this.displayNameValue().trim();
+    if (!trimmed) return this.transloco.translate('settings.displayNameRequired');
+    if (trimmed.length > DISPLAY_NAME_MAX_LENGTH) {
+      return this.transloco.translate('settings.displayNameTooLong', {
+        maxLength: DISPLAY_NAME_MAX_LENGTH,
+      });
+    }
+    return null;
+  });
+
+  readonly saveDisplayNameButtonLabel = computed(() => {
+    this.transloco.activeLang();
+    return this.isSavingDisplayName()
+      ? this.transloco.translate('settings.saving')
+      : this.transloco.translate('settings.saveButton');
+  });
 
   constructor() {
     effect(() => {
       const profile = this.userService.profile();
-      if (!profile || this.cityInitialized) return;
-      this.cityInitialized = true;
+      if (!profile || this.profileFieldsInitialized) return;
+      this.profileFieldsInitialized = true;
       this.selectedCity.set(profile.profileCity ?? null);
       this.showCity.set(!!profile.profileCity);
+      this.displayNameValue.set(profile.displayName);
     });
   }
 
@@ -175,6 +203,32 @@ export class SettingsAccountComponent implements OnInit {
       this.toastService.success(this.transloco.translate('settings.profileCityUpdated'));
     } catch (err) {
       this.toastService.error(this.errorService.toUserMessage(err));
+    }
+  }
+
+  async onSaveDisplayName(): Promise<void> {
+    this.displayNameTouched.set(true);
+    if (this.displayNameError()) return;
+
+    const profile = this.userService.profile();
+    if (!profile) return;
+
+    const trimmed = this.displayNameValue().trim();
+    this.isSavingDisplayName.set(true);
+    try {
+      // Firestore is the source of truth read everywhere else in the app
+      // (profile pages, seller info on listings); Auth is updated too so
+      // authService.currentUser() — read directly on this page and in the
+      // navbar/dock — doesn't show a stale name until the next full reload.
+      await this.userService.updateProfile({ ...profile, displayName: trimmed });
+      await this.authService.updateDisplayName(trimmed);
+      this.displayNameValue.set(trimmed);
+      this.displayNameTouched.set(false);
+      this.toastService.success(this.transloco.translate('settings.displayNameUpdated'));
+    } catch (err) {
+      this.toastService.error(this.errorService.toUserMessage(err));
+    } finally {
+      this.isSavingDisplayName.set(false);
     }
   }
 
