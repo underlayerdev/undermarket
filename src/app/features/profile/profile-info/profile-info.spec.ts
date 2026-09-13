@@ -43,4 +43,33 @@ describe('ProfileInfoComponent', () => {
     const avatar = fixture.debugElement.query(By.directive(AvatarComponent));
     expect(avatar.componentInstance.src()).toBeUndefined();
   });
+
+  it('should hide the email when showEmail is false', () => {
+    const fixture = setup(mockUser());
+    fixture.componentRef.setInput('showEmail', false);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).not.toContain('test@example.com');
+  });
+
+  it('should show the city when the user has opted in', () => {
+    const fixture = setup(
+      mockUser({
+        profileCity: {
+          displayName: 'Palermo, Buenos Aires',
+          city: 'Buenos Aires',
+          region: 'Buenos Aires',
+          countryCode: 'AR',
+        },
+      }),
+    );
+
+    expect(fixture.nativeElement.textContent).toContain('Palermo, Buenos Aires');
+  });
+
+  it('should not show a city when the user has not opted in', () => {
+    const fixture = setup(mockUser({ profileCity: undefined }));
+
+    expect(fixture.nativeElement.querySelector('.ul-icon-map_pin')).toBeNull();
+  });
 });

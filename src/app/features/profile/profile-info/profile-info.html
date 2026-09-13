@@ -2,6 +2,17 @@
   <ul-avatar [initials]="avatarInitials()" [src]="avatarSrc()" size="xl" />
   <div>
     <h1 class="ul-typography-headline-l-extrablack">{{ user().displayName }}</h1>
-    <p class="ul-typography-body-m-regular ul-text-secondary">{{ user().email }}</p>
+    @if (showEmail()) {
+      <p class="ul-typography-body-m-regular ul-text-secondary">{{ user().email }}</p>
+    }
+    @if (user().profileCity; as city) {
+      <p
+        class="ul-gap-1 ul-typography-body-m-regular ul-text-secondary"
+        style="display: flex; align-items: center"
+      >
+        <ul-icon icon="map_pin" size="4" />
+        {{ city.displayName }}
+      </p>
+    }
   </div>
 </div>

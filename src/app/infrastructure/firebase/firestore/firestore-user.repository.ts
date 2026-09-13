@@ -23,6 +23,10 @@ export class FirestoreUserRepository implements UserRepository {
       settings: user.settings,
       providerId: user.providerId,
       createdAt: user.createdAt,
+      // null (not omitted) when absent: profileCity being unset must
+      // actually clear any previously-stored value on an update, not leave
+      // a stale one behind — see the field's doc comment on User.
+      profileCity: user.profileCity ?? null,
     });
   }
 
@@ -39,6 +43,7 @@ export class FirestoreUserRepository implements UserRepository {
         settings: user.settings,
         providerId: user.providerId,
         createdAt: user.createdAt,
+        profileCity: user.profileCity ?? null,
       },
       { merge: true },
     );
@@ -67,6 +72,11 @@ export class FirestoreUserRepository implements UserRepository {
       // Auth itself (the source of truth for reauth) is unaffected.
       providerId: (data['providerId'] as User['providerId']) ?? 'password',
       createdAt: createdAt ? createdAt.toDate() : new Date(),
+      // Omitted (not set to undefined) when absent, matching Listing's
+      // sourceProvider/sourceId convention — update() spreads this object
+      // straight into setDoc(), and a caller round-tripping this object
+      // shouldn't accidentally reintroduce a `profileCity: undefined` key.
+      ...(data['profileCity'] ? { profileCity: data['profileCity'] as User['profileCity'] } : {}),
     };
   }
 }

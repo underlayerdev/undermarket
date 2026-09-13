@@ -36,6 +36,15 @@ export const routes: Routes = [
         loadComponent: () => import('./features/profile/profile').then((m) => m.ProfileComponent),
       },
       {
+        // Public: anyone can view another user's profile (own-profile
+        // visits redirect to /profile inside the component itself).
+        path: 'profile/:userId',
+        loadComponent: () =>
+          import('./features/profile/public-profile/public-profile').then(
+            (m) => m.PublicProfileComponent,
+          ),
+      },
+      {
         path: 'settings',
         canActivate: [authGuard],
         loadChildren: () =>

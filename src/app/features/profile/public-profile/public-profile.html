@@ -1,0 +1,24 @@
+<ng-container *transloco="let t">
+  <div class="um-profile">
+    <div class="ul-content ul-pt-8">
+      @if (isLoading()) {
+        <div class="ul-gap-4 ul-mb-6" style="display: flex; align-items: center">
+          <ul-skeleton variant="rect" width="80px" height="80px" [show]="true" />
+          <ul-skeleton variant="text" [lines]="2" [show]="true" />
+        </div>
+        <ul-skeleton variant="rect" height="200px" [show]="true" />
+      } @else if (notFound()) {
+        <ul-status status="info" customIcon="no_result">
+          <div ul-status-title>{{ t('publicProfile.notFoundTitle') }}</div>
+          <div ul-status-description>{{ t('publicProfile.notFound') }}</div>
+        </ul-status>
+        <ul-button theme="outline-white" size="md" type="button" routerLink="/discover">
+          {{ t('listingDetail.browseListings') }}
+        </ul-button>
+      } @else if (profileUser(); as user) {
+        <um-profile-info [user]="user" [showEmail]="false" />
+        <um-profile-listings [ownerId]="user.id" [publicView]="true" />
+      }
+    </div>
+  </div>
+</ng-container>

@@ -28,7 +28,9 @@
               [ariaLabel]="t('profile.selectListingAriaLabel')"
             >
               <span emptyListText>{{
-                hasSearchQuery() ? t('profile.noSearchResults') : t('profile.emptyState')
+                hasSearchQuery()
+                  ? t('profile.noSearchResults')
+                  : t(publicView() ? 'profile.sellerEmptyState' : 'profile.emptyState')
               }}</span>
             </um-listings-list>
           </ng-template>
@@ -43,10 +45,12 @@
         </ng-container>
       }
       <span emptyListText>{{
-        hasSearchQuery() ? t('profile.noSearchResults') : t('profile.emptyState')
+        hasSearchQuery()
+          ? t('profile.noSearchResults')
+          : t(publicView() ? 'profile.sellerEmptyState' : 'profile.emptyState')
       }}</span>
 
-      @if (!hasSearchQuery()) {
+      @if (!hasSearchQuery() && !publicView()) {
         <ul-button emptyList theme="fill-purple" size="md" type="button" routerLink="/listings/new">
           {{ t('home.postListing') }}
         </ul-button>

@@ -47,6 +47,7 @@ function mockMatchMedia(matches: boolean): void {
 
 describe('ProfileListingsComponent', () => {
   let getByOwnerSpy: ReturnType<typeof vi.fn>;
+  let getPublicByOwnerSpy: ReturnType<typeof vi.fn>;
   let restoreLocalStorage: () => void;
 
   beforeEach(() => {
@@ -57,19 +58,24 @@ describe('ProfileListingsComponent', () => {
     restoreLocalStorage();
   });
 
-  function setup(listings: Listing[] = [listing()]) {
+  function setup(listings: Listing[] = [listing()], publicView = false) {
     getByOwnerSpy = vi.fn().mockResolvedValue(listings);
+    getPublicByOwnerSpy = vi.fn().mockResolvedValue(listings);
 
     TestBed.configureTestingModule({
       imports: [ProfileListingsComponent, getTranslocoTestingModule()],
       providers: [
         provideRouter([]),
-        { provide: LISTING_REPOSITORY, useValue: { getByOwner: getByOwnerSpy } },
+        {
+          provide: LISTING_REPOSITORY,
+          useValue: { getByOwner: getByOwnerSpy, getPublicByOwner: getPublicByOwnerSpy },
+        },
       ],
     });
 
     const fixture = TestBed.createComponent(ProfileListingsComponent);
     fixture.componentRef.setInput('ownerId', 'user-1');
+    fixture.componentRef.setInput('publicView', publicView);
     fixture.detectChanges();
     return fixture;
   }
@@ -184,5 +190,32 @@ describe('ProfileListingsComponent', () => {
     );
     expect(takeoverRows.length).toBe(1);
     expect(takeoverRows[0].textContent).toContain('Vintage lamp');
+  });
+
+  describe('publicView', () => {
+    it('should call getPublicByOwner instead of getByOwner', async () => {
+      const fixture = setup([listing({ id: 'a' })], true);
+      await flushAsync();
+
+      expect(getPublicByOwnerSpy).toHaveBeenCalledWith('user-1');
+      expect(getByOwnerSpy).not.toHaveBeenCalled();
+      expect(fixture.componentInstance.listings().map((l) => l.id)).toEqual(['a']);
+    });
+
+    it('should use the seller-facing title instead of "My listings"', async () => {
+      const fixture = setup([listing({ id: 'a' }), listing({ id: 'b' })], true);
+      await flushAsync();
+
+      expect(fixture.componentInstance.title()).toBe('Listings (2)');
+    });
+
+    it('should not show the "post a listing" empty-state button', async () => {
+      const fixture = setup([], true);
+      await flushAsync();
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.textContent).not.toContain('Post a Listing');
+      expect(fixture.nativeElement.textContent).toContain('This user has not posted');
+    });
   });
 });

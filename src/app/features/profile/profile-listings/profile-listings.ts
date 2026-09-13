@@ -37,6 +37,10 @@ export class ProfileListingsComponent implements OnInit {
   private static readonly HISTORY_KEY = 'profile-listings';
 
   readonly ownerId = input.required<UserId>();
+  // Someone else viewing this owner's public profile, rather than the owner
+  // managing their own — active listings only (enforced by the repository
+  // query itself, not just this flag), no "post a listing" empty-state CTA.
+  readonly publicView = input(false);
 
   private readonly listingRepository = inject(LISTING_REPOSITORY);
   private readonly errorService = inject(ErrorService);
@@ -46,7 +50,9 @@ export class ProfileListingsComponent implements OnInit {
   readonly createListingSlug = createListingSlug;
   // Title with amount of listings.
   readonly title = computed(() =>
-    this.transloco.translate('profile.myListings', { value: this.listings().length }),
+    this.transloco.translate(this.publicView() ? 'profile.sellerListings' : 'profile.myListings', {
+      value: this.listings().length,
+    }),
   );
   readonly listings = signal<Listing[]>([]);
   readonly isLoading = signal(true);
@@ -89,7 +95,9 @@ export class ProfileListingsComponent implements OnInit {
   private async load(): Promise<void> {
     this.isLoading.set(true);
     try {
-      const listings = await this.listingRepository.getByOwner(this.ownerId());
+      const listings = this.publicView()
+        ? await this.listingRepository.getPublicByOwner(this.ownerId())
+        : await this.listingRepository.getByOwner(this.ownerId());
       this.listings.set(listings);
     } catch (err) {
       // Otherwise a failed fetch (e.g. a missing Firestore index) leaves

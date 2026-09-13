@@ -1,0 +1,10 @@
+@use 'pkg:@underlayerdev/ui/containers' as containers;
+@use 'pkg:@underlayerdev/ui/breakpoints' as bp;
+
+.um-profile {
+  @include containers.container-fluid;
+
+  @include bp.up('md') {
+    @include containers.container-product;
+  }
+}

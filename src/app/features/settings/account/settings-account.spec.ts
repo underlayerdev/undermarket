@@ -4,6 +4,7 @@ import { ToastService } from '@underlayerdev/ui';
 import { SettingsAccountComponent } from './settings-account';
 import { AuthService } from '../../../application/services/auth.service';
 import { UserService } from '../../../application/services/user.service';
+import { GEOCODING_PROVIDER, GEOLOCATION_PROVIDER } from '../../../core/configuration/tokens';
 import { getTranslocoTestingModule } from '../../../../testing/transloco-testing';
 import { mockUser } from '../../../domain/user/user.mock';
 import type { User } from '../../../domain/user/user.model';
@@ -15,6 +16,7 @@ describe('SettingsAccountComponent', () => {
   let logoutSpy: ReturnType<typeof vi.fn>;
   let navigateByUrlSpy: ReturnType<typeof vi.fn>;
   let userServiceDeleteAccountSpy: ReturnType<typeof vi.fn>;
+  let updateProfileSpy: ReturnType<typeof vi.fn>;
 
   function setup() {
     changePasswordSpy = vi.fn().mockResolvedValue(undefined);
@@ -22,6 +24,7 @@ describe('SettingsAccountComponent', () => {
     logoutSpy = vi.fn().mockResolvedValue(undefined);
     navigateByUrlSpy = vi.fn().mockResolvedValue(true);
     userServiceDeleteAccountSpy = vi.fn().mockResolvedValue(undefined);
+    updateProfileSpy = vi.fn().mockResolvedValue(undefined);
 
     TestBed.configureTestingModule({
       imports: [SettingsAccountComponent, getTranslocoTestingModule()],
@@ -41,12 +44,15 @@ describe('SettingsAccountComponent', () => {
             profile: () => currentUser,
             loadProfile: vi.fn().mockResolvedValue(undefined),
             ensureProfile: vi.fn().mockImplementation(async () => currentUser),
+            updateProfile: updateProfileSpy,
             updateSettings: vi.fn().mockResolvedValue(undefined),
             deleteAccount: userServiceDeleteAccountSpy,
           },
         },
         { provide: Router, useValue: { navigateByUrl: navigateByUrlSpy } },
         { provide: ActivatedRoute, useValue: {} },
+        { provide: GEOCODING_PROVIDER, useValue: { search: vi.fn(), reverseGeocode: vi.fn() } },
+        { provide: GEOLOCATION_PROVIDER, useValue: { getCurrentPosition: vi.fn() } },
       ],
     });
 
@@ -138,5 +144,92 @@ describe('SettingsAccountComponent', () => {
 
     expect(logoutSpy).toHaveBeenCalled();
     expect(navigateByUrlSpy).toHaveBeenCalledWith('/login');
+  });
+
+  describe('public profile city', () => {
+    it('should seed showCity as false when the profile has no city set', () => {
+      currentUser = mockUser({ profileCity: undefined });
+      const fixture = setup();
+
+      expect(fixture.componentInstance.showCity()).toBe(false);
+    });
+
+    it('should seed showCity and selectedCity from an existing profile city', () => {
+      currentUser = mockUser({
+        profileCity: {
+          displayName: 'Palermo, Buenos Aires',
+          city: 'Buenos Aires',
+          region: 'Buenos Aires',
+          countryCode: 'AR',
+        },
+      });
+      const fixture = setup();
+
+      expect(fixture.componentInstance.showCity()).toBe(true);
+      expect(fixture.componentInstance.selectedCity()?.city).toBe('Buenos Aires');
+    });
+
+    it('should clear the profile city immediately when the checkbox is unchecked', async () => {
+      currentUser = mockUser({
+        profileCity: {
+          displayName: 'Palermo, Buenos Aires',
+          city: 'Buenos Aires',
+          region: 'Buenos Aires',
+          countryCode: 'AR',
+        },
+      });
+      const fixture = setup();
+
+      fixture.componentInstance.onToggleShowCity(false);
+      await Promise.resolve();
+
+      expect(fixture.componentInstance.selectedCity()).toBeNull();
+      expect(updateProfileSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ profileCity: undefined }),
+      );
+    });
+
+    it('should not save anything just from checking the box, before a city is picked', () => {
+      currentUser = mockUser({ profileCity: undefined });
+      const fixture = setup();
+
+      fixture.componentInstance.onToggleShowCity(true);
+
+      expect(fixture.componentInstance.showCity()).toBe(true);
+      expect(updateProfileSpy).not.toHaveBeenCalled();
+    });
+
+    it('should save the picked city and update selectedCity', async () => {
+      currentUser = mockUser({ profileCity: undefined });
+      const fixture = setup();
+
+      await fixture.componentInstance.onCityPicked({
+        id: 'place.1',
+        displayName: 'Recoleta, Buenos Aires',
+        countryCode: 'AR',
+        region: 'Buenos Aires',
+        city: 'Buenos Aires',
+        neighborhood: 'Recoleta',
+        latitude: -34.5875,
+        longitude: -58.3974,
+      });
+
+      expect(fixture.componentInstance.selectedCity()).toEqual({
+        displayName: 'Recoleta, Buenos Aires',
+        countryCode: 'AR',
+        region: 'Buenos Aires',
+        city: 'Buenos Aires',
+      });
+      expect(updateProfileSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          profileCity: {
+            displayName: 'Recoleta, Buenos Aires',
+            countryCode: 'AR',
+            region: 'Buenos Aires',
+            city: 'Buenos Aires',
+          },
+        }),
+      );
+    });
   });
 });

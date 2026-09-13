@@ -1,20 +1,33 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, effect, inject, OnInit, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { UserService } from '../../../application/services/user.service';
 import { AuthService } from '../../../application/services/auth.service';
 import { ErrorService } from '../../../application/services/error.service';
+import { LocationService } from '../../../application/services/location.service';
+import { toLocationErrorMessage } from '../../../application/services/location-error.util';
 import { validateConfirmPassword, validatePassword } from '../../../shared/utils/auth-validation';
 import { LocaleDatePipe } from '../../../shared/pipes';
-import { ButtonComponent, InputComponent, ModalComponent, ToastService } from '@underlayerdev/ui';
+import { LocationPickerComponent } from '../../../shared/location/location-picker/location-picker';
+import type { LocationSuggestion } from '../../../domain/location/location.model';
+import type { PublicCityInfo } from '../../../domain/user/user.model';
+import {
+  ButtonComponent,
+  CheckboxComponent,
+  InputComponent,
+  ModalComponent,
+  ToastService,
+} from '@underlayerdev/ui';
 import { SettingsLayoutComponent } from '../shared/settings-layout/settings-layout';
 
 @Component({
   selector: 'um-settings-account',
   imports: [
     ButtonComponent,
+    CheckboxComponent,
     InputComponent,
     LocaleDatePipe,
+    LocationPickerComponent,
     ModalComponent,
     SettingsLayoutComponent,
     TranslocoDirective,
@@ -29,6 +42,7 @@ export class SettingsAccountComponent implements OnInit {
   private readonly transloco = inject(TranslocoService);
   private readonly toastService = inject(ToastService);
   private readonly router = inject(Router);
+  private readonly locationService = inject(LocationService);
 
   readonly isEmailPasswordUser = computed(
     () => this.authService.currentUser()?.providerId === 'password',
@@ -79,12 +93,88 @@ export class SettingsAccountComponent implements OnInit {
   readonly deleteAccountPasswordValue = signal('');
   readonly isDeletingAccount = signal(false);
 
+  // Seeded once from the loaded profile (below), then a purely local UI
+  // toggle from that point on — checking/unchecking updates the persisted
+  // profile immediately, it doesn't wait for a separate save action.
+  readonly showCity = signal(false);
+  readonly selectedCity = signal<PublicCityInfo | null>(null);
+  readonly citySuggestions = signal<LocationSuggestion[]>([]);
+  readonly isResolvingCurrentCity = signal(false);
+  private cityInitialized = false;
+
+  constructor() {
+    effect(() => {
+      const profile = this.userService.profile();
+      if (!profile || this.cityInitialized) return;
+      this.cityInitialized = true;
+      this.selectedCity.set(profile.profileCity ?? null);
+      this.showCity.set(!!profile.profileCity);
+    });
+  }
+
   ngOnInit(): void {
     const user = this.authService.currentUser();
     if (user) {
       // ensureProfile, not loadProfile: an account with no Firestore doc yet
       // would otherwise leave the panel with nothing to show.
       void this.userService.ensureProfile(user);
+    }
+  }
+
+  onToggleShowCity(checked: boolean): void {
+    this.showCity.set(checked);
+    // Only clearing is immediate — turning it on waits for an actual city to
+    // be picked, so there's nothing to save (and nothing to show) yet.
+    if (!checked) {
+      this.selectedCity.set(null);
+      void this.saveProfileCity(null);
+    }
+  }
+
+  async onCityQueryChanged(query: string): Promise<void> {
+    if (!query.trim()) {
+      this.citySuggestions.set([]);
+      return;
+    }
+    try {
+      this.citySuggestions.set(await this.locationService.searchAreas(query));
+    } catch {
+      this.citySuggestions.set([]);
+    }
+  }
+
+  async onCityPicked(suggestion: LocationSuggestion): Promise<void> {
+    const city: PublicCityInfo = {
+      displayName: suggestion.displayName,
+      city: suggestion.city,
+      region: suggestion.region,
+      countryCode: suggestion.countryCode,
+    };
+    this.selectedCity.set(city);
+    await this.saveProfileCity(city);
+  }
+
+  async onUseCurrentCity(): Promise<void> {
+    this.isResolvingCurrentCity.set(true);
+    try {
+      const area = await this.locationService.resolveCurrentArea();
+      await this.onCityPicked({ id: '', ...area });
+    } catch (err) {
+      this.toastService.error(toLocationErrorMessage(err, this.transloco));
+    } finally {
+      this.isResolvingCurrentCity.set(false);
+    }
+  }
+
+  private async saveProfileCity(profileCity: PublicCityInfo | null): Promise<void> {
+    const profile = this.userService.profile();
+    if (!profile) return;
+
+    try {
+      await this.userService.updateProfile({ ...profile, profileCity: profileCity ?? undefined });
+      this.toastService.success(this.transloco.translate('settings.profileCityUpdated'));
+    } catch (err) {
+      this.toastService.error(this.errorService.toUserMessage(err));
     }
   }
 
