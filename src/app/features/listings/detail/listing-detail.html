@@ -77,11 +77,24 @@
             </p>
 
             <div>
-              <h2 class="ul-typography-headline-s-extrabold ul-mb-2">
-                {{ t('listingDetail.description') }}
-              </h2>
               <p class="ul-typography-body-m-regular">{{ item.description }}</p>
             </div>
+
+            @if (owner(); as seller) {
+              <a [routerLink]="['/profile', seller.id]" class="listing-detail__seller ul-gap-3">
+                <ul-avatar [initials]="getInitials(seller)" [src]="seller.photoUrl" size="md" />
+                <div>
+                  <p class="ul-typography-body-m-extrabold ul-text-primary">
+                    {{ t('listingDetail.soldBy', { value: seller.displayName }) }}
+                  </p>
+                  @if (seller.profileCity; as city) {
+                    <p class="ul-typography-caption-l-regular ul-text-secondary">
+                      {{ city.displayName }}
+                    </p>
+                  }
+                </div>
+              </a>
+            }
 
             <p class="ul-typography-caption-l-regular ul-text-secondary">
               {{ t('listingDetail.listedOn', { value: item.createdAt | localeDate }) }}

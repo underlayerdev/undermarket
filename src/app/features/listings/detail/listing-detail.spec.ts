@@ -7,10 +7,18 @@ import { ListingDetailComponent } from './listing-detail';
 import { AuthService } from '../../../application/services/auth.service';
 import { ListingService } from '../../../application/services/listing.service';
 import { SeoService } from '../../../core/seo/seo.service';
-import { LISTING_REPOSITORY } from '../../../core/configuration/tokens';
+import { LISTING_REPOSITORY, USER_REPOSITORY } from '../../../core/configuration/tokens';
 import type { Listing } from '../../../domain/listing/listing.model';
+import { mockUser } from '../../../domain/user/user.mock';
 import { ImageLightboxService } from '../../../shared/image-lightbox/image-lightbox.service';
 import { getTranslocoTestingModule } from '../../../../testing/transloco-testing';
+
+// fixture.whenStable() doesn't reliably wait out ngOnInit's two-step async
+// chain (listing fetch, then owner fetch) — a real macrotask boundary
+// guarantees every pending microtask has drained.
+function flushAsync(): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, 0));
+}
 
 describe('ListingDetailComponent', () => {
   const listing: Listing = {
@@ -34,12 +42,14 @@ describe('ListingDetailComponent', () => {
     listingServiceMock: { delete: ReturnType<typeof vi.fn>; update?: ReturnType<typeof vi.fn> } = {
       delete: vi.fn(),
     },
+    getOwnerById: ReturnType<typeof vi.fn> = vi.fn().mockResolvedValue(null),
   ) {
     TestBed.configureTestingModule({
       imports: [ListingDetailComponent, getTranslocoTestingModule()],
       providers: [
         provideRouter([]),
         { provide: LISTING_REPOSITORY, useValue: { getById } },
+        { provide: USER_REPOSITORY, useValue: { getById: getOwnerById } },
         { provide: ListingService, useValue: listingServiceMock },
         { provide: AuthService, useValue: { currentUser: signal(currentUser) } },
         { provide: SeoService, useValue: { setPage: vi.fn(), setListing: vi.fn() } },
@@ -54,12 +64,17 @@ describe('ListingDetailComponent', () => {
   it('should publish a draft listing and reflect the new status', async () => {
     const draft: Listing = { ...listing, status: 'draft' };
     const updateSpy = vi.fn().mockResolvedValue(undefined);
-    const fixture = setup(vi.fn().mockResolvedValue(draft), 'vintage-lamp-123', { id: 'owner-1' }, {
-      delete: vi.fn(),
-      update: updateSpy,
-    });
+    const fixture = setup(
+      vi.fn().mockResolvedValue(draft),
+      'vintage-lamp-123',
+      { id: 'owner-1' },
+      {
+        delete: vi.fn(),
+        update: updateSpy,
+      },
+    );
     fixture.detectChanges();
-    await fixture.whenStable();
+    await flushAsync();
 
     await fixture.componentInstance.onPublishClick();
 
@@ -77,7 +92,7 @@ describe('ListingDetailComponent', () => {
   it('should show the listing once loaded', async () => {
     const fixture = setup(vi.fn().mockResolvedValue(listing));
     fixture.detectChanges();
-    await fixture.whenStable();
+    await flushAsync();
 
     expect(fixture.componentInstance.isLoading()).toBe(false);
     expect(fixture.componentInstance.listing()?.title).toBe('Vintage lamp');
@@ -89,7 +104,7 @@ describe('ListingDetailComponent', () => {
       id: 'owner-1',
     });
     fixture.detectChanges();
-    await fixture.whenStable();
+    await flushAsync();
     fixture.detectChanges();
     expect(fixture.componentInstance.isOwner()).toBe(true);
 
@@ -110,7 +125,7 @@ describe('ListingDetailComponent', () => {
   it('should set a not-found error type when the repository returns null', async () => {
     const fixture = setup(vi.fn().mockResolvedValue(null));
     fixture.detectChanges();
-    await fixture.whenStable();
+    await flushAsync();
 
     expect(fixture.componentInstance.errorType()).toBe('not-found');
     expect(fixture.componentInstance.listing()).toBeNull();
@@ -119,7 +134,7 @@ describe('ListingDetailComponent', () => {
   it('should set a generic error type when the repository throws', async () => {
     const fixture = setup(vi.fn().mockRejectedValue(new Error('network down')));
     fixture.detectChanges();
-    await fixture.whenStable();
+    await flushAsync();
 
     expect(fixture.componentInstance.errorType()).toBe('generic');
   });
@@ -131,7 +146,7 @@ describe('ListingDetailComponent', () => {
       .mockResolvedValue(listing);
     const fixture = setup(getById);
     fixture.detectChanges();
-    await fixture.whenStable();
+    await flushAsync();
     expect(fixture.componentInstance.errorType()).toBe('generic');
 
     await fixture.componentInstance.retry();
@@ -165,7 +180,7 @@ describe('ListingDetailComponent', () => {
     };
     const fixture = setup(vi.fn().mockResolvedValue(listingWithPhotos));
     fixture.detectChanges();
-    await fixture.whenStable();
+    await flushAsync();
     fixture.detectChanges();
 
     const triggers = fixture.nativeElement.querySelectorAll('.listing-detail__photo-trigger');
@@ -178,5 +193,67 @@ describe('ListingDetailComponent', () => {
       .calls[0];
     expect(images).toEqual(listingWithPhotos.imageUrls);
     expect(startIndex).toBe(1);
+  });
+
+  describe('seller info', () => {
+    it('should show the seller name linked to their public profile once loaded', async () => {
+      const seller = mockUser({ id: 'owner-1', displayName: 'Jane Seller' });
+      const fixture = setup(
+        vi.fn().mockResolvedValue(listing),
+        'vintage-lamp-123',
+        null,
+        { delete: vi.fn() },
+        vi.fn().mockResolvedValue(seller),
+      );
+      fixture.detectChanges();
+      await flushAsync();
+      fixture.detectChanges();
+
+      expect(fixture.componentInstance.owner()?.displayName).toBe('Jane Seller');
+      expect(fixture.nativeElement.textContent).toContain('Jane Seller');
+      const link: HTMLAnchorElement =
+        fixture.nativeElement.querySelector('.listing-detail__seller');
+      expect(link.getAttribute('href')).toBe('/profile/owner-1');
+    });
+
+    it('should show the seller city when they have opted in', async () => {
+      const seller = mockUser({
+        id: 'owner-1',
+        profileCity: {
+          displayName: 'Palermo, Buenos Aires',
+          city: 'Buenos Aires',
+          region: 'Buenos Aires',
+          countryCode: 'AR',
+        },
+      });
+      const fixture = setup(
+        vi.fn().mockResolvedValue(listing),
+        'vintage-lamp-123',
+        null,
+        { delete: vi.fn() },
+        vi.fn().mockResolvedValue(seller),
+      );
+      fixture.detectChanges();
+      await flushAsync();
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.textContent).toContain('Palermo, Buenos Aires');
+    });
+
+    it('should not show a seller block when the owner fetch fails', async () => {
+      const fixture = setup(
+        vi.fn().mockResolvedValue(listing),
+        'vintage-lamp-123',
+        null,
+        { delete: vi.fn() },
+        vi.fn().mockRejectedValue(new Error('not found')),
+      );
+      fixture.detectChanges();
+      await flushAsync();
+      fixture.detectChanges();
+
+      expect(fixture.componentInstance.owner()).toBeNull();
+      expect(fixture.nativeElement.querySelector('.listing-detail__seller')).toBeNull();
+    });
   });
 });

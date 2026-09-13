@@ -6,13 +6,16 @@ import { AuthService } from '../../../application/services/auth.service';
 import { ErrorService } from '../../../application/services/error.service';
 import { ListingService } from '../../../application/services/listing.service';
 import { SeoService } from '../../../core/seo/seo.service';
-import { LISTING_REPOSITORY } from '../../../core/configuration/tokens';
+import { LISTING_REPOSITORY, USER_REPOSITORY } from '../../../core/configuration/tokens';
 import type { Listing } from '../../../domain/listing/listing.model';
+import type { User } from '../../../domain/user/user.model';
+import { getInitials } from '../../../domain/user/user-display';
 import { ImageLightboxService } from '../../../shared/image-lightbox/image-lightbox.service';
 import { ListingPricePipe } from '../../../shared/listing/listing-price/listing-price.pipe';
 import { LocaleDatePipe } from '../../../shared/pipes/locale-date/locale-date.pipe';
 import { createListingSlug, extractIdFromSlug } from '../../../shared/utils/slugify';
 import {
+  AvatarComponent,
   BreadcrumbComponent,
   ButtonComponent,
   CarouselComponent,
@@ -35,6 +38,7 @@ import {
   imports: [
     ListingPricePipe,
     LocaleDatePipe,
+    AvatarComponent,
     BreadcrumbComponent,
     ButtonComponent,
     ModalComponent,
@@ -55,6 +59,7 @@ export class ListingDetailComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly location = inject(Location);
   private readonly listingRepository = inject(LISTING_REPOSITORY);
+  private readonly userRepository = inject(USER_REPOSITORY);
   protected readonly authService = inject(AuthService);
   private readonly listingService = inject(ListingService);
   private readonly errorService = inject(ErrorService);
@@ -64,7 +69,9 @@ export class ListingDetailComponent implements OnInit {
   private readonly toastService = inject(ToastService);
 
   readonly createListingSlug = createListingSlug;
+  readonly getInitials = getInitials;
   readonly listing = signal<Listing | null>(null);
+  readonly owner = signal<User | null>(null);
   readonly isLoading = signal(true);
   readonly errorType = signal<ListingDetailErrorType | null>(null);
   readonly showDeleteModal = signal(false);
@@ -109,6 +116,16 @@ export class ListingDetailComponent implements OnInit {
     await this.loadListing();
   }
 
+  // A missing/failed fetch (e.g. a deleted account) just leaves the seller
+  // block off the page — it must not fail the whole listing view.
+  private async loadOwner(ownerId: string): Promise<void> {
+    try {
+      this.owner.set(await this.userRepository.getById(ownerId));
+    } catch {
+      this.owner.set(null);
+    }
+  }
+
   private async loadListing(): Promise<void> {
     const slug = this.route.snapshot.params['slug'] as string;
     const id = extractIdFromSlug(slug);
@@ -118,6 +135,7 @@ export class ListingDetailComponent implements OnInit {
       if (listing) {
         this.listing.set(listing);
         this.seoService.setListing(listing);
+        await this.loadOwner(listing.ownerId);
       } else {
         this.errorType.set('not-found');
         this.seoService.setPage(this.transloco.translate('listingDetail.notFoundPageTitle'));
