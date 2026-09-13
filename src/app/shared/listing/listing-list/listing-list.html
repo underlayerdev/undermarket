@@ -18,6 +18,7 @@
           <ul-selectable-row
             [selected]="isSelected(listing.id)"
             [selectionActive]="hasSelection()"
+            [selectable]="false"
             [ariaLabel]="ariaLabel()"
             (selectedChange)="toggleSelect(listing.id, $event)"
             (longPress)="toggleSelect(listing.id, true)"
