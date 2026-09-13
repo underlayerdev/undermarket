@@ -3,46 +3,50 @@
     <ng-container *transloco="let t">
       <h1 class="ul-typography-headline-xl-extrablack ul-mb-6">{{ t('discover.title') }}</h1>
 
-      <div class="ul-gap-2 ul-mb-6" style="display: flex; flex-wrap: wrap">
-        <ul-pill
-          variant="interactive"
-          [theme]="selectedCategory() === null ? 'fill-purple' : 'transparent-white'"
-          (click)="selectCategory(null)"
-        >
-          {{ t('discover.allCategories') }}
-        </ul-pill>
-        @for (category of categories; track category) {
+      <um-search-location-bar
+        [searchLocation]="searchLocationService.searchLocation()"
+        [pickerSuggestions]="locationSuggestions()"
+        [isResolvingCurrentLocation]="isResolvingCurrentLocation()"
+        [radiusOptions]="radiusOptions()"
+        [changeLocationLabel]="t('location.changeLocation')"
+        [firstRunTitle]="t('location.firstRunTitle')"
+        [locationPickerPlaceholder]="t('location.searchPlaceholder')"
+        [useCurrentLocationLabel]="t('location.useCurrentLocationLabel')"
+        [radiusLabel]="t('location.searchRadiusLabel')"
+        [withinRadiusLabel]="withinRadiusLabel()"
+        (queryChanged)="onLocationQueryChanged($event)"
+        (areaSelected)="onAreaSelected($event)"
+        (radiusChanged)="onRadiusChanged($event)"
+        (useCurrentLocationRequested)="onUseCurrentLocationRequested()"
+      />
+
+      <div class="ul-gap-4 ul-mb-6" style="display: flex; align-items: center; flex-wrap: wrap">
+        <div class="ul-gap-2" style="display: flex; flex-wrap: wrap; flex: 1">
           <ul-pill
             variant="interactive"
-            [theme]="selectedCategory() === category ? 'fill-purple' : 'transparent-white'"
-            (click)="selectCategory(category)"
+            [theme]="selectedCategory() === null ? 'fill-purple' : 'transparent-white'"
+            (click)="selectCategory(null)"
           >
-            {{ category }}
+            {{ t('discover.allCategories') }}
           </ul-pill>
-        }
-      </div>
-
-      @if (listingService.listings().length === 0) {
-        <p class="ul-typography-body-m-regular ul-text-secondary ul-mt-8">
-          {{ t('discover.emptyState') }}
-        </p>
-      } @else {
-        <div class="ul-row">
-          @for (listing of listingService.listings(); track listing.id) {
-            <div class="ul-col-6 ul-col-sm-4 ul-col-md-3 ul-col-lg-2 ul-col-xl-2">
-              <a [routerLink]="['/listings', createListingSlug(listing.title, listing.id)]">
-                <ul-card
-                  [cardTitle]="listing.title"
-                  [cardSubtitle]="listing.price | listingPrice: listing.currency"
-                  [cardCaption]="listing.category"
-                  cardDirection="vertical"
-                  mediaAspectRatio="portrait"
-                />
-              </a>
-            </div>
+          @for (category of categories; track category) {
+            <ul-pill
+              variant="interactive"
+              [theme]="selectedCategory() === category ? 'fill-purple' : 'transparent-white'"
+              (click)="selectCategory(category)"
+            >
+              {{ category }}
+            </ul-pill>
           }
         </div>
-      }
+        <um-sort
+          [placeholder]="t('listing.sortPlaceholder')"
+          [sortOptions]="sortOptions()"
+          [(sort)]="sortOption"
+        />
+      </div>
+
+      <um-listing-grid [listings]="sortedListings()" [emptyStateText]="t('discover.emptyState')" />
     </ng-container>
   </div>
 </div>

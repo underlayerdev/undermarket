@@ -26,19 +26,25 @@ import {
   FIREBASE_AUTH,
   FIREBASE_FIRESTORE,
   FIREBASE_FUNCTIONS,
+  GEOCODING_PROVIDER,
+  GEOLOCATION_PROVIDER,
   IMAGE_STORAGE,
   LISTING_REPOSITORY,
   MERCADO_LIBRE_PROVIDER,
   NOTIFICATION_PROVIDER,
+  SEARCH_LOCATION_REPOSITORY,
   USER_REPOSITORY,
 } from './core/configuration/tokens';
 import { FirebaseAuthProvider } from './infrastructure/firebase/auth/firebase-auth.provider';
 import { FirestoreUserRepository } from './infrastructure/firebase/firestore/firestore-user.repository';
 import { FirestoreListingRepository } from './infrastructure/firebase/firestore/firestore-listing.repository';
+import { FirestoreSearchLocationRepository } from './infrastructure/firebase/firestore/firestore-search-location.repository';
 import { FirebaseMercadoLibreProvider } from './infrastructure/firebase/functions/firebase-mercado-libre.provider';
 import { CloudinaryImageStorage } from './infrastructure/cloudinary/cloudinary-image-storage';
 import { provideCloudinaryImageLoader } from './infrastructure/cloudinary/cloudinary-image-loader';
 import { MockNotificationProvider } from './infrastructure/mock/mock-notification.provider';
+import { MapboxGeocodingProvider } from './infrastructure/geocoding/mapbox-geocoding.provider';
+import { BrowserGeolocationProvider } from './infrastructure/geolocation/browser-geolocation.provider';
 import { TranslocoHttpLoader } from './core/i18n/transloco-http-loader';
 import { AVAILABLE_LANGUAGES, DEFAULT_LANGUAGE } from './core/i18n/languages';
 import { LanguageService } from './application/services/language.service';
@@ -90,6 +96,9 @@ export const appConfig: ApplicationConfig = {
     { provide: LISTING_REPOSITORY, useClass: FirestoreListingRepository },
     { provide: IMAGE_STORAGE, useClass: CloudinaryImageStorage },
     { provide: MERCADO_LIBRE_PROVIDER, useClass: FirebaseMercadoLibreProvider },
+    { provide: GEOCODING_PROVIDER, useClass: MapboxGeocodingProvider },
+    { provide: GEOLOCATION_PROVIDER, useClass: BrowserGeolocationProvider },
+    { provide: SEARCH_LOCATION_REPOSITORY, useClass: FirestoreSearchLocationRepository },
     // TODO: swap for a Firestore-backed NotificationProvider once real
     // notification-triggering events are defined.
     { provide: NOTIFICATION_PROVIDER, useClass: MockNotificationProvider },

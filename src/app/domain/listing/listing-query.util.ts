@@ -1,8 +1,10 @@
 import { sortByDate, sortByText } from '../shared/sort.util';
 import type { SortOption } from '../shared/sort.model';
+import { sortListingsByDistance } from './listing-distance.util';
 import type { Listing } from './listing.model';
+import type { GeoPoint } from '../location/location.model';
 
-export type ListingSortOption = 'newest' | 'oldest' | 'title-asc';
+export type ListingSortOption = 'newest' | 'oldest' | 'title-asc' | 'nearest';
 
 // The allowed sort choices for listings — other sortable features (members,
 // chat messages, ...) define their own list; only the SortOption shape and
@@ -11,6 +13,7 @@ export const LISTING_SORT_OPTIONS: SortOption<ListingSortOption>[] = [
   { value: 'newest', labelKey: 'listing.sortNewest' },
   { value: 'oldest', labelKey: 'listing.sortOldest' },
   { value: 'title-asc', labelKey: 'listing.sortTitleAsc' },
+  { value: 'nearest', labelKey: 'listing.sortNearest' },
 ];
 
 export function filterListingsByQuery(listings: Listing[], searchQuery?: string): Listing[] {
@@ -26,12 +29,22 @@ export function filterListingsByQuery(listings: Listing[], searchQuery?: string)
 // `sort` is loosely typed as `string | null` rather than `ListingSortOption | null`
 // because it round-trips through `ul-select`'s `[(value)]`, which is fixed to
 // `ModelSignal<string | null>` — an unrecognized value just falls through to newest.
-export function sortListings(listings: Listing[], sort?: string | null): Listing[] {
+// `origin` is optional and only meaningful for 'nearest' — callers with no
+// notion of a search location (e.g. profile-listings) simply never pass one,
+// and 'nearest' falls back to newest rather than throwing.
+export function sortListings(
+  listings: Listing[],
+  sort?: string | null,
+  origin?: GeoPoint,
+): Listing[] {
   switch (sort) {
     case 'oldest':
       return sortByDate(listings, (listing) => listing.createdAt, 'asc');
     case 'title-asc':
       return sortByText(listings, (listing) => listing.title, 'asc');
+    case 'nearest':
+      if (origin) return sortListingsByDistance(listings, origin);
+      return sortByDate(listings, (listing) => listing.createdAt, 'desc');
     case 'newest':
     default:
       return sortByDate(listings, (listing) => listing.createdAt, 'desc');

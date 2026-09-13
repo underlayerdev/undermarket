@@ -87,5 +87,147 @@ describe('FirestoreListingRepository', () => {
     const [, payload] = vi.mocked(firestoreModule.updateDoc).mock.calls[0];
     expect(payload).not.toHaveProperty('sourceProvider');
     expect(payload).not.toHaveProperty('sourceId');
+    expect(payload).not.toHaveProperty('geohash');
+  });
+
+  const testLocation = {
+    displayName: 'Palermo, Buenos Aires',
+    countryCode: 'AR',
+    region: 'Buenos Aires',
+    city: 'Buenos Aires',
+    neighborhood: 'Palermo',
+    latitude: -34.5875,
+    longitude: -58.4205,
+    geohash: '6ex2ug0d0',
+  };
+
+  it('should not include location on a listing that predates that field', async () => {
+    vi.mocked(firestoreModule.getDoc).mockResolvedValue({
+      exists: () => true,
+      data: () => baseDocData,
+    } as never);
+    const repository = createRepository();
+
+    const listing = await repository.getById('123');
+
+    expect('location' in listing!).toBe(false);
+  });
+
+  it('should round-trip location, and flatten geohash at the top level on write', async () => {
+    vi.mocked(firestoreModule.getDoc).mockResolvedValue({
+      exists: () => true,
+      data: () => ({ ...baseDocData, location: testLocation }),
+    } as never);
+    const repository = createRepository();
+    const listing = await repository.getById('123');
+    expect(listing?.location).toEqual(testLocation);
+
+    await repository.update(listing!);
+
+    const [, payload] = vi.mocked(firestoreModule.updateDoc).mock.calls[0];
+    expect(payload).toMatchObject({ location: testLocation, geohash: testLocation.geohash });
+  });
+
+  it('should flatten geohash at the top level when creating a listing with a location', async () => {
+    vi.mocked(firestoreModule.addDoc).mockResolvedValue({ id: 'new-id' } as never);
+    const repository = createRepository();
+
+    await repository.create({
+      ownerId: 'owner-1',
+      title: 'Vintage lamp',
+      description: 'A nice lamp',
+      price: 42,
+      currency: 'USD',
+      category: 'Furniture',
+      imageUrls: [],
+      status: 'active',
+      location: testLocation,
+    });
+
+    const [, payload] = vi.mocked(firestoreModule.addDoc).mock.calls[0];
+    expect(payload).toMatchObject({ location: testLocation, geohash: testLocation.geohash });
+  });
+
+  describe('searchNearby', () => {
+    function docSnapshot(id: string, data: Record<string, unknown>) {
+      return { id, data: () => data };
+    }
+
+    it('should query once per geohash bounding box, dedupe overlapping ids, and apply the radius filter', async () => {
+      const near = docSnapshot('near', { ...baseDocData, location: testLocation });
+      const far = docSnapshot('far', {
+        ...baseDocData,
+        location: {
+          ...testLocation,
+          displayName: 'Rosario',
+          city: 'Rosario',
+          latitude: -32.9468,
+          longitude: -60.6393,
+        },
+      });
+      // The same doc can appear in more than one bounding-box query — the
+      // repository must dedupe rather than double-count it.
+      vi.mocked(firestoreModule.getDocs).mockResolvedValue({ docs: [near, far] } as never);
+      const repository = createRepository();
+
+      const result = await repository.searchNearby({
+        center: { latitude: testLocation.latitude, longitude: testLocation.longitude },
+        radiusKm: 10,
+      });
+
+      expect(result.map((l) => l.id)).toEqual(['near']);
+      // geohashQueryBoundsForRadius returns more than one bound for most
+      // radii — every one of them should have run as its own query.
+      expect(vi.mocked(firestoreModule.getDocs).mock.calls.length).toBeGreaterThan(1);
+    });
+
+    it('should exclude listings with no location at all', async () => {
+      const noLocation = docSnapshot('no-location', baseDocData);
+      vi.mocked(firestoreModule.getDocs).mockResolvedValue({ docs: [noLocation] } as never);
+      const repository = createRepository();
+
+      const result = await repository.searchNearby({
+        center: { latitude: testLocation.latitude, longitude: testLocation.longitude },
+        radiusKm: 10,
+      });
+
+      expect(result).toEqual([]);
+    });
+
+    it('should apply the category filter client-side after the radius filter', async () => {
+      const furniture = docSnapshot('furniture', { ...baseDocData, location: testLocation });
+      const electronics = docSnapshot('electronics', {
+        ...baseDocData,
+        category: 'Electronics',
+        location: testLocation,
+      });
+      vi.mocked(firestoreModule.getDocs).mockResolvedValue({
+        docs: [furniture, electronics],
+      } as never);
+      const repository = createRepository();
+
+      const result = await repository.searchNearby({
+        center: { latitude: testLocation.latitude, longitude: testLocation.longitude },
+        radiusKm: 10,
+        category: 'Electronics',
+      });
+
+      expect(result.map((l) => l.id)).toEqual(['electronics']);
+    });
+  });
+
+  describe('getPublicByOwner', () => {
+    it('should query by owner and active status, mapping the results', async () => {
+      vi.mocked(firestoreModule.getDocs).mockResolvedValue({
+        docs: [{ id: 'a', data: () => baseDocData }],
+      } as never);
+      const repository = createRepository();
+
+      const result = await repository.getPublicByOwner('owner-1');
+
+      expect(result.map((l) => l.id)).toEqual(['a']);
+      expect(vi.mocked(firestoreModule.where)).toHaveBeenCalledWith('ownerId', '==', 'owner-1');
+      expect(vi.mocked(firestoreModule.where)).toHaveBeenCalledWith('status', '==', 'active');
+    });
   });
 });

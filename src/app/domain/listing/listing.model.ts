@@ -1,5 +1,6 @@
 import type { Category } from '../category/category.model';
 import type { CurrencyCode } from '../currency/currency.model';
+import type { ListingLocation } from '../location/location.model';
 import type { UserId } from '../user/user.model';
 
 export type ListingId = string;
@@ -24,4 +25,11 @@ export interface Listing {
   sourceProvider?: ListingSourceProvider;
   /** The item id in the source provider's own system — paired with sourceProvider. */
   sourceId?: string;
+  /**
+   * Approximate area the item is located in — never an exact address.
+   * Optional for backward compatibility with listings created before this
+   * field existed; required going forward (enforced by validateNewListing
+   * and firestore.rules), so new/edited listings always have one.
+   */
+  location?: ListingLocation;
 }

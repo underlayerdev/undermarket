@@ -5,9 +5,13 @@ import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { AuthService } from '../../../application/services/auth.service';
 import { ErrorService } from '../../../application/services/error.service';
 import { ListingService } from '../../../application/services/listing.service';
+import { LocationService } from '../../../application/services/location.service';
+import { toLocationErrorMessage } from '../../../application/services/location-error.util';
+import { SearchLocationService } from '../../../application/services/search-location.service';
 import { SeoService } from '../../../core/seo/seo.service';
 import { LISTING_REPOSITORY } from '../../../core/configuration/tokens';
 import { ImageUploadComponent } from '../../../shared/image-upload/image-upload';
+import { LocationPickerComponent } from '../../../shared/location/location-picker/location-picker';
 import { CATEGORIES } from '../../../domain/category/category.model';
 import type { Category } from '../../../domain/category/category.model';
 import {
@@ -15,6 +19,8 @@ import {
   DEFAULT_CURRENCY,
   getMaxPriceForCurrency,
 } from '../../../domain/currency/currency.model';
+import { toLocationArea } from '../../../domain/location/geohash.util';
+import type { LocationArea, LocationSuggestion } from '../../../domain/location/location.model';
 import type { Listing } from '../../../domain/listing/listing.model';
 import type { NewListingInput } from '../../../domain/listing/listing.validator';
 import {
@@ -57,6 +63,10 @@ interface NewListingFormModel {
   price: string;
   currency: string | null;
   category: string | null;
+  // Not part of the ul-input/ul-select signal-forms graph below — validated
+  // manually in onSubmit() instead, since um-location-picker isn't a
+  // FormValueControl (it emits a rich LocationSuggestion, not a plain string).
+  location: LocationArea | null;
 }
 
 function toNewListingInput(value: NewListingFormModel, ownerId: string): NewListingInput {
@@ -69,6 +79,8 @@ function toNewListingInput(value: NewListingFormModel, ownerId: string): NewList
     category: value.category!,
     status: 'active',
     ownerId,
+    // Guaranteed non-null by the onSubmit() guard below.
+    location: value.location!,
   };
 }
 
@@ -80,6 +92,7 @@ function toNewListingInput(value: NewListingFormModel, ownerId: string): NewList
     IconComponent,
     ImageUploadComponent,
     InputComponent,
+    LocationPickerComponent,
     ModalComponent,
     SelectComponent,
     SkeletonComponent,
@@ -100,6 +113,8 @@ export class NewListingComponent {
   private readonly toastService = inject(ToastService);
   private readonly location = inject(Location);
   private readonly transloco = inject(TranslocoService);
+  private readonly searchLocationService = inject(SearchLocationService);
+  private readonly locationService = inject(LocationService);
 
   // Presence of the :slug param is what distinguishes /listings/new from
   // /listings/:slug/edit — both route to this same component. Bound via
@@ -128,12 +143,17 @@ export class NewListingComponent {
   readonly imageFiles = signal<File[]>([]);
   readonly showDiscardModal = signal(false);
 
+  readonly locationSuggestions = signal<LocationSuggestion[]>([]);
+  readonly isResolvingCurrentLocation = signal(false);
+  readonly locationTouched = signal(false);
+
   readonly listingModel = signal<NewListingFormModel>({
     title: '',
     description: '',
     price: '',
     currency: DEFAULT_CURRENCY,
     category: null,
+    location: null,
   });
 
   readonly listingForm = form(this.listingModel, (listing) => {
@@ -226,7 +246,11 @@ export class NewListingComponent {
   });
 
   readonly publishButtonNotReady = computed(
-    () => this.isLoading() || this.listingForm().invalid() || !this.listingForm().touched(),
+    () =>
+      this.isLoading() ||
+      this.listingForm().invalid() ||
+      !this.listingForm().touched() ||
+      !this.listingModel().location,
   );
 
   readonly publishButtonLabel = computed(() => {
@@ -258,6 +282,14 @@ export class NewListingComponent {
       if (slug) {
         void this.loadForEdit(slug);
       } else {
+        // Defaults a new listing to wherever the seller is currently
+        // browsing from — they can still search/select a different area.
+        // Only the LocationArea fields, not radiusKm/source/updatedAt.
+        const current = this.searchLocationService.searchLocation();
+        if (current) {
+          const { radiusKm, source, updatedAt, ...area } = current;
+          this.listingModel.update((model) => ({ ...model, location: area }));
+        }
         this.seoService.setPage(this.transloco.translate('newListing.pageTitle'));
       }
     });
@@ -280,6 +312,9 @@ export class NewListingComponent {
         price: String(listing.price),
         currency: listing.currency,
         category: listing.category,
+        // Older listings predate this field — leaves it null, forcing the
+        // seller to pick one on save, since it's required going forward.
+        location: listing.location ?? null,
       });
       this.seoService.setPage(this.transloco.translate('newListing.editPageTitle'));
     } catch (err) {
@@ -287,6 +322,36 @@ export class NewListingComponent {
       await this.router.navigateByUrl('/profile');
     } finally {
       this.isLoadingListing.set(false);
+    }
+  }
+
+  async onLocationQueryChanged(query: string): Promise<void> {
+    if (!query.trim()) {
+      this.locationSuggestions.set([]);
+      return;
+    }
+    try {
+      this.locationSuggestions.set(await this.locationService.searchAreas(query));
+    } catch {
+      this.locationSuggestions.set([]);
+    }
+  }
+
+  onLocationPicked(suggestion: LocationSuggestion): void {
+    this.locationTouched.set(true);
+    this.listingModel.update((model) => ({ ...model, location: toLocationArea(suggestion) }));
+  }
+
+  async onUseCurrentLocationForListing(): Promise<void> {
+    this.locationTouched.set(true);
+    this.isResolvingCurrentLocation.set(true);
+    try {
+      const area = await this.locationService.resolveCurrentArea();
+      this.listingModel.update((model) => ({ ...model, location: area }));
+    } catch (err) {
+      this.toastService.error(toLocationErrorMessage(err, this.transloco));
+    } finally {
+      this.isResolvingCurrentLocation.set(false);
     }
   }
 
@@ -313,6 +378,11 @@ export class NewListingComponent {
   async onSubmit(): Promise<void> {
     const currentUser = this.authService.currentUser();
     if (!currentUser) return;
+
+    if (!this.listingModel().location) {
+      this.locationTouched.set(true);
+      return;
+    }
 
     await submit(this.listingForm, async () => {
       this.isLoading.set(true);

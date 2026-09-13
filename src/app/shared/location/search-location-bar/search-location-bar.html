@@ -1,0 +1,55 @@
+<div class="ul-gap-3 ul-mb-4" style="display: flex; align-items: center">
+  <button
+    type="button"
+    class="ul-gap-2"
+    style="display: flex; align-items: center"
+    (click)="open.set(true)"
+  >
+    <ul-icon icon="map_pin" size="5" />
+    @if (searchLocation(); as location) {
+      <span class="ul-typography-body-m-regular">
+        {{ location.displayName }} — {{ withinRadiusLabel() }}
+      </span>
+    } @else {
+      <span class="ul-typography-body-m-regular">{{ changeLocationLabel() }}</span>
+    }
+  </button>
+  <ul-button
+    [iconOnly]="true"
+    theme="transparent-white"
+    type="button"
+    [disabled]="isResolvingCurrentLocation()"
+    [ariaLabel]="useCurrentLocationLabel()"
+    (buttonClick)="useCurrentLocationRequested.emit()"
+  >
+    <ul-icon icon="map_pin" size="5" />
+  </ul-button>
+</div>
+
+<ul-modal
+  [(open)]="open"
+  [title]="isFirstRun() ? firstRunTitle() : changeLocationLabel()"
+  [fullScreenInMobile]="true"
+  [closeOnBackdropClick]="!isFirstRun()"
+  [showCloseButton]="!isFirstRun()"
+>
+  <um-location-picker
+    [placeholder]="locationPickerPlaceholder()"
+    [suggestions]="pickerSuggestions()"
+    [isResolvingCurrentLocation]="isResolvingCurrentLocation()"
+    [useCurrentLocationLabel]="useCurrentLocationLabel()"
+    (queryChanged)="queryChanged.emit($event)"
+    (suggestionSelected)="onAreaPicked($event)"
+    (useCurrentLocationRequested)="useCurrentLocationRequested.emit()"
+  />
+
+  @if (!isFirstRun()) {
+    <ul-select
+      class="ul-mt-4"
+      [label]="radiusLabel()"
+      [options]="radiusOptions()"
+      [value]="radiusValue()"
+      (valueChange)="onRadiusChange($event)"
+    />
+  }
+</ul-modal>

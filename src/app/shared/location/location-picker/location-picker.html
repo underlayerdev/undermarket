@@ -1,0 +1,22 @@
+<div class="ul-gap-2" style="display: flex; align-items: flex-start">
+  <ul-search-input
+    [label]="label()"
+    [placeholder]="placeholder()"
+    [results]="searchResults()"
+    [value]="query()"
+    (valueChange)="onQueryChange($event)"
+    (suggestionSelected)="onResultSelected($event)"
+  />
+  @if (showUseCurrentLocation()) {
+    <ul-button
+      [iconOnly]="true"
+      theme="transparent-white"
+      type="button"
+      [disabled]="isResolvingCurrentLocation()"
+      [ariaLabel]="useCurrentLocationLabel()"
+      (buttonClick)="useCurrentLocationRequested.emit()"
+    >
+      <ul-icon icon="map_pin" size="6" />
+    </ul-button>
+  }
+</div>

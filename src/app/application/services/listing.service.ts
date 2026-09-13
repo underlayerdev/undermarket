@@ -2,7 +2,10 @@ import { inject, Injectable, signal } from '@angular/core';
 import { TranslocoService } from '@jsverse/transloco';
 import { IMAGE_STORAGE, LISTING_REPOSITORY } from '../../core/configuration/tokens';
 import type { Listing, ListingId } from '../../domain/listing/listing.model';
-import type { ListingSearchFilters } from '../../domain/listing/listing.repository';
+import type {
+  ListingSearchFilters,
+  NearbySearchParams,
+} from '../../domain/listing/listing.repository';
 import { validateNewListing } from '../../domain/listing/listing.validator';
 import type { NewListingInput } from '../../domain/listing/listing.validator';
 import { AuthService } from './auth.service';
@@ -26,12 +29,16 @@ export class ListingService {
     this.listings.set(result);
   }
 
+  async searchNearby(params: NearbySearchParams): Promise<void> {
+    const result = await this.listingRepository.searchNearby(params);
+    this.listings.set(result);
+  }
+
   // firestore.rules requires a new listing's imageUrls to start empty, so
   // images are uploaded and attached in a follow-up update after create().
   async create(data: NewListingInput, images: File[] = []): Promise<Listing> {
     const currentUser = this.authService.currentUser();
-    if (!currentUser)
-      throw new Error(this.transloco.translate('listingService.mustBeSignedIn'));
+    if (!currentUser) throw new Error(this.transloco.translate('listingService.mustBeSignedIn'));
     if (data.ownerId !== currentUser.id) {
       throw new Error(this.transloco.translate('listingService.ownAccountOnly'));
     }

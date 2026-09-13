@@ -13,4 +13,11 @@ export const environment = {
     cloudName: 'db3cbociq',
     uploadPreset: 'listing',
   },
+  mapbox: {
+    // Public token restricted by URL (Mapbox's own client-side security
+    // model) — unlike MercadoLibre's OAuth secret, this does not need to be
+    // proxied through a Cloud Function. Replace with the real dev token.
+    accessToken:
+      'pk.eyJ1IjoidW5kZXJsYXllciIsImEiOiJjbXR6cXJheTMwb3k4NGpzODc4OG1uZG50In0.d1EazLtjfmdusOMpCrUsXQ',
+  },
 };

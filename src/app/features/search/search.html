@@ -28,6 +28,23 @@
         {{ t('search.title') }}
       </h1>
 
+      <um-search-location-bar
+        [searchLocation]="searchLocationService.searchLocation()"
+        [pickerSuggestions]="locationSuggestions()"
+        [isResolvingCurrentLocation]="isResolvingCurrentLocation()"
+        [radiusOptions]="radiusOptions()"
+        [changeLocationLabel]="t('location.changeLocation')"
+        [firstRunTitle]="t('location.firstRunTitle')"
+        [locationPickerPlaceholder]="t('location.searchPlaceholder')"
+        [useCurrentLocationLabel]="t('location.useCurrentLocationLabel')"
+        [radiusLabel]="t('location.searchRadiusLabel')"
+        [withinRadiusLabel]="withinRadiusLabel()"
+        (queryChanged)="onLocationQueryChanged($event)"
+        (areaSelected)="onAreaSelected($event)"
+        (radiusChanged)="onRadiusChanged($event)"
+        (useCurrentLocationRequested)="onUseCurrentLocationRequested()"
+      />
+
       <div class="ul-row ul-mb-4">
         <div class="ul-col-12 ul-col-md-6 search__desktop-search-col">
           <ul-search-input
@@ -56,36 +73,24 @@
         </div>
       </div>
 
-      @if (selectedCategory()) {
-        <div class="ul-gap-2 ul-mb-4" style="display: flex; align-items: center">
-          <span class="ul-typography-caption-l-regular">{{ t('search.activeFilter') }}</span>
-          <ul-pill theme="fill-purple" variant="dismissible" (dismiss)="clearCategory()">
-            {{ selectedCategory() }}
-          </ul-pill>
-        </div>
-      }
+      <div class="ul-gap-4 ul-mb-4" style="display: flex; align-items: center; flex-wrap: wrap">
+        @if (selectedCategory()) {
+          <div class="ul-gap-2" style="display: flex; align-items: center">
+            <span class="ul-typography-caption-l-regular">{{ t('search.activeFilter') }}</span>
+            <ul-pill theme="fill-purple" variant="dismissible" (dismiss)="clearCategory()">
+              {{ selectedCategory() }}
+            </ul-pill>
+          </div>
+        }
+        <um-sort
+          class="ul-ml-auto"
+          [placeholder]="t('listing.sortPlaceholder')"
+          [sortOptions]="sortOptions()"
+          [(sort)]="sortOption"
+        />
+      </div>
 
-      @if (listingService.listings().length === 0) {
-        <p class="ul-typography-body-m-regular ul-text-secondary ul-mt-8">
-          {{ t('search.emptyState') }}
-        </p>
-      } @else {
-        <div class="ul-row">
-          @for (listing of listingService.listings(); track listing.id) {
-            <div class="ul-col-6 ul-col-sm-4 ul-col-md-3 ul-col-lg-2 ul-col-xl-2">
-              <a [routerLink]="['/listings', createListingSlug(listing.title, listing.id)]">
-                <ul-card
-                  [cardTitle]="listing.title"
-                  [cardSubtitle]="listing.price | listingPrice: listing.currency"
-                  [cardCaption]="listing.category"
-                  cardDirection="vertical"
-                  mediaAspectRatio="portrait"
-                />
-              </a>
-            </div>
-          }
-        </div>
-      }
+      <um-listing-grid [listings]="sortedListings()" [emptyStateText]="t('search.emptyState')" />
     </div>
   </div>
 </ng-container>

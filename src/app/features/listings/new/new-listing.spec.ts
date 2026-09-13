@@ -1,12 +1,32 @@
 import { Location } from '@angular/common';
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
+import { ToastService } from '@underlayerdev/ui';
 import { NewListingComponent } from './new-listing';
 import { AuthService } from '../../../application/services/auth.service';
 import { ListingService } from '../../../application/services/listing.service';
-import { LISTING_REPOSITORY } from '../../../core/configuration/tokens';
+import {
+  GEOCODING_PROVIDER,
+  GEOLOCATION_PROVIDER,
+  LISTING_REPOSITORY,
+  SEARCH_LOCATION_REPOSITORY,
+} from '../../../core/configuration/tokens';
 import type { Listing } from '../../../domain/listing/listing.model';
+import { GeolocationError } from '../../../domain/location/geolocation.provider';
+import type { LocationArea } from '../../../domain/location/location.model';
 import { getTranslocoTestingModule } from '../../../../testing/transloco-testing';
+import { installFakeLocalStorage } from '../../../../testing/fake-local-storage';
+
+const TEST_LOCATION: LocationArea = {
+  displayName: 'Palermo, Buenos Aires',
+  countryCode: 'AR',
+  region: 'Buenos Aires',
+  city: 'Buenos Aires',
+  neighborhood: 'Palermo',
+  latitude: -34.5875,
+  longitude: -58.4205,
+  geohash: '6ex2ug0d0',
+};
 
 // fixture.whenStable() doesn't reliably wait out the load-for-edit async
 // chain (getById -> .set()) — a real macrotask boundary guarantees every
@@ -48,6 +68,12 @@ describe('NewListingComponent', () => {
         },
         { provide: Router, useValue: overrides?.router ?? { navigate: vi.fn() } },
         { provide: Location, useValue: { back: vi.fn() } },
+        { provide: GEOCODING_PROVIDER, useValue: { search: vi.fn(), reverseGeocode: vi.fn() } },
+        { provide: GEOLOCATION_PROVIDER, useValue: { getCurrentPosition: vi.fn() } },
+        {
+          provide: SEARCH_LOCATION_REPOSITORY,
+          useValue: { getByUser: vi.fn().mockResolvedValue(null), save: vi.fn() },
+        },
       ],
     });
 
@@ -123,6 +149,7 @@ describe('NewListingComponent', () => {
       price: String(createdListing.price),
       currency: createdListing.currency,
       category: createdListing.category,
+      location: TEST_LOCATION,
     });
     fixture.detectChanges();
 
@@ -151,6 +178,7 @@ describe('NewListingComponent', () => {
         price: '10',
         currency: 'USD',
         category: 'Electronics',
+        location: null,
       });
     });
 
@@ -195,6 +223,7 @@ describe('NewListingComponent', () => {
       fixture.componentInstance.listingModel.update((value) => ({
         ...value,
         title: 'A brand new title',
+        location: TEST_LOCATION,
       }));
       fixture.detectChanges();
 
@@ -211,6 +240,95 @@ describe('NewListingComponent', () => {
       expect(navigateSpy).toHaveBeenCalledWith(['/listings', 'a-brand-new-title-abc123'], {
         replaceUrl: true,
       });
+    });
+  });
+
+  describe('location field', () => {
+    let restoreLocalStorage: () => void;
+
+    beforeEach(() => {
+      restoreLocalStorage = installFakeLocalStorage();
+    });
+
+    afterEach(() => {
+      restoreLocalStorage();
+    });
+
+    it('should default a new listing to the current search location', () => {
+      localStorage.setItem(
+        'um-search-location',
+        JSON.stringify({
+          ...TEST_LOCATION,
+          radiusKm: 10,
+          source: 'saved',
+          updatedAt: new Date().toISOString(),
+        }),
+      );
+
+      const fixture = setup();
+
+      expect(fixture.componentInstance.listingModel().location).toEqual(TEST_LOCATION);
+    });
+
+    it('should block submit and never call create when no location is set', async () => {
+      const createSpy = vi.fn();
+      const fixture = setup({
+        authService: { currentUser: () => ({ id: 'user-1' }) },
+        listingService: { create: createSpy },
+      });
+
+      fixture.componentInstance.listingModel.update((value) => ({
+        title: 'A perfectly valid title',
+        description: 'A perfectly valid description for this listing.',
+        price: '10',
+        currency: value.currency,
+        category: 'Electronics',
+        location: null,
+      }));
+      fixture.detectChanges();
+
+      await fixture.componentInstance.onSubmit();
+
+      expect(createSpy).not.toHaveBeenCalled();
+      expect(fixture.componentInstance.locationTouched()).toBe(true);
+    });
+
+    it('should set the geocoded area when a suggestion is picked', () => {
+      const fixture = setup();
+
+      fixture.componentInstance.onLocationPicked({
+        id: 'place.1',
+        displayName: TEST_LOCATION.displayName,
+        countryCode: TEST_LOCATION.countryCode,
+        region: TEST_LOCATION.region,
+        city: TEST_LOCATION.city,
+        neighborhood: TEST_LOCATION.neighborhood,
+        latitude: TEST_LOCATION.latitude,
+        longitude: TEST_LOCATION.longitude,
+      });
+
+      expect(fixture.componentInstance.listingModel().location?.displayName).toBe(
+        TEST_LOCATION.displayName,
+      );
+    });
+
+    it('should show a location-specific error (not the generic one) when resolving the current location fails', async () => {
+      const fixture = setup();
+      const geolocationProvider = TestBed.inject(GEOLOCATION_PROVIDER);
+      vi.mocked(geolocationProvider.getCurrentPosition).mockRejectedValue(
+        new GeolocationError('permission-denied'),
+      );
+      // ToastService is provided at the component level (see @Component's
+      // providers), not the root injector — TestBed.inject() would resolve
+      // a different instance than the one the component actually uses.
+      const toastService = fixture.debugElement.injector.get(ToastService);
+      const errorSpy = vi.spyOn(toastService, 'error');
+
+      await fixture.componentInstance.onUseCurrentLocationForListing();
+
+      expect(errorSpy).toHaveBeenCalledWith(
+        'Location access was denied. Please search for a city or area instead.',
+      );
     });
   });
 });

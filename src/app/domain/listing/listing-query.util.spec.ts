@@ -77,4 +77,42 @@ describe('sortListings', () => {
     sortListings(listings, 'oldest');
     expect(listings.map((l) => l.id)).toEqual(['newer', 'older']);
   });
+
+  it('falls back to newest first for "nearest" when no origin is given', () => {
+    const listings = [
+      listing({ id: 'older', createdAt: new Date('2026-01-01') }),
+      listing({ id: 'newer', createdAt: new Date('2026-06-01') }),
+    ];
+    expect(sortListings(listings, 'nearest').map((l) => l.id)).toEqual(['newer', 'older']);
+  });
+
+  it('sorts nearest first when an origin is given', () => {
+    const far = listing({
+      id: 'far',
+      location: {
+        displayName: 'Rosario',
+        countryCode: 'AR',
+        region: 'Santa Fe',
+        city: 'Rosario',
+        latitude: -32.9468,
+        longitude: -60.6393,
+        geohash: '',
+      },
+    });
+    const near = listing({
+      id: 'near',
+      location: {
+        displayName: 'Palermo, Buenos Aires',
+        countryCode: 'AR',
+        region: 'Buenos Aires',
+        city: 'Buenos Aires',
+        neighborhood: 'Palermo',
+        latitude: -34.5875,
+        longitude: -58.4205,
+        geohash: '',
+      },
+    });
+    const origin = { latitude: -34.6037, longitude: -58.3816 };
+    expect(sortListings([far, near], 'nearest', origin).map((l) => l.id)).toEqual(['near', 'far']);
+  });
 });

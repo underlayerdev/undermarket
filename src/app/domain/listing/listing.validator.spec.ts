@@ -6,6 +6,19 @@ import { getMaxPriceForCurrency } from '../currency/currency.model';
 import { LISTING_DESCRIPTION_MAX_LENGTH, LISTING_TITLE_MAX_LENGTH } from './listing-constraints';
 import { getTranslocoTestingModule } from '../../../testing/transloco-testing';
 
+function validLocation(): NewListingInput['location'] {
+  return {
+    displayName: 'Palermo, Buenos Aires',
+    countryCode: 'AR',
+    region: 'Buenos Aires',
+    city: 'Buenos Aires',
+    neighborhood: 'Palermo',
+    latitude: -34.5875,
+    longitude: -58.4205,
+    geohash: '6ex2ug0d0',
+  };
+}
+
 function validInput(overrides: Partial<NewListingInput> = {}): NewListingInput {
   return {
     ownerId: 'user-1',
@@ -15,6 +28,7 @@ function validInput(overrides: Partial<NewListingInput> = {}): NewListingInput {
     currency: 'ARS',
     category: 'Furniture',
     status: 'active',
+    location: validLocation(),
     ...overrides,
   };
 }
@@ -32,9 +46,7 @@ describe('validateNewListing', () => {
   });
 
   it('should reject an empty or whitespace-only title', () => {
-    expect(validateNewListing(validInput({ title: '   ' }), transloco)).toBe(
-      'Title is required.',
-    );
+    expect(validateNewListing(validInput({ title: '   ' }), transloco)).toBe('Title is required.');
   });
 
   it('should reject a title over the max length', () => {
@@ -95,5 +107,17 @@ describe('validateNewListing', () => {
     expect(validateNewListing(validInput({ status: 'sold' }), transloco)).toBe(
       'New listings must start as active.',
     );
+  });
+
+  it('should reject a missing location', () => {
+    expect(validateNewListing(validInput({ location: undefined as never }), transloco)).toBe(
+      'Please choose a location for this listing.',
+    );
+  });
+
+  it('should reject a location with an out-of-range latitude', () => {
+    expect(
+      validateNewListing(validInput({ location: { ...validLocation(), latitude: 91 } }), transloco),
+    ).toBe('Please select a valid location.');
   });
 });

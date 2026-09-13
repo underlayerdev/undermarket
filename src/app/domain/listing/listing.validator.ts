@@ -2,6 +2,8 @@ import type { TranslocoService } from '@jsverse/transloco';
 import { CATEGORIES } from '../category/category.model';
 import type { Category } from '../category/category.model';
 import { CURRENCIES, getMaxPriceForCurrency } from '../currency/currency.model';
+import { validateLocationArea } from '../location/location.validator';
+import type { LocationArea } from '../location/location.model';
 import { LISTING_DESCRIPTION_MAX_LENGTH, LISTING_TITLE_MAX_LENGTH } from './listing-constraints';
 import type { Listing } from './listing.model';
 
@@ -11,10 +13,11 @@ import type { Listing } from './listing.model';
 // without actually being one.
 export type NewListingInput = Omit<
   Listing,
-  'id' | 'createdAt' | 'updatedAt' | 'imageUrls' | 'currency' | 'category'
+  'id' | 'createdAt' | 'updatedAt' | 'imageUrls' | 'currency' | 'category' | 'location'
 > & {
   currency: string;
   category: string;
+  location: LocationArea;
 };
 
 // Mirrors the constraints enforced server-side in firestore.rules — this is
@@ -53,6 +56,9 @@ export function validateNewListing(
     return transloco.translate('newListing.errors.categoryInvalid');
 
   if (data.status !== 'active') return transloco.translate('newListing.errors.statusInvalid');
+
+  const locationError = validateLocationArea(data.location, transloco);
+  if (locationError) return locationError;
 
   return null;
 }

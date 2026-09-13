@@ -2,18 +2,41 @@ import { Location } from '@angular/common';
 import { TestBed } from '@angular/core/testing';
 import { SearchComponent } from './search';
 import { ListingService } from '../../application/services/listing.service';
+import {
+  AUTH_PROVIDER,
+  GEOCODING_PROVIDER,
+  GEOLOCATION_PROVIDER,
+  SEARCH_LOCATION_REPOSITORY,
+} from '../../core/configuration/tokens';
 import { getTranslocoTestingModule } from '../../../testing/transloco-testing';
 import { installFakeLocalStorage } from '../../../testing/fake-local-storage';
 import { getRecentSearches } from '../../shared/search/recent-searches.util';
+import type { SearchLocation } from '../../domain/location/location.model';
+
+const testSearchLocation: SearchLocation = {
+  displayName: 'Palermo, Buenos Aires',
+  countryCode: 'AR',
+  region: 'Buenos Aires',
+  city: 'Buenos Aires',
+  neighborhood: 'Palermo',
+  latitude: -34.5875,
+  longitude: -58.4205,
+  geohash: '6ex2ug0d0',
+  radiusKm: 10,
+  source: 'saved',
+  updatedAt: new Date('2026-01-01'),
+};
 
 describe('SearchComponent', () => {
   let searchSpy: ReturnType<typeof vi.fn>;
+  let searchNearbySpy: ReturnType<typeof vi.fn>;
   let locationBackSpy: ReturnType<typeof vi.fn>;
   let restoreLocalStorage: () => void;
 
   beforeEach(() => {
     restoreLocalStorage = installFakeLocalStorage();
     searchSpy = vi.fn().mockResolvedValue(undefined);
+    searchNearbySpy = vi.fn().mockResolvedValue(undefined);
     locationBackSpy = vi.fn();
 
     TestBed.configureTestingModule({
@@ -21,9 +44,25 @@ describe('SearchComponent', () => {
       providers: [
         {
           provide: ListingService,
-          useValue: { search: searchSpy, listings: () => [] },
+          useValue: { search: searchSpy, searchNearby: searchNearbySpy, listings: () => [] },
         },
         { provide: Location, useValue: { back: locationBackSpy } },
+        {
+          provide: AUTH_PROVIDER,
+          useValue: {
+            currentUser: () => null,
+            onAuthStateChange: (cb: (user: null) => void) => {
+              cb(null);
+              return () => {};
+            },
+          },
+        },
+        { provide: GEOCODING_PROVIDER, useValue: { search: vi.fn(), reverseGeocode: vi.fn() } },
+        { provide: GEOLOCATION_PROVIDER, useValue: { getCurrentPosition: vi.fn() } },
+        {
+          provide: SEARCH_LOCATION_REPOSITORY,
+          useValue: { getByUser: vi.fn().mockResolvedValue(null), save: vi.fn() },
+        },
       ],
     });
   });
@@ -66,11 +105,12 @@ describe('SearchComponent', () => {
     expect(locationBackSpy).toHaveBeenCalled();
   });
 
-  it('should render a ul-search-input for both the mobile header and desktop row', () => {
+  it('should render a ul-search-input for the mobile header, desktop row, and location picker', () => {
     const fixture = TestBed.createComponent(SearchComponent);
     fixture.detectChanges();
 
-    expect(fixture.nativeElement.querySelectorAll('ul-search-input').length).toBe(2);
+    // Mobile header + desktop row + the first-run location picker's own.
+    expect(fixture.nativeElement.querySelectorAll('ul-search-input').length).toBe(3);
   });
 
   it('should record a submitted search into recent searches and trigger the search', () => {
@@ -104,5 +144,36 @@ describe('SearchComponent', () => {
     fixture.componentInstance.onSearchSubmit('   ');
 
     expect(getRecentSearches('listings')).toEqual([]);
+  });
+
+  it('should search nearby with the persisted location and radius once one is set', () => {
+    localStorage.setItem('um-search-location', JSON.stringify(testSearchLocation));
+    const fixture = TestBed.createComponent(SearchComponent);
+    fixture.detectChanges();
+
+    expect(searchNearbySpy).toHaveBeenCalledWith({
+      center: testSearchLocation,
+      radiusKm: 10,
+      category: undefined,
+      query: undefined,
+    });
+  });
+
+  it('should include the current query/category when searching nearby', () => {
+    localStorage.setItem('um-search-location', JSON.stringify(testSearchLocation));
+    const fixture = TestBed.createComponent(SearchComponent);
+    fixture.detectChanges();
+    fixture.componentInstance.query.set('lamp');
+    fixture.componentInstance.selectedCategory.set('Furniture');
+    searchNearbySpy.mockClear();
+
+    fixture.componentInstance.onSearch();
+
+    expect(searchNearbySpy).toHaveBeenCalledWith({
+      center: testSearchLocation,
+      radiusKm: 10,
+      category: 'Furniture',
+      query: 'lamp',
+    });
   });
 });

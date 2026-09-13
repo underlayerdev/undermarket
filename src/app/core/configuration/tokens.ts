@@ -7,6 +7,9 @@ import type { AuthProvider } from '../../domain/auth/auth.provider';
 import type { ImageStorage } from '../../domain/image-storage/image-storage.provider';
 import type { MercadoLibreProvider } from '../../domain/mercado-libre/mercado-libre.provider';
 import type { NotificationProvider } from '../../domain/notification/notification.provider';
+import type { GeocodingProvider } from '../../domain/location/geocoding.provider';
+import type { GeolocationProvider } from '../../domain/location/geolocation.provider';
+import type { SearchLocationRepository } from '../../domain/location/search-location.repository';
 import type { UserRepository } from '../../domain/user/user.repository';
 import type { ListingRepository } from '../../domain/listing/listing.repository';
 
@@ -23,4 +26,9 @@ export const MERCADO_LIBRE_PROVIDER = new InjectionToken<MercadoLibreProvider>(
 );
 export const NOTIFICATION_PROVIDER = new InjectionToken<NotificationProvider>(
   'NOTIFICATION_PROVIDER',
+);
+export const GEOCODING_PROVIDER = new InjectionToken<GeocodingProvider>('GEOCODING_PROVIDER');
+export const GEOLOCATION_PROVIDER = new InjectionToken<GeolocationProvider>('GEOLOCATION_PROVIDER');
+export const SEARCH_LOCATION_REPOSITORY = new InjectionToken<SearchLocationRepository>(
+  'SEARCH_LOCATION_REPOSITORY',
 );

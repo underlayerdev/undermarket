@@ -90,6 +90,27 @@
               [formField]="listingForm.category"
             />
 
+            <div>
+              <label class="ul-form-field__label ul-form-field__label--md">
+                {{ t('newListing.locationLabel') }}
+              </label>
+              <um-location-picker
+                [placeholder]="t('newListing.locationPlaceholder')"
+                [initialQuery]="listingModel().location?.displayName ?? ''"
+                [suggestions]="locationSuggestions()"
+                [isResolvingCurrentLocation]="isResolvingCurrentLocation()"
+                [useCurrentLocationLabel]="t('newListing.useCurrentLocationLabel')"
+                (queryChanged)="onLocationQueryChanged($event)"
+                (suggestionSelected)="onLocationPicked($event)"
+                (useCurrentLocationRequested)="onUseCurrentLocationForListing()"
+              />
+              @if (locationTouched() && !listingModel().location) {
+                <p class="ul-typography-caption-l-regular ul-text-red">
+                  {{ t('newListing.errors.locationRequired') }}
+                </p>
+              }
+            </div>
+
             <div class="new-listing__submit ul-gap-4 ul-mt-2">
               <ul-button
                 type="button"

@@ -1,8 +1,9 @@
 rules_version = '2';
 
 // Keep these in sync with src/app/domain/listing/listing-constraints.ts,
-// src/app/domain/category/category.model.ts, and
-// src/app/domain/currency/currency.model.ts.
+// src/app/domain/category/category.model.ts,
+// src/app/domain/currency/currency.model.ts, and
+// src/app/domain/location/location.model.ts.
 service cloud.firestore {
   match /databases/{database}/documents {
 
@@ -27,9 +28,23 @@ service cloud.firestore {
         && price is number && price >= 0 && price <= maxPriceForCurrency(currency);
     }
 
+    // Area-level only (city/neighborhood/region + coordinates) — never an
+    // exact address. `geohash` is duplicated at the top level of the listing
+    // doc so Firestore can range-query it; the two must always agree.
+    function isValidLocation(location) {
+      return location.keys().hasAll(['displayName', 'countryCode', 'region', 'city', 'latitude', 'longitude', 'geohash'])
+        && location.displayName is string && location.displayName.size() > 0 && location.displayName.size() <= 120
+        && location.countryCode is string
+        && location.region is string
+        && location.city is string && location.city.size() > 0
+        && location.latitude is number && location.latitude >= -90 && location.latitude <= 90
+        && location.longitude is number && location.longitude >= -180 && location.longitude <= 180
+        && location.geohash is string && location.geohash.size() > 0;
+    }
+
     function isValidNewListing(data) {
       return data.keys().hasAll(
-        ['ownerId', 'title', 'description', 'price', 'currency', 'category', 'status', 'imageUrls', 'createdAt', 'updatedAt']
+        ['ownerId', 'title', 'description', 'price', 'currency', 'category', 'status', 'imageUrls', 'createdAt', 'updatedAt', 'location', 'geohash']
       )
         && data.ownerId is string
         && data.title is string && data.title.size() > 0 && data.title.size() <= 100
@@ -39,17 +54,26 @@ service cloud.firestore {
         && data.status == 'active'
         && data.imageUrls is list && data.imageUrls.size() == 0
         && data.createdAt is timestamp
-        && data.updatedAt is timestamp;
+        && data.updatedAt is timestamp
+        && isValidLocation(data.location)
+        && data.geohash == data.location.geohash;
     }
 
     function isValidListingUpdate(data) {
+      // location/geohash are validated when present, but not required here —
+      // unlike a brand-new listing, an update to a listing that predates this
+      // field (e.g. a status-only change) must not be blocked just because
+      // it has none. New listings always get one going forward, per
+      // isValidNewListing below.
       return data.title is string && data.title.size() > 0 && data.title.size() <= 100
         && data.description is string && data.description.size() > 0 && data.description.size() <= 2000
         && isValidPrice(data.price, data.currency)
         && isValidCategory(data.category)
         && (data.status == 'active' || data.status == 'sold' || data.status == 'draft')
         && data.imageUrls is list
-        && data.updatedAt is timestamp;
+        && data.updatedAt is timestamp
+        && (!data.keys().hasAny(['location'])
+          || (isValidLocation(data.location) && data.geohash == data.location.geohash));
     }
 
     match /listings/{listingId} {
@@ -74,11 +98,35 @@ service cloud.firestore {
       allow delete: if isSignedIn() && resource.data.ownerId == request.auth.uid;
     }
 
+    // City/region/country only — no coordinates, unlike isValidLocation
+    // above, since this is for display on a public profile, never a
+    // distance query.
+    function isValidProfileCity(profileCity) {
+      return profileCity.keys().hasAll(['displayName', 'city', 'region', 'countryCode'])
+        && profileCity.displayName is string && profileCity.displayName.size() > 0 && profileCity.displayName.size() <= 120
+        && profileCity.city is string && profileCity.city.size() > 0
+        && profileCity.region is string
+        && profileCity.countryCode is string;
+    }
+
     match /users/{userId} {
       // Display names/avatars are shown on listings, so profiles are
       // publicly readable; only the account owner can write their own doc.
+      // profileCity is opted-in and validated when present — absent (not a
+      // hidden/false flag) is how "not shown" is represented, so there's
+      // nothing city-shaped to leak from a direct read either way.
       allow read: if true;
-      allow write: if isSignedIn() && request.auth.uid == userId;
+      allow write: if isSignedIn() && request.auth.uid == userId
+        && (!request.resource.data.keys().hasAny(['profileCity'])
+          || request.resource.data.profileCity == null
+          || isValidProfileCity(request.resource.data.profileCity));
+    }
+
+    // The user's "where am I browsing right now" preference — kept out of
+    // users/{userId} deliberately, since that doc is publicly readable
+    // (above) and this reveals roughly where someone lives/spends time.
+    match /userSearchLocations/{userId} {
+      allow read, write: if isSignedIn() && request.auth.uid == userId;
     }
 
     // MercadoLibre OAuth state (short-lived, keyed by the `state` param) and
