@@ -69,7 +69,7 @@ ul-breadcrumb {
   // here regardless, since object-fit: cover is meant to crop the photo to
   // this box, not have the box grow around it.
   overflow: hidden;
-  height: 65vh;
+  height: 63vh;
 
   @include bp.up('md') {
     height: auto;

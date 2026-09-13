@@ -32,6 +32,7 @@ import {
   ListingDetailErrorComponent,
   ListingDetailErrorType,
 } from './listing-detail-error/listing-detail-error';
+import { ListingDetailStatusComponent } from './listing-detail-status';
 
 @Component({
   selector: 'um-listing-detail',
@@ -50,6 +51,7 @@ import {
     CarouselComponent,
     CarouselItemComponent,
     ListingDetailErrorComponent,
+    ListingDetailStatusComponent,
   ],
   providers: [ToastService],
   templateUrl: './listing-detail.html',

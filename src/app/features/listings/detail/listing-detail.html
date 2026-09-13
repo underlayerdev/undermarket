@@ -1,8 +1,8 @@
 <ng-container *transloco="let t">
   @if (isLoading()) {
     <div class="ul-container-product">
-      <div class="ul-content ul-pt-8">
-        <ul-skeleton variant="rect" height="400px" [show]="true" />
+      <div class="ul-content">
+        <ul-skeleton variant="rect" width="100%" height="500px" [show]="true" />
         <ul-skeleton variant="text" [lines]="5" [show]="true" />
       </div>
     </div>
@@ -55,23 +55,14 @@
 
           <div class="ul-col-12 ul-col-md-5 ul-gap-4 listing-detail__info">
             <div class="listing-detail__wrap-row ul-gap-2">
-              <ul-pill theme="outline-purple" variant="read-only">{{ item.category }}</ul-pill>
-              @if (item.status === 'sold') {
-                <ul-pill theme="fill-red" variant="read-only">
-                  {{ t('listingDetail.sold') }}
-                </ul-pill>
-              } @else if (item.status === 'draft') {
-                <ul-pill theme="outline-white" variant="read-only">
-                  {{ t('listingDetail.draft') }}
-                </ul-pill>
-              } @else {
-                <ul-pill theme="transparent-green" variant="read-only">
-                  {{ t('listingDetail.available') }}
-                </ul-pill>
-              }
+              <ul-pill theme="outline-purple" variant="read-only" size="sm">
+                {{ item.category }}
+              </ul-pill>
+              <um-listing-detail-status [item]="item" />
             </div>
 
             <h1 class="ul-typography-headline-l-extrablack">{{ item.title }}</h1>
+
             <p class="ul-typography-headline-m-extrabold">
               {{ item.price | listingPrice: item.currency }}
             </p>
@@ -82,7 +73,7 @@
 
             @if (owner(); as seller) {
               <a [routerLink]="['/profile', seller.id]" class="listing-detail__seller ul-gap-3">
-                <ul-avatar [initials]="getInitials(seller)" [src]="seller.photoUrl" size="md" />
+                <ul-avatar [initials]="getInitials(seller)" [src]="seller.photoUrl" size="sm" />
                 <div>
                   <p class="ul-typography-body-m-extrabold ul-text-primary">
                     {{ t('listingDetail.soldBy', { value: seller.displayName }) }}
