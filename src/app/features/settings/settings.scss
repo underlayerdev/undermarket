@@ -1,4 +1,5 @@
 @use 'pkg:@underlayerdev/ui/breakpoints' as bp;
+@use 'pkg:@underlayerdev/ui/containers' as containers;
 
 // height:100% alone did nothing here: percentage heights only resolve
 // against a parent with a definite computed height, and none of the divs
@@ -10,7 +11,20 @@
   flex: 1;
 }
 
-.ul-container-fluid,
+// Fluid on mobile, form on desktop — two classes stacked together
+// (`ul-container-fluid md:ul-container-form`) never worked, since both are
+// static classes that set padding-left/right unconditionally, so whichever
+// one lands later in the compiled stylesheet always wins regardless of
+// viewport.
+.um-settings {
+  @include containers.container-fluid;
+
+  @include bp.up('md') {
+    @include containers.container-form;
+  }
+}
+
+.um-settings,
 .ul-content {
   display: flex;
   flex-direction: column;
