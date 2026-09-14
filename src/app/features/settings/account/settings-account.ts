@@ -13,10 +13,10 @@ import type { LocationSuggestion } from '../../../domain/location/location.model
 import type { PublicCityInfo } from '../../../domain/user/user.model';
 import {
   ButtonComponent,
-  CheckboxComponent,
   InputComponent,
   ModalComponent,
   ToastService,
+  ToggleComponent,
 } from '@underlayerdev/ui';
 import { SettingsLayoutComponent } from '../shared/settings-layout/settings-layout';
 
@@ -26,12 +26,12 @@ const DISPLAY_NAME_MAX_LENGTH = 50;
   selector: 'um-settings-account',
   imports: [
     ButtonComponent,
-    CheckboxComponent,
     InputComponent,
     LocaleDatePipe,
     LocationPickerComponent,
     ModalComponent,
     SettingsLayoutComponent,
+    ToggleComponent,
     TranslocoDirective,
   ],
   templateUrl: './settings-account.html',

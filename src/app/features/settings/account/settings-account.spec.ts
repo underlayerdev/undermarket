@@ -172,7 +172,7 @@ describe('SettingsAccountComponent', () => {
       expect(fixture.componentInstance.selectedCity()?.city).toBe('Buenos Aires');
     });
 
-    it('should clear the profile city immediately when the checkbox is unchecked', async () => {
+    it('should clear the profile city immediately when the toggle is switched off', async () => {
       currentUser = mockUser({
         profileCity: {
           displayName: 'Palermo, Buenos Aires',
