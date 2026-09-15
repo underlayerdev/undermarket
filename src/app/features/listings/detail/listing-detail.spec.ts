@@ -216,13 +216,13 @@ describe('ListingDetailComponent', () => {
       expect(link.getAttribute('href')).toBe('/profile/owner-1');
     });
 
-    it('should show the seller city when they have opted in', async () => {
+    it('should show just the seller city, not the full geocoded display name', async () => {
       const seller = mockUser({
         id: 'owner-1',
         profileCity: {
-          displayName: 'Palermo, Buenos Aires',
+          displayName: 'Palermo, Buenos Aires, Buenos Aires Province, Argentina',
           city: 'Buenos Aires',
-          region: 'Buenos Aires',
+          region: 'Buenos Aires Province',
           countryCode: 'AR',
         },
       });
@@ -237,7 +237,9 @@ describe('ListingDetailComponent', () => {
       await flushAsync();
       fixture.detectChanges();
 
-      expect(fixture.nativeElement.textContent).toContain('Palermo, Buenos Aires');
+      expect(fixture.nativeElement.textContent).toContain('Buenos Aires');
+      expect(fixture.nativeElement.textContent).not.toContain('Palermo');
+      expect(fixture.nativeElement.textContent).not.toContain('Argentina');
     });
 
     it('should not show a seller block when the owner fetch fails', async () => {
@@ -254,6 +256,64 @@ describe('ListingDetailComponent', () => {
 
       expect(fixture.componentInstance.owner()).toBeNull();
       expect(fixture.nativeElement.querySelector('.listing-detail__seller')).toBeNull();
+    });
+  });
+
+  describe('listing location', () => {
+    it('should show neighborhood and city when the listing has both', async () => {
+      const listingWithLocation: Listing = {
+        ...listing,
+        location: {
+          displayName: 'Palermo, Buenos Aires, Buenos Aires Province, Argentina',
+          countryCode: 'AR',
+          region: 'Buenos Aires Province',
+          city: 'Buenos Aires',
+          neighborhood: 'Palermo',
+          latitude: -34.5875,
+          longitude: -58.3974,
+          geohash: '6exys',
+        },
+      };
+      const fixture = setup(vi.fn().mockResolvedValue(listingWithLocation));
+      fixture.detectChanges();
+      await flushAsync();
+      fixture.detectChanges();
+
+      expect(fixture.componentInstance.listingLocationLabel()).toBe('Palermo, Buenos Aires');
+      // Only neighborhood + city are shown — not the full displayName, region, or country.
+      expect(fixture.nativeElement.textContent).not.toContain('Buenos Aires Province');
+      expect(fixture.nativeElement.textContent).not.toContain('Argentina');
+    });
+
+    it('should show only the city when there is no neighborhood', async () => {
+      const listingWithLocation: Listing = {
+        ...listing,
+        location: {
+          displayName: 'Rosario, Santa Fe, Argentina',
+          countryCode: 'AR',
+          region: 'Santa Fe',
+          city: 'Rosario',
+          latitude: -32.9468,
+          longitude: -60.6393,
+          geohash: '6ewrz',
+        },
+      };
+      const fixture = setup(vi.fn().mockResolvedValue(listingWithLocation));
+      fixture.detectChanges();
+      await flushAsync();
+      fixture.detectChanges();
+
+      expect(fixture.componentInstance.listingLocationLabel()).toBe('Rosario');
+    });
+
+    it('should show nothing when the listing has no location', async () => {
+      const fixture = setup(vi.fn().mockResolvedValue(listing));
+      fixture.detectChanges();
+      await flushAsync();
+      fixture.detectChanges();
+
+      expect(fixture.componentInstance.listingLocationLabel()).toBeNull();
+      expect(fixture.nativeElement.querySelector('ul-icon[icon="map_pin"]')).toBeNull();
     });
   });
 });

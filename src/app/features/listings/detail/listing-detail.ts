@@ -98,6 +98,15 @@ export class ListingDetailComponent implements OnInit {
     autoplay: false,
   };
 
+  // Listing.location carries several fields not meant for display here
+  // (countryCode, region, geohash, lat/lng — used for search/geocoding, not
+  // shown to buyers) — only neighborhood + city are shown on the product page.
+  readonly listingLocationLabel = computed(() => {
+    const location = this.listing()?.location;
+    if (!location) return null;
+    return location.neighborhood ? `${location.neighborhood}, ${location.city}` : location.city;
+  });
+
   protected photoAltText(index: number): string {
     return this.transloco.translate('listingDetail.photoAlt', { photoNumber: index + 1 });
   }

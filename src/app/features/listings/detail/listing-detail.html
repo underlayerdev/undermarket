@@ -67,6 +67,15 @@
               {{ item.price | listingPrice: item.currency }}
             </p>
 
+            @if (listingLocationLabel(); as locationLabel) {
+              <p
+                class="listing-detail__wrap-row ul-gap-2 ul-typography-body-s-regular ul-text-secondary"
+              >
+                <ul-icon icon="map_pin" size="4" />
+                {{ locationLabel }}
+              </p>
+            }
+
             <div>
               <p class="ul-typography-body-m-regular">{{ item.description }}</p>
             </div>
@@ -80,7 +89,7 @@
                   </p>
                   @if (seller.profileCity; as city) {
                     <p class="ul-typography-caption-l-regular ul-text-secondary">
-                      {{ city.displayName }}
+                      {{ city.city }}
                     </p>
                   }
                 </div>

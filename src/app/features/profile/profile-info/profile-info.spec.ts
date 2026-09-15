@@ -52,19 +52,21 @@ describe('ProfileInfoComponent', () => {
     expect(fixture.nativeElement.textContent).not.toContain('test@example.com');
   });
 
-  it('should show the city when the user has opted in', () => {
+  it('should show just the city, not the full geocoded display name', () => {
     const fixture = setup(
       mockUser({
         profileCity: {
-          displayName: 'Palermo, Buenos Aires',
+          displayName: 'Palermo, Buenos Aires, Buenos Aires Province, Argentina',
           city: 'Buenos Aires',
-          region: 'Buenos Aires',
+          region: 'Buenos Aires Province',
           countryCode: 'AR',
         },
       }),
     );
 
-    expect(fixture.nativeElement.textContent).toContain('Palermo, Buenos Aires');
+    expect(fixture.nativeElement.textContent).toContain('Buenos Aires');
+    expect(fixture.nativeElement.textContent).not.toContain('Palermo');
+    expect(fixture.nativeElement.textContent).not.toContain('Argentina');
   });
 
   it('should not show a city when the user has not opted in', () => {
