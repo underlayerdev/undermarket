@@ -1,7 +1,6 @@
 import { Location } from '@angular/common';
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
-import { ToastService } from '@underlayerdev/ui';
 import { NewListingComponent } from './new-listing';
 import { AuthService } from '../../../application/services/auth.service';
 import { ListingService } from '../../../application/services/listing.service';
@@ -56,6 +55,9 @@ describe('NewListingComponent', () => {
     listingRepository?: object;
     router?: object;
     slug?: string | null;
+    geocodingProvider?: object;
+    geolocationProvider?: object;
+    searchLocationRepository?: object;
   }) {
     TestBed.configureTestingModule({
       imports: [NewListingComponent, getTranslocoTestingModule()],
@@ -68,11 +70,20 @@ describe('NewListingComponent', () => {
         },
         { provide: Router, useValue: overrides?.router ?? { navigate: vi.fn() } },
         { provide: Location, useValue: { back: vi.fn() } },
-        { provide: GEOCODING_PROVIDER, useValue: { search: vi.fn(), reverseGeocode: vi.fn() } },
-        { provide: GEOLOCATION_PROVIDER, useValue: { getCurrentPosition: vi.fn() } },
+        {
+          provide: GEOCODING_PROVIDER,
+          useValue: overrides?.geocodingProvider ?? { search: vi.fn(), reverseGeocode: vi.fn() },
+        },
+        {
+          provide: GEOLOCATION_PROVIDER,
+          useValue: overrides?.geolocationProvider ?? { getCurrentPosition: vi.fn() },
+        },
         {
           provide: SEARCH_LOCATION_REPOSITORY,
-          useValue: { getByUser: vi.fn().mockResolvedValue(null), save: vi.fn() },
+          useValue: overrides?.searchLocationRepository ?? {
+            getByUser: vi.fn().mockResolvedValue(null),
+            save: vi.fn(),
+          },
         },
       ],
     });
@@ -254,7 +265,7 @@ describe('NewListingComponent', () => {
       restoreLocalStorage();
     });
 
-    it('should default a new listing to the current search location', () => {
+    it('should default a new listing to the current search location', async () => {
       localStorage.setItem(
         'um-search-location',
         JSON.stringify({
@@ -266,6 +277,7 @@ describe('NewListingComponent', () => {
       );
 
       const fixture = setup();
+      await flushAsync();
 
       expect(fixture.componentInstance.listingModel().location).toEqual(TEST_LOCATION);
     });
@@ -290,13 +302,10 @@ describe('NewListingComponent', () => {
       await fixture.componentInstance.onSubmit();
 
       expect(createSpy).not.toHaveBeenCalled();
-      expect(fixture.componentInstance.locationTouched()).toBe(true);
     });
 
-    it('should set the geocoded area when a suggestion is picked', () => {
-      const fixture = setup();
-
-      fixture.componentInstance.onLocationPicked({
+    it('should fall back to geolocation and adopt the result as the search location when none is saved', async () => {
+      const suggestion = {
         id: 'place.1',
         displayName: TEST_LOCATION.displayName,
         countryCode: TEST_LOCATION.countryCode,
@@ -305,28 +314,52 @@ describe('NewListingComponent', () => {
         neighborhood: TEST_LOCATION.neighborhood,
         latitude: TEST_LOCATION.latitude,
         longitude: TEST_LOCATION.longitude,
+      };
+      const saveSpy = vi.fn();
+      const fixture = setup({
+        authService: { currentUser: () => ({ id: 'user-1' }) },
+        geolocationProvider: {
+          getCurrentPosition: vi.fn().mockResolvedValue({
+            latitude: TEST_LOCATION.latitude,
+            longitude: TEST_LOCATION.longitude,
+          }),
+        },
+        geocodingProvider: {
+          search: vi.fn(),
+          reverseGeocode: vi.fn().mockResolvedValue(suggestion),
+        },
+        searchLocationRepository: { getByUser: vi.fn().mockResolvedValue(null), save: saveSpy },
       });
+      await flushAsync();
+      fixture.detectChanges();
 
-      expect(fixture.componentInstance.listingModel().location?.displayName).toBe(
-        TEST_LOCATION.displayName,
+      // The geohash is computed live from lat/lng (geofire-common), not the
+      // fabricated placeholder on TEST_LOCATION — check the rest field by
+      // field and just assert a geohash was actually produced.
+      expect(fixture.componentInstance.listingModel().location).toEqual(
+        expect.objectContaining({
+          ...TEST_LOCATION,
+          geohash: expect.any(String),
+        }),
+      );
+      expect(fixture.componentInstance.isResolvingLocation()).toBe(false);
+      expect(saveSpy).toHaveBeenCalledWith(
+        'user-1',
+        expect.objectContaining({ city: TEST_LOCATION.city, source: 'browser-geolocation' }),
       );
     });
 
-    it('should show a location-specific error (not the generic one) when resolving the current location fails', async () => {
-      const fixture = setup();
-      const geolocationProvider = TestBed.inject(GEOLOCATION_PROVIDER);
-      vi.mocked(geolocationProvider.getCurrentPosition).mockRejectedValue(
-        new GeolocationError('permission-denied'),
-      );
-      // ToastService is provided at the component level (see @Component's
-      // providers), not the root injector — TestBed.inject() would resolve
-      // a different instance than the one the component actually uses.
-      const toastService = fixture.debugElement.injector.get(ToastService);
-      const errorSpy = vi.spyOn(toastService, 'error');
+    it('should surface a location-specific error when geolocation fails and none is saved', async () => {
+      const fixture = setup({
+        geolocationProvider: {
+          getCurrentPosition: vi.fn().mockRejectedValue(new GeolocationError('permission-denied')),
+        },
+      });
+      await flushAsync();
+      fixture.detectChanges();
 
-      await fixture.componentInstance.onUseCurrentLocationForListing();
-
-      expect(errorSpy).toHaveBeenCalledWith(
+      expect(fixture.componentInstance.listingModel().location).toBeNull();
+      expect(fixture.componentInstance.locationError()).toBe(
         'Location access was denied. Please search for a city or area instead.',
       );
     });

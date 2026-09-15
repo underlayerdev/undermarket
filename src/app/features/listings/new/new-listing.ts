@@ -11,7 +11,6 @@ import { SearchLocationService } from '../../../application/services/search-loca
 import { SeoService } from '../../../core/seo/seo.service';
 import { LISTING_REPOSITORY } from '../../../core/configuration/tokens';
 import { ImageUploadComponent } from '../../../shared/image-upload/image-upload';
-import { LocationPickerComponent } from '../../../shared/location/location-picker/location-picker';
 import { CATEGORIES } from '../../../domain/category/category.model';
 import type { Category } from '../../../domain/category/category.model';
 import {
@@ -19,8 +18,7 @@ import {
   DEFAULT_CURRENCY,
   getMaxPriceForCurrency,
 } from '../../../domain/currency/currency.model';
-import { toLocationArea } from '../../../domain/location/geohash.util';
-import type { LocationArea, LocationSuggestion } from '../../../domain/location/location.model';
+import type { LocationArea } from '../../../domain/location/location.model';
 import type { Listing } from '../../../domain/listing/listing.model';
 import type { NewListingInput } from '../../../domain/listing/listing.validator';
 import {
@@ -63,9 +61,10 @@ interface NewListingFormModel {
   price: string;
   currency: string | null;
   category: string | null;
-  // Not part of the ul-input/ul-select signal-forms graph below — validated
-  // manually in onSubmit() instead, since um-location-picker isn't a
-  // FormValueControl (it emits a rich LocationSuggestion, not a plain string).
+  // Not part of the ul-input/ul-select signal-forms graph below, and never
+  // set by the seller directly — see resolveDefaultLocation(). Matches how
+  // Wallapop/Vinted work: location is an account-level setting, not a
+  // per-listing question.
   location: LocationArea | null;
 }
 
@@ -92,7 +91,6 @@ function toNewListingInput(value: NewListingFormModel, ownerId: string): NewList
     IconComponent,
     ImageUploadComponent,
     InputComponent,
-    LocationPickerComponent,
     ModalComponent,
     SelectComponent,
     SkeletonComponent,
@@ -143,9 +141,8 @@ export class NewListingComponent {
   readonly imageFiles = signal<File[]>([]);
   readonly showDiscardModal = signal(false);
 
-  readonly locationSuggestions = signal<LocationSuggestion[]>([]);
-  readonly isResolvingCurrentLocation = signal(false);
-  readonly locationTouched = signal(false);
+  readonly isResolvingLocation = signal(false);
+  readonly locationError = signal<string | null>(null);
 
   readonly listingModel = signal<NewListingFormModel>({
     title: '',
@@ -282,17 +279,50 @@ export class NewListingComponent {
       if (slug) {
         void this.loadForEdit(slug);
       } else {
-        // Defaults a new listing to wherever the seller is currently
-        // browsing from — they can still search/select a different area.
-        // Only the LocationArea fields, not radiusKm/source/updatedAt.
-        const current = this.searchLocationService.searchLocation();
-        if (current) {
-          const { radiusKm, source, updatedAt, ...area } = current;
-          this.listingModel.update((model) => ({ ...model, location: area }));
-        }
+        void this.seedLocationForNewListing();
         this.seoService.setPage(this.transloco.translate('newListing.pageTitle'));
       }
     });
+  }
+
+  private async seedLocationForNewListing(): Promise<void> {
+    const area = await this.resolveDefaultLocation();
+    if (area) this.listingModel.update((model) => ({ ...model, location: area }));
+  }
+
+  /**
+   * Wallapop/Vinted don't ask per listing either — location is an
+   * account-level setting. Reuses the seller's current search location if
+   * they have one; if not (e.g. this is the very first thing they do after
+   * signing up, before ever visiting discover/search), falls back to the
+   * same browser-geolocation prompt search uses, and persists the result so
+   * it's reused for future listings/searches too.
+   */
+  private async resolveDefaultLocation(): Promise<LocationArea | null> {
+    // Only the LocationArea fields, not radiusKm/source/updatedAt.
+    const current = this.searchLocationService.searchLocation();
+    if (current) {
+      const { radiusKm, source, updatedAt, ...area } = current;
+      return area;
+    }
+
+    this.isResolvingLocation.set(true);
+    this.locationError.set(null);
+    try {
+      const area = await this.locationService.resolveCurrentArea();
+      await this.searchLocationService.setSearchLocation(area, 'browser-geolocation');
+      return area;
+    } catch (err) {
+      this.locationError.set(toLocationErrorMessage(err, this.transloco));
+      return null;
+    } finally {
+      this.isResolvingLocation.set(false);
+    }
+  }
+
+  async retryLocation(): Promise<void> {
+    const area = await this.resolveDefaultLocation();
+    if (area) this.listingModel.update((model) => ({ ...model, location: area }));
   }
 
   private async loadForEdit(slug: string): Promise<void> {
@@ -312,46 +342,21 @@ export class NewListingComponent {
         price: String(listing.price),
         currency: listing.currency,
         category: listing.category,
-        // Older listings predate this field — leaves it null, forcing the
-        // seller to pick one on save, since it's required going forward.
         location: listing.location ?? null,
       });
+      // Older listings predate this field — backfill it the same way a new
+      // listing gets one, rather than leaving the seller stuck unable to
+      // save an edit at all (there's no picker to set it manually anymore).
+      if (!listing.location) {
+        const area = await this.resolveDefaultLocation();
+        if (area) this.listingModel.update((model) => ({ ...model, location: area }));
+      }
       this.seoService.setPage(this.transloco.translate('newListing.editPageTitle'));
     } catch (err) {
       this.toastService.error(this.errorService.toUserMessage(err));
       await this.router.navigateByUrl('/profile');
     } finally {
       this.isLoadingListing.set(false);
-    }
-  }
-
-  async onLocationQueryChanged(query: string): Promise<void> {
-    if (!query.trim()) {
-      this.locationSuggestions.set([]);
-      return;
-    }
-    try {
-      this.locationSuggestions.set(await this.locationService.searchAreas(query));
-    } catch {
-      this.locationSuggestions.set([]);
-    }
-  }
-
-  onLocationPicked(suggestion: LocationSuggestion): void {
-    this.locationTouched.set(true);
-    this.listingModel.update((model) => ({ ...model, location: toLocationArea(suggestion) }));
-  }
-
-  async onUseCurrentLocationForListing(): Promise<void> {
-    this.locationTouched.set(true);
-    this.isResolvingCurrentLocation.set(true);
-    try {
-      const area = await this.locationService.resolveCurrentArea();
-      this.listingModel.update((model) => ({ ...model, location: area }));
-    } catch (err) {
-      this.toastService.error(toLocationErrorMessage(err, this.transloco));
-    } finally {
-      this.isResolvingCurrentLocation.set(false);
     }
   }
 
@@ -379,10 +384,7 @@ export class NewListingComponent {
     const currentUser = this.authService.currentUser();
     if (!currentUser) return;
 
-    if (!this.listingModel().location) {
-      this.locationTouched.set(true);
-      return;
-    }
+    if (!this.listingModel().location) return;
 
     await submit(this.listingForm, async () => {
       this.isLoading.set(true);
