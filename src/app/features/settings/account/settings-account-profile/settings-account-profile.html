@@ -1,0 +1,30 @@
+<ng-container *transloco="let t">
+  <div class="settings__panel ul-mt-6">
+    <h2 class="ul-typography-headline-s-extrabold ul-mb-4">
+      {{ t('settings.publicProfile') }}
+    </h2>
+
+    <ul-toggle
+      [label]="t('settings.showCityLabel')"
+      [helperText]="t('settings.showCityHelper')"
+      [checked]="showCity()"
+      (checkedChange)="onToggleShowCity($event)"
+    />
+
+    @if (showCity()) {
+      <div class="ul-mt-4">
+        <um-location-picker
+          [label]="t('settings.cityLabel')"
+          [placeholder]="t('location.searchPlaceholder')"
+          [initialQuery]="selectedCity()?.displayName ?? ''"
+          [suggestions]="citySuggestions()"
+          [isResolvingCurrentLocation]="isResolvingCurrentCity()"
+          [useCurrentLocationLabel]="t('location.useCurrentLocationLabel')"
+          (queryChanged)="onCityQueryChanged($event)"
+          (suggestionSelected)="onCityPicked($event)"
+          (useCurrentLocationRequested)="onUseCurrentCity()"
+        />
+      </div>
+    }
+  </div>
+</ng-container>
