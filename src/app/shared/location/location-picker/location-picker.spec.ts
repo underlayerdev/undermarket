@@ -29,6 +29,24 @@ describe('LocationPickerComponent', () => {
     expect(fixture.componentInstance).toBeTruthy();
   });
 
+  it('should adopt initialQuery even when it arrives after creation (e.g. an async profile load)', () => {
+    const fixture = setup();
+    expect(fixture.componentInstance.query()).toBe('');
+
+    fixture.componentRef.setInput('initialQuery', 'Palermo, Buenos Aires');
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.query()).toBe('Palermo, Buenos Aires');
+  });
+
+  it('should keep a value the user typed even if initialQuery does not change', () => {
+    const fixture = setup();
+
+    fixture.componentInstance.onQueryChange('la lucila');
+
+    expect(fixture.componentInstance.query()).toBe('la lucila');
+  });
+
   it('should debounce query changes before emitting queryChanged', () => {
     vi.useFakeTimers();
     const fixture = setup();

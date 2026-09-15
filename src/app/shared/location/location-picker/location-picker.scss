@@ -1,0 +1,11 @@
+@use 'pkg:@underlayerdev/ui/design-tokens' as tokens;
+
+.um-location-picker {
+  display: flex;
+  align-items: center;
+  gap: tokens.$spacing-spacing-4;
+
+  &__pin-button {
+    margin-top: tokens.$spacing-spacing-4;
+  }
+}

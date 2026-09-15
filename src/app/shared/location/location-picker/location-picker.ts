@@ -1,4 +1,4 @@
-import { Component, computed, input, output, signal } from '@angular/core';
+import { Component, computed, input, linkedSignal, output } from '@angular/core';
 import { ButtonComponent, IconComponent, SearchInputComponent } from '@underlayerdev/ui';
 import type { SearchSuggestion } from '@underlayerdev/ui';
 import type { LocationSuggestion } from '../../../domain/location/location.model';
@@ -12,6 +12,7 @@ const QUERY_DEBOUNCE_MS = 300;
 @Component({
   selector: 'um-location-picker',
   imports: [SearchInputComponent, ButtonComponent, IconComponent],
+  styleUrl: './location-picker.scss',
   templateUrl: './location-picker.html',
 })
 export class LocationPickerComponent {
@@ -27,7 +28,11 @@ export class LocationPickerComponent {
   readonly suggestionSelected = output<LocationSuggestion>();
   readonly useCurrentLocationRequested = output<void>();
 
-  readonly query = signal(this.initialQuery());
+  // linkedSignal (not signal) because initialQuery can arrive after this
+  // component already exists — e.g. settings-account seeds it from the
+  // profile, which loads asynchronously — so it must keep tracking
+  // initialQuery() until the user actually types something themselves.
+  readonly query = linkedSignal(() => this.initialQuery());
 
   private readonly suggestionsById = computed(
     () => new Map(this.suggestions().map((suggestion) => [suggestion.id, suggestion])),

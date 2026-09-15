@@ -1,4 +1,4 @@
-<div class="ul-gap-2" style="display: flex; align-items: flex-start">
+<div class="um-location-picker">
   <ul-search-input
     [label]="label()"
     [placeholder]="placeholder()"
@@ -9,6 +9,7 @@
   />
   @if (showUseCurrentLocation()) {
     <ul-button
+      class="um-location-picker__pin-button"
       [iconOnly]="true"
       theme="transparent-white"
       type="button"
