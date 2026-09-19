@@ -54,7 +54,6 @@ export class FirebaseAuthProvider implements AuthProvider {
 
   async register(email: string, password: string): Promise<User> {
     const { user } = await createUserWithEmailAndPassword(this.auth, email, password);
-    await updateProfile(user, { displayName: email.split('@')[0] });
     return this.mapUser(user);
   }
 
@@ -85,6 +84,11 @@ export class FirebaseAuthProvider implements AuthProvider {
   async updateDisplayName(displayName: string): Promise<void> {
     const user = this.requireCurrentFirebaseUser();
     await updateProfile(user, { displayName });
+  }
+
+  async updatePhotoUrl(photoUrl: string): Promise<void> {
+    const user = this.requireCurrentFirebaseUser();
+    await updateProfile(user, { photoURL: photoUrl });
   }
 
   async deleteAccount(currentPassword?: string): Promise<void> {

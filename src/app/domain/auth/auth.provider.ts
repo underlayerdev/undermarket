@@ -12,6 +12,8 @@ export interface AuthProvider {
   changePassword(newPassword: string, currentPassword?: string): Promise<void>;
   /** Updates the account's display name in Firebase Auth only — callers must also persist it to the Firestore profile (the source of truth read everywhere else in the app), since the two are never automatically kept in sync. */
   updateDisplayName(displayName: string): Promise<void>;
+  /** Updates the account's photo URL in Firebase Auth only — same caveat as updateDisplayName. */
+  updatePhotoUrl(photoUrl: string): Promise<void>;
   /** Reauthenticates the same way as changePassword, then permanently deletes the Firebase Auth account. Does not touch the user's Firestore document — callers must delete that separately. */
   deleteAccount(currentPassword?: string): Promise<void>;
   logout(): Promise<void>;

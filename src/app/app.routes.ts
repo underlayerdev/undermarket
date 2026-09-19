@@ -2,6 +2,8 @@ import { Routes } from '@angular/router';
 import { AppLayoutComponent } from './layouts/app-layout/app-layout';
 import { PublicLayoutComponent } from './layouts/public-layout/public-layout';
 import { authGuard } from './features/auth/guards/auth.guard';
+import { onboardingGuard } from './features/onboarding/guards/onboarding.guard';
+import { onboardingRequiredGuard } from './features/onboarding/guards/onboarding-required.guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'home', pathMatch: 'full' },
@@ -13,8 +15,24 @@ export const routes: Routes = [
   },
 
   {
+    // Deliberately a sibling of AppLayoutComponent, not a child — nesting it
+    // there would apply onboardingRequiredGuard (below) to this route too
+    // and redirect-loop. Being a sibling also means no navbar/sidebar/dock
+    // ever mounts for this route, with no CSS override needed.
+    path: 'onboarding',
+    canActivate: [onboardingGuard],
+    loadChildren: () =>
+      import('./features/onboarding/onboarding.routes').then((m) => m.onboardingRoutes),
+  },
+
+  {
     path: '',
     component: AppLayoutComponent,
+    // Redirects any signed-in, not-yet-onboarded user to /onboarding no
+    // matter which child route they hit — deep link, back button, typed
+    // URL. Guests are unaffected; existing per-route authGuard still
+    // handles them.
+    canActivateChild: [onboardingRequiredGuard],
     children: [
       {
         path: 'home',

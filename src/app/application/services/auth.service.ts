@@ -61,6 +61,13 @@ export class AuthService {
     this.currentUser.update((user) => (user ? { ...user, displayName } : user));
   }
 
+  // Same reasoning as updateDisplayName — updateProfile() doesn't trigger
+  // onAuthStateChange either.
+  async updatePhotoUrl(photoUrl: string): Promise<void> {
+    await this.authProvider.updatePhotoUrl(photoUrl);
+    this.currentUser.update((user) => (user ? { ...user, photoUrl } : user));
+  }
+
   async deleteAccount(currentPassword?: string): Promise<void> {
     await this.authProvider.deleteAccount(currentPassword);
     this.currentUser.set(null);

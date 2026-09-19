@@ -7,7 +7,8 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "firebase:deploy:rules": "firebase deploy --only firestore:rules"
+    "firebase:deploy:rules": "firebase deploy --only firestore:rules",
+    "firebase:deploy:functions": "firebase deploy --only functions"
   },
   "private": true,
   "engines": {
@@ -25,11 +26,12 @@
     "@angular/router": "^22.0.0",
     "@jsverse/transloco": "^8.4.0",
     "@splidejs/splide": "^4.1.4",
-    "@underlayerdev/ui": "^0.9.5",
+    "@underlayerdev/ui": "^0.12.0",
     "browser-image-compression": "^2.0.2",
     "date-fns": "^4.4.0",
     "firebase": "^12.16.0",
     "geofire-common": "^6.0.0",
+    "ngx-image-cropper": "^9.1.7",
     "photoswipe": "^5.4.4",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"

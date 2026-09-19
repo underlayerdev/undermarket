@@ -15,24 +15,16 @@ export class FirestoreUserRepository implements UserRepository {
     return this.mapDoc(id, snapshot.data());
   }
 
-  async create(user: User): Promise<void> {
-    await setDoc(doc(this.firestore, 'users', user.id), {
-      email: user.email,
-      displayName: user.displayName,
-      photoUrl: user.photoUrl ?? null,
-      settings: user.settings,
-      providerId: user.providerId,
-      createdAt: user.createdAt,
-      // null (not omitted) when absent: profileCity being unset must
-      // actually clear any previously-stored value on an update, not leave
-      // a stale one behind — see the field's doc comment on User.
-      profileCity: user.profileCity ?? null,
-    });
-  }
-
-  // setDoc+merge rather than updateDoc: accounts created before the profile
-  // doc was written on sign-in have no doc yet, and updateDoc rejects with
-  // not-found on a missing document instead of creating it.
+  // No create() — users/{uid} is created exclusively by the onUserCreate
+  // Cloud Function (functions/src/users/on-create.ts); firestore.rules
+  // denies client create entirely.
+  //
+  // `onboarded` is deliberately never part of this payload — it's a
+  // server-only field. The client just writes a valid displayName as each
+  // onboarding step completes; a Firestore trigger
+  // (functions/src/users/on-update.ts) is what flips onboarded to true once
+  // it sees one, and firestore.rules rejects any client write that tries to
+  // change it itself.
   async update(user: User): Promise<void> {
     await setDoc(
       doc(this.firestore, 'users', user.id),
@@ -43,6 +35,9 @@ export class FirestoreUserRepository implements UserRepository {
         settings: user.settings,
         providerId: user.providerId,
         createdAt: user.createdAt,
+        // null (not omitted) when absent: profileCity being unset must
+        // actually clear any previously-stored value on an update, not leave
+        // a stale one behind — see the field's doc comment on User.
         profileCity: user.profileCity ?? null,
       },
       { merge: true },
@@ -72,6 +67,11 @@ export class FirestoreUserRepository implements UserRepository {
       // Auth itself (the source of truth for reauth) is unaffected.
       providerId: (data['providerId'] as User['providerId']) ?? 'password',
       createdAt: createdAt ? createdAt.toDate() : new Date(),
+      // Docs written before this field existed have no onboarding to do —
+      // treat absence as already-onboarded (grandfathered), not as false.
+      // `??` only falls back when the key is truly absent, so an explicit
+      // `false` written by onUserCreate is preserved correctly.
+      onboarded: (data['onboarded'] as boolean | undefined) ?? true,
       // Omitted (not set to undefined) when absent, matching Listing's
       // sourceProvider/sourceId convention — update() spreads this object
       // straight into setDoc(), and a caller round-tripping this object

@@ -7,10 +7,9 @@ import { ErrorService } from '../../../application/services/error.service';
 import { validateConfirmPassword, validatePassword } from '../../../shared/utils/auth-validation';
 import { LocaleDatePipe } from '../../../shared/pipes';
 import { ButtonComponent, InputComponent, ModalComponent, ToastService } from '@underlayerdev/ui';
+import { validateDisplayName } from '../../../domain/user/user-display.validator';
 import { SettingsLayoutComponent } from '../shared/settings-layout/settings-layout';
 import { SettingsAccountProfileComponent } from './settings-account-profile/settings-account-profile';
-
-const DISPLAY_NAME_MAX_LENGTH = 50;
 
 @Component({
   selector: 'um-settings-account',
@@ -92,14 +91,7 @@ export class SettingsAccountComponent implements OnInit {
 
   readonly displayNameError = computed(() => {
     if (!this.displayNameTouched()) return null;
-    const trimmed = this.displayNameValue().trim();
-    if (!trimmed) return this.transloco.translate('settings.displayNameRequired');
-    if (trimmed.length > DISPLAY_NAME_MAX_LENGTH) {
-      return this.transloco.translate('settings.displayNameTooLong', {
-        maxLength: DISPLAY_NAME_MAX_LENGTH,
-      });
-    }
-    return null;
+    return validateDisplayName(this.displayNameValue(), this.transloco);
   });
 
   readonly saveDisplayNameButtonLabel = computed(() => {
@@ -121,9 +113,9 @@ export class SettingsAccountComponent implements OnInit {
   ngOnInit(): void {
     const user = this.authService.currentUser();
     if (user) {
-      // ensureProfile, not loadProfile: an account with no Firestore doc yet
-      // would otherwise leave the panel with nothing to show.
-      void this.userService.ensureProfile(user);
+      // The onboarding-required guard already guarantees a doc exists by
+      // the time this page is reachable — this is just a normal read.
+      void this.userService.loadProfile(user.id);
     }
   }
 

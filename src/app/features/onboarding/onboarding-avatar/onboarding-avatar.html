@@ -1,0 +1,59 @@
+<ng-container *transloco="let t">
+  <um-onboarding-step
+    [centered]="true"
+    [isLoading]="isSaving()"
+    [errorMessage]="saveError()"
+    (back)="back()"
+    (continueClicked)="continue()"
+  >
+    <div class="onboarding__step-header">
+      <h1 class="ul-typography-headline-l-extrablack">{{ t('onboarding.photo.title') }}</h1>
+      <p class="ul-typography-body-m-regular ul-text-secondary">
+        {{ t('onboarding.photo.subtitle') }}
+      </p>
+    </div>
+
+    <button
+      type="button"
+      class="onboarding__avatar-button"
+      [attr.aria-label]="t('onboarding.photo.changePhoto')"
+      (click)="avatarFileInput.click()"
+    >
+      <ul-avatar
+        size="2xl"
+        [editable]="true"
+        [src]="onboardingAvatarService.avatarPreviewUrl()"
+        [initials]="initials()"
+      />
+    </button>
+    <input #avatarFileInput type="file" accept="image/*" hidden (change)="onFileSelected($event)" />
+
+    <ul-image-cropper
+      [(open)]="onboardingAvatarService.showCropper"
+      [imageFile]="onboardingAvatarService.pendingFile()"
+      shape="round"
+      [aspectRatio]="1"
+      [maxOutputSize]="512"
+      [title]="t('onboarding.photo.cropTitle')"
+      [confirmLabel]="t('onboarding.photo.cropSave')"
+      [zoomLabel]="t('onboarding.photo.cropZoom')"
+      (cropped)="onCropped($event)"
+      (cancelled)="onCropCancelled()"
+    />
+
+    @if (onboardingAvatarService.isUploadingAvatar()) {
+      <p class="ul-typography-caption-l-regular ul-text-secondary">
+        {{ t('onboarding.photo.uploading') }}
+      </p>
+    } @else if (onboardingAvatarService.avatarError()) {
+      <div class="onboarding__error-row">
+        <p class="ul-typography-caption-l-regular ul-text-red">
+          {{ onboardingAvatarService.avatarError() }}
+        </p>
+        <ul-button theme="ghost-white" size="sm" (buttonClick)="retryUpload()">
+          {{ t('onboarding.retry') }}
+        </ul-button>
+      </div>
+    }
+  </um-onboarding-step>
+</ng-container>

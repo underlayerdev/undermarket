@@ -13,19 +13,17 @@ import type { User } from '../../domain/user/user.model';
 describe('LanguageService', () => {
   let currentUser: ReturnType<typeof signal<User | null>>;
   let profile: ReturnType<typeof signal<User | null>>;
-  let ensureProfileSpy: ReturnType<typeof vi.fn>;
+  let loadProfileSpy: ReturnType<typeof vi.fn>;
   let updateSettingsSpy: ReturnType<typeof vi.fn>;
   let transloco: TranslocoService;
 
-  /** `storedProfile` is what ensureProfile resolves with — null means "create it". */
+  /** `storedProfile` is what loadProfile resolves with — null means "doesn't exist yet". */
   function setup(storedProfile: User | null = null) {
     currentUser = signal<User | null>(null);
     profile = signal<User | null>(null);
     updateSettingsSpy = vi.fn().mockResolvedValue(undefined);
-    ensureProfileSpy = vi.fn().mockImplementation(async (user: User) => {
-      const resolved = storedProfile ?? user;
-      profile.set(resolved);
-      return resolved;
+    loadProfileSpy = vi.fn().mockImplementation(async () => {
+      profile.set(storedProfile);
     });
 
     TestBed.configureTestingModule({
@@ -34,7 +32,7 @@ describe('LanguageService', () => {
         { provide: AuthService, useValue: { currentUser } },
         {
           provide: UserService,
-          useValue: { profile, ensureProfile: ensureProfileSpy, updateSettings: updateSettingsSpy },
+          useValue: { profile, loadProfile: loadProfileSpy, updateSettings: updateSettingsSpy },
         },
       ],
     });
@@ -88,16 +86,15 @@ describe('LanguageService', () => {
     expect(transloco.getActiveLang()).toBe('es');
   });
 
-  it('should create the profile doc for an account that has none', async () => {
-    setup(null);
+  it('should load the profile for the restored session and not error when it does not exist yet', async () => {
+    const service = setup(null);
 
     currentUser.set(mockUser());
     TestBed.tick();
-    await Promise.resolve();
+    await service.whenSynced();
 
-    expect(ensureProfileSpy).toHaveBeenCalledWith(
-      expect.objectContaining({ id: 'user-1', settings: { language: 'en' } }),
-    );
+    expect(loadProfileSpy).toHaveBeenCalledWith('user-1');
+    expect(transloco.getActiveLang()).toBe('en');
   });
 
   it('should apply and persist a language change', async () => {
@@ -112,23 +109,24 @@ describe('LanguageService', () => {
     expect(localStorage.getItem(LANGUAGE_STORAGE_KEY)).toBe('es');
   });
 
-  it('should persist after doc creation finishes, not race it', async () => {
-    // A slow ensureProfile is the realistic case: the settings page is usable
-    // before the doc exists, so a change can be made while it is being created.
-    // Ordering is the whole point here, so record the sequence of writes.
+  it('should persist after the in-flight profile load settles, not race it', async () => {
+    // A slow loadProfile is the realistic case: the settings page is usable
+    // before it resolves, so a language change can be made while it's still
+    // in flight. Ordering matters — if updateSettings's local profile.set()
+    // patch landed first, the load resolving afterwards would overwrite it
+    // with the pre-change value. Record the sequence to prove it doesn't.
     const writes: string[] = [];
-    let releaseCreate: () => void = () => undefined;
-    const created = new Promise<void>((resolve) => {
-      releaseCreate = resolve;
+    let releaseLoad: () => void = () => undefined;
+    const loaded = new Promise<void>((resolve) => {
+      releaseLoad = resolve;
     });
 
     const service = setup(null);
     const user = mockUser();
-    ensureProfileSpy.mockImplementation(async (u: User) => {
-      await created;
-      writes.push('create');
-      profile.set(u);
-      return u;
+    loadProfileSpy.mockImplementation(async () => {
+      await loaded;
+      writes.push('load');
+      profile.set(user);
     });
     updateSettingsSpy.mockImplementation(async () => {
       writes.push('update');
@@ -138,12 +136,10 @@ describe('LanguageService', () => {
     TestBed.tick();
 
     const change = service.setLanguage('en');
-    releaseCreate();
+    releaseLoad();
     await change;
 
-    // The update must land after the create. Reversed, the create's seeded
-    // language is the last write to Firestore and the user's choice is lost.
-    expect(writes).toEqual(['create', 'update']);
+    expect(writes).toEqual(['load', 'update']);
     expect(updateSettingsSpy).toHaveBeenCalledWith('user-1', { language: 'en' });
     expect(transloco.getActiveLang()).toBe('en');
   });

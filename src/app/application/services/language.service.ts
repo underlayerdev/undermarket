@@ -63,10 +63,10 @@ export class LanguageService {
     const user = this.authService.currentUser();
     if (!user) return;
 
-    // Wait for any in-flight sync before writing. It may still be creating this
-    // account's doc, and updateSettings merges into a doc it assumes exists —
-    // letting them race means the create can land last and overwrite the
-    // language the user just chose.
+    // Wait for any in-flight sync before writing. It may still be loading the
+    // profile — updateSettings below patches profile() locally, and letting
+    // that load resolve afterwards would overwrite the patch with the
+    // pre-change value the user just moved away from.
     await this.syncInFlight?.catch(() => undefined);
 
     await this.userService.updateSettings(user.id, {
@@ -76,18 +76,16 @@ export class LanguageService {
   }
 
   private async syncFromProfile(userId: string): Promise<void> {
-    const user = this.authService.currentUser();
-    if (!user) return;
-
     const langAtStart = this.transloco.getActiveLang();
 
-    // ensureProfile writes the doc for accounts that never had one, so the
-    // language the user is currently seeing becomes their stored preference
-    // instead of being silently dropped on the next reload.
-    const profile = await this.userService.ensureProfile({
-      ...user,
-      settings: { language: langAtStart },
-    });
+    // The doc is created by the onUserCreate Cloud Function now, not by
+    // this service — just read whatever language it (or a later Settings
+    // change) landed with. If the doc genuinely isn't there yet (the brief
+    // window right after signup), profile() just stays null and this
+    // quietly no-ops; the onboarding-required guard is what actually waits
+    // for it.
+    await this.userService.loadProfile(userId);
+    const profile = this.userService.profile();
 
     // The fetch is slow enough that the user can change the language while it
     // is in flight (the settings page is reachable before the profile lands).
@@ -95,7 +93,7 @@ export class LanguageService {
     if (this.transloco.getActiveLang() !== langAtStart) return;
     if (this.syncedUserId !== userId) return;
 
-    if (isAvailableLanguage(profile.settings.language)) {
+    if (profile && isAvailableLanguage(profile.settings.language)) {
       this.apply(profile.settings.language);
     }
   }

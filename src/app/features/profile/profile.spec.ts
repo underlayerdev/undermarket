@@ -9,12 +9,12 @@ import { getTranslocoTestingModule } from '../../../testing/transloco-testing';
 import { mockUser } from '../../domain/user/user.mock';
 
 describe('ProfileComponent', () => {
-  let ensureProfileSpy: ReturnType<typeof vi.fn>;
+  let loadProfileSpy: ReturnType<typeof vi.fn>;
 
   function setup(
     currentUser: { id: string; email: string } | null = { id: 'user-1', email: 'a@b.com' },
   ) {
-    ensureProfileSpy = vi.fn().mockResolvedValue(undefined);
+    loadProfileSpy = vi.fn().mockResolvedValue(undefined);
 
     TestBed.configureTestingModule({
       imports: [ProfileComponent, getTranslocoTestingModule()],
@@ -24,7 +24,7 @@ describe('ProfileComponent', () => {
           provide: UserService,
           useValue: {
             profile: () => (currentUser ? mockUser({ id: currentUser.id }) : null),
-            ensureProfile: ensureProfileSpy,
+            loadProfile: loadProfileSpy,
           },
         },
         // ProfileListingsComponent (rendered once the profile loads) injects
@@ -45,17 +45,17 @@ describe('ProfileComponent', () => {
     expect(fixture.componentInstance).toBeTruthy();
   });
 
-  it('should ensure the profile exists for the current user', async () => {
+  it('should load the profile for the current user', async () => {
     const fixture = setup();
     await fixture.whenStable();
 
-    expect(ensureProfileSpy).toHaveBeenCalledWith({ id: 'user-1', email: 'a@b.com' });
+    expect(loadProfileSpy).toHaveBeenCalledWith('user-1');
   });
 
   it('should do nothing when there is no signed-in user', async () => {
     const fixture = setup(null);
     await fixture.whenStable();
 
-    expect(ensureProfileSpy).not.toHaveBeenCalled();
+    expect(loadProfileSpy).not.toHaveBeenCalled();
   });
 });

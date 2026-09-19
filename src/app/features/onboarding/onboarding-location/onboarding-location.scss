@@ -1,0 +1,17 @@
+@use 'pkg:@underlayerdev/ui/design-tokens' as tokens;
+
+// Flattens into the shell's flex column — see onboarding-step.scss.
+:host {
+  display: contents;
+}
+
+.onboarding__map-preview {
+  display: flex;
+  flex-direction: column;
+  gap: tokens.$spacing-spacing-2;
+
+  img {
+    width: 100%;
+    border-radius: tokens.$radius-radius-3;
+  }
+}

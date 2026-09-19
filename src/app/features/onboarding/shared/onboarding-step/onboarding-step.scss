@@ -1,0 +1,59 @@
+@use 'pkg:@underlayerdev/ui/design-tokens' as tokens;
+@use 'pkg:@underlayerdev/ui/containers' as containers;
+@use '../../onboarding-shared' as shared;
+
+// Stretches to fill the shell body's flex column (rather than shrink-wrapping
+// its own content) so .onboarding__content's flex: 1 below has actual
+// leftover height to grow into, keeping .onboarding__footer pinned at the
+// bottom instead of sitting right under the content on short steps.
+:host {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+}
+
+.onboarding__content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: tokens.$spacing-spacing-6;
+}
+
+.onboarding__step {
+  width: 100%;
+  max-width: shared.$onboarding-max-width;
+  display: flex;
+  flex-direction: column;
+  gap: tokens.$spacing-spacing-6;
+}
+
+.onboarding__step--centered {
+  align-items: center;
+}
+
+// container-fluid centers its children horizontally and applies the app's
+// standard responsive edge padding — without it the buttons stretched to the
+// full viewport width on desktop while the content column above stayed
+// capped at 360px, visibly misaligned with it.
+.onboarding__footer {
+  @include containers.container-fluid;
+  padding-top: tokens.$spacing-spacing-5;
+  padding-bottom: tokens.$spacing-spacing-8;
+}
+
+.onboarding__footer-inner {
+  width: 100%;
+  max-width: shared.$onboarding-max-width;
+  display: flex;
+  flex-direction: column;
+  gap: tokens.$spacing-spacing-3;
+}
+
+.onboarding__footer-inner ul-button {
+  display: block;
+  width: 100%;
+}

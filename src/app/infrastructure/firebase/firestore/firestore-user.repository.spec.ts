@@ -73,13 +73,28 @@ describe('FirestoreUserRepository', () => {
     expect(user?.profileCity).toEqual(profileCity);
   });
 
-  it('should write profileCity as null (not omitted) when creating a user with none', async () => {
+  it('should treat a missing onboarded field as already onboarded', async () => {
+    vi.mocked(firestoreModule.getDoc).mockResolvedValue({
+      exists: () => true,
+      data: () => baseDocData,
+    } as never);
     const repository = createRepository();
 
-    await repository.create(testUser);
+    const user = await repository.getById('user-1');
 
-    const [, payload] = vi.mocked(firestoreModule.setDoc).mock.calls[0];
-    expect(payload).toMatchObject({ profileCity: null });
+    expect(user?.onboarded).toBe(true);
+  });
+
+  it('should preserve an explicit onboarded: false rather than defaulting it', async () => {
+    vi.mocked(firestoreModule.getDoc).mockResolvedValue({
+      exists: () => true,
+      data: () => ({ ...baseDocData, onboarded: false }),
+    } as never);
+    const repository = createRepository();
+
+    const user = await repository.getById('user-1');
+
+    expect(user?.onboarded).toBe(false);
   });
 
   it('should write the given profileCity when updating a user', async () => {
@@ -98,5 +113,14 @@ describe('FirestoreUserRepository', () => {
 
     const [, payload] = vi.mocked(firestoreModule.setDoc).mock.calls[0];
     expect(payload).toMatchObject({ profileCity: null });
+  });
+
+  it('should never write onboarded — it is a server-only field', async () => {
+    const repository = createRepository();
+
+    await repository.update({ ...testUser, onboarded: true });
+
+    const [, payload] = vi.mocked(firestoreModule.setDoc).mock.calls[0];
+    expect('onboarded' in (payload as object)).toBe(false);
   });
 });

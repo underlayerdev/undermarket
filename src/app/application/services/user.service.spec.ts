@@ -8,7 +8,6 @@ import type { User } from '../../domain/user/user.model';
 describe('UserService', () => {
   let repository: {
     getById: ReturnType<typeof vi.fn>;
-    create: ReturnType<typeof vi.fn>;
     update: ReturnType<typeof vi.fn>;
     updateSettings: ReturnType<typeof vi.fn>;
     delete: ReturnType<typeof vi.fn>;
@@ -17,7 +16,6 @@ describe('UserService', () => {
   function setup(stored: User | null = null): UserService {
     repository = {
       getById: vi.fn().mockResolvedValue(stored),
-      create: vi.fn().mockResolvedValue(undefined),
       update: vi.fn().mockResolvedValue(undefined),
       updateSettings: vi.fn().mockResolvedValue(undefined),
       delete: vi.fn().mockResolvedValue(undefined),
@@ -33,27 +31,122 @@ describe('UserService', () => {
     expect(setup()).toBeTruthy();
   });
 
-  describe('ensureProfile', () => {
-    it('should return the stored profile without writing when one exists', async () => {
+  describe('waitForProfile', () => {
+    it('should return and set the profile immediately when it already exists', async () => {
       const stored = mockUser({ settings: { language: 'es' } });
       const service = setup(stored);
 
-      const result = await service.ensureProfile(mockUser());
+      const result = await service.waitForProfile('user-1');
 
       expect(result).toEqual(stored);
       expect(service.profile()).toEqual(stored);
-      expect(repository.create).not.toHaveBeenCalled();
+      expect(repository.getById).toHaveBeenCalledTimes(1);
     });
 
-    it('should create the doc when the account has no profile yet', async () => {
+    it('should poll until the doc appears', async () => {
+      const stored = mockUser();
+      repository = {
+        getById: vi
+          .fn()
+          .mockResolvedValueOnce(null)
+          .mockResolvedValueOnce(null)
+          .mockResolvedValueOnce(stored),
+        update: vi.fn().mockResolvedValue(undefined),
+        updateSettings: vi.fn().mockResolvedValue(undefined),
+        delete: vi.fn().mockResolvedValue(undefined),
+      };
+      TestBed.configureTestingModule({
+        providers: [{ provide: USER_REPOSITORY, useValue: repository as UserRepository }],
+      });
+      const service = TestBed.inject(UserService);
+
+      const result = await service.waitForProfile('user-1', 5, 0);
+
+      expect(result).toEqual(stored);
+      expect(service.profile()).toEqual(stored);
+      expect(repository.getById).toHaveBeenCalledTimes(3);
+    });
+
+    it('should give up and clear the profile after exhausting all attempts', async () => {
       const service = setup(null);
-      const user = mockUser({ settings: { language: 'es' } });
 
-      const result = await service.ensureProfile(user);
+      const result = await service.waitForProfile('user-1', 2, 0);
 
-      expect(repository.create).toHaveBeenCalledWith(user);
-      expect(result).toEqual(user);
-      expect(service.profile()).toEqual(user);
+      expect(result).toBeNull();
+      expect(service.profile()).toBeNull();
+      expect(repository.getById).toHaveBeenCalledTimes(2);
+    });
+
+    it('should not re-poll on a second call for the same id once already cached and onboarded', async () => {
+      const stored = mockUser({ onboarded: true });
+      const service = setup(stored);
+      await service.waitForProfile('user-1');
+
+      const result = await service.waitForProfile('user-1');
+
+      expect(result).toEqual(stored);
+      expect(repository.getById).toHaveBeenCalledTimes(1);
+    });
+
+    it('should always refetch when the cached profile is not yet onboarded', async () => {
+      const notOnboarded = mockUser({ onboarded: false });
+      const onboardedNow = mockUser({ onboarded: true });
+      repository = {
+        getById: vi.fn().mockResolvedValueOnce(notOnboarded).mockResolvedValueOnce(onboardedNow),
+        update: vi.fn().mockResolvedValue(undefined),
+        updateSettings: vi.fn().mockResolvedValue(undefined),
+        delete: vi.fn().mockResolvedValue(undefined),
+      };
+      TestBed.configureTestingModule({
+        providers: [{ provide: USER_REPOSITORY, useValue: repository as UserRepository }],
+      });
+      const service = TestBed.inject(UserService);
+      await service.waitForProfile('user-1');
+
+      const result = await service.waitForProfile('user-1');
+
+      expect(result).toEqual(onboardedNow);
+      expect(repository.getById).toHaveBeenCalledTimes(2);
+    });
+
+    it('should flag isCheckingProfile only while actually polling, not on the cached fast path', async () => {
+      const stored = mockUser();
+      const service = setup(stored);
+
+      await service.waitForProfile('user-1');
+
+      expect(service.isCheckingProfile()).toBe(false);
+    });
+
+    it('should flag isCheckingProfile during polling and clear it once resolved', async () => {
+      const stored = mockUser();
+      let sawCheckingDuringPoll = false;
+      repository = {
+        getById: vi.fn().mockImplementation(async () => {
+          sawCheckingDuringPoll ||= service.isCheckingProfile();
+          return stored;
+        }),
+        update: vi.fn().mockResolvedValue(undefined),
+        updateSettings: vi.fn().mockResolvedValue(undefined),
+        delete: vi.fn().mockResolvedValue(undefined),
+      };
+      TestBed.configureTestingModule({
+        providers: [{ provide: USER_REPOSITORY, useValue: repository as UserRepository }],
+      });
+      const service = TestBed.inject(UserService);
+
+      await service.waitForProfile('user-1');
+
+      expect(sawCheckingDuringPoll).toBe(true);
+      expect(service.isCheckingProfile()).toBe(false);
+    });
+
+    it('should clear isCheckingProfile even when polling exhausts all attempts', async () => {
+      const service = setup(null);
+
+      await service.waitForProfile('user-1', 2, 0);
+
+      expect(service.isCheckingProfile()).toBe(false);
     });
   });
 

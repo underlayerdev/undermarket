@@ -169,6 +169,17 @@ describe('SettingsAccountComponent', () => {
       expect(updateDisplayNameSpy).not.toHaveBeenCalled();
     });
 
+    it('should reject a display name under the min length', () => {
+      currentUser = mockUser();
+      const fixture = setup();
+      fixture.componentInstance.displayNameValue.set('a');
+
+      fixture.componentInstance.onSaveDisplayName();
+
+      expect(fixture.componentInstance.displayNameError()).toContain('at least');
+      expect(updateProfileSpy).not.toHaveBeenCalled();
+    });
+
     it('should reject a display name over the max length', () => {
       currentUser = mockUser();
       const fixture = setup();

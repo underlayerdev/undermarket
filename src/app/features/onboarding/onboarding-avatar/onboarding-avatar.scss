@@ -1,0 +1,25 @@
+@use 'pkg:@underlayerdev/ui/design-tokens' as tokens;
+
+// Flattens into the shell's flex column — see onboarding-step.scss.
+:host {
+  display: contents;
+}
+
+.onboarding__step-header {
+  align-self: flex-start;
+}
+
+.onboarding__avatar-button {
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  border-radius: tokens.$radius-radius-full;
+}
+
+.onboarding__error-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: tokens.$spacing-spacing-3;
+}

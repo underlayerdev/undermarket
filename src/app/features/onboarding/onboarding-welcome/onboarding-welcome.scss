@@ -1,0 +1,94 @@
+@use 'pkg:@underlayerdev/ui/design-tokens' as tokens;
+@use 'pkg:@underlayerdev/ui/containers' as containers;
+@use '../onboarding-shared' as shared;
+
+// This route has no parent layout (it's a sibling of AppLayoutComponent in
+// app.routes.ts, not a child) — no navbar/sidebar/dock ever mounts here.
+:host {
+  display: block;
+  min-height: 100vh;
+  background-color: tokens.$color-background-main;
+}
+.um-onboarding__welcome {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+
+  // container-fluid centers its children and applies the app's standard
+  // responsive edge padding — without it the content/button stretched to
+  // the full viewport width on desktop instead of staying a narrow column.
+  &-content,
+  &-footer {
+    @include containers.container-fluid;
+  }
+
+  &-content {
+    flex: 1;
+    padding-top: tokens.$spacing-spacing-6;
+    padding-bottom: tokens.$spacing-spacing-6;
+    align-items: center;
+  }
+
+  &-content-inner {
+    width: 100%;
+    max-width: shared.$onboarding-max-width;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: tokens.$spacing-spacing-6;
+  }
+
+  &-footer {
+    padding-top: tokens.$spacing-spacing-5;
+    padding-bottom: tokens.$spacing-spacing-8;
+  }
+
+  &-footer-inner {
+    width: 100%;
+    max-width: shared.$onboarding-max-width;
+  }
+
+  ul-button {
+    display: block;
+    width: 100%;
+  }
+}
+
+// A hand-drawn shopping-bag-with-tag mark instead of a photographic logo:
+// no asset to ship, scales crisply at any size, and reads as "marketplace"
+// rather than a generic brand lockup.
+.um-onboarding__welcome-illustration {
+  width: 140px;
+  height: 140px;
+
+  &-glow {
+    fill: tokens.$color-background-purple;
+    opacity: 0.25;
+    filter: blur(18px);
+  }
+
+  &-handle {
+    fill: none;
+    stroke: tokens.$color-text-primary;
+    stroke-opacity: 0.8;
+    stroke-width: 4;
+    stroke-linecap: round;
+  }
+
+  &-bag {
+    fill: tokens.$color-background-grey-lvl-1;
+    stroke: tokens.$color-text-primary;
+    stroke-opacity: 0.85;
+    stroke-width: 4;
+  }
+
+  &-badge {
+    fill: tokens.$color-background-purple;
+  }
+
+  &-spark {
+    fill: tokens.$primitive-color-purple-solid-8;
+  }
+}

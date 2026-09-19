@@ -28,6 +28,17 @@ export interface User {
   providerId: AuthProviderId;
   createdAt: Date;
   /**
+   * Whether this account has completed the onboarding wizard. Optional
+   * because it's fundamentally a Firestore-profile concept, not an Auth
+   * one — AuthProvider's Auth-derived User (currentUser(), login/register
+   * results) never sets it, only FirestoreUserRepository does. Set to
+   * false by the onUserCreate Cloud Function when the doc is first
+   * created, flipped to true by the wizard on completion. Absent
+   * (pre-feature accounts) is treated as onboarded, see
+   * isFullyOnboarded() in user-display.ts.
+   */
+  onboarded?: boolean;
+  /**
    * Present only while the user has opted in to showing it — absent (not
    * just hidden) is how "off" is represented, so there's nothing to leak to
    * a direct Firestore read even though users/{userId} is publicly

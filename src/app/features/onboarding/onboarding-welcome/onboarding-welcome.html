@@ -1,0 +1,27 @@
+<ng-container *transloco="let t">
+  <div class="um-onboarding__welcome">
+    <ul-navbar variant="minimal" logoSrc="assets/img/logo.png" logoAlt="Undermarket" />
+
+    <div class="um-onboarding__welcome-content">
+      <div class="um-onboarding__welcome-content-inner">
+        <div>
+          <h1 class="ul-typography-headline-l-extrablack">{{ t('onboarding.welcome.title') }}</h1>
+          <span class="ul-typography-brand-headline-xl-extrablack ul-text-primary"
+            >UNDERMARKET</span
+          >
+          <p class="ul-typography-body-m-regular ul-text-secondary">
+            {{ t('onboarding.welcome.subtitle') }}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="um-onboarding__welcome-footer">
+      <div class="um-onboarding__welcome-footer-inner">
+        <ul-button theme="fill-purple" size="md" (buttonClick)="startOnboarding()">
+          {{ t('onboarding.welcome.getStarted') }}
+        </ul-button>
+      </div>
+    </div>
+  </div>
+</ng-container>

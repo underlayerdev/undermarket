@@ -1,0 +1,33 @@
+<ng-container *transloco="let t">
+  <div class="onboarding__content">
+    <div class="onboarding__step" [class.onboarding__step--centered]="centered()">
+      <ng-content />
+    </div>
+  </div>
+
+  <div class="onboarding__footer">
+    <div class="onboarding__footer-inner">
+      @if (errorMessage()) {
+        <p class="ul-typography-caption-l-regular ul-text-red">{{ errorMessage() }}</p>
+      }
+      @if (showBack()) {
+        <ul-button
+          theme="transparent-white"
+          size="md"
+          [disabled]="isLoading()"
+          (buttonClick)="back.emit()"
+        >
+          {{ t('onboarding.back') }}
+        </ul-button>
+      }
+      <ul-button
+        theme="fill-purple"
+        size="md"
+        [disabled]="!canContinue() || isLoading()"
+        (buttonClick)="continueClicked.emit()"
+      >
+        {{ isLoading() ? t('onboarding.saving') : (continueLabel() ?? t('onboarding.continue')) }}
+      </ul-button>
+    </div>
+  </div>
+</ng-container>

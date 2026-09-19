@@ -47,6 +47,7 @@ function createAuthProviderMock(): AuthProvider & { emitAuthState: (user: User |
     confirmPasswordReset: async () => undefined,
     changePassword: async () => undefined,
     updateDisplayName: async () => undefined,
+    updatePhotoUrl: async () => undefined,
     deleteAccount: async () => undefined,
     logout: async () => undefined,
     currentUser: () => null,

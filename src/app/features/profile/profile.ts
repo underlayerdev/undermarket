@@ -31,9 +31,9 @@ export class ProfileComponent implements OnInit {
     if (!user) return;
 
     try {
-      // ensureProfile, not loadProfile: an account with no Firestore doc yet
-      // would otherwise render an empty profile instead of the auth details.
-      await this.userService.ensureProfile(user);
+      // The onboarding-required guard already guarantees a doc exists by
+      // the time this page is reachable — this is just a normal read.
+      await this.userService.loadProfile(user.id);
     } catch (err) {
       this.toastService.error(this.errorService.toUserMessage(err));
     }

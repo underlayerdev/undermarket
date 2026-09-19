@@ -1,0 +1,9 @@
+// Shared by the shell header, each step's content/footer, and the welcome
+// screen so every section lines up under the same narrow column at any
+// viewport width, including desktop.
+$onboarding-max-width: 360px;
+
+// Caps the shell body on desktop so it reads as a bounded card instead of
+// stretching full-bleed to the viewport height; a step that needs more
+// room scrolls internally instead of growing the box further.
+$onboarding-max-height: 640px;

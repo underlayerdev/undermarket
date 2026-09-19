@@ -1,0 +1,76 @@
+@use 'pkg:@underlayerdev/ui/design-tokens' as tokens;
+@use 'pkg:@underlayerdev/ui/containers' as containers;
+@use 'pkg:@underlayerdev/ui/breakpoints' as bp;
+@use './onboarding-shared' as shared;
+
+// This route has no parent layout (it's a sibling of AppLayoutComponent in
+// app.routes.ts, not a child) — no navbar/sidebar/dock ever mounts here, so
+// unlike listing-detail/new-listing's mobile-only takeover trick, this is
+// just a normal full-height page on every breakpoint.
+:host {
+  display: contents;
+}
+
+.um-onboarding {
+  min-height: 100vh;
+  display: grid;
+  // navbar/header size to their own content (auto) instead of sharing
+  // leftover space with each other — with two 1fr rows here before, the
+  // stepper's rendered height depended on how tall the current step's body
+  // was, so it visibly changed from step to step. Only the body row flexes.
+  grid-template-rows: auto auto minmax(0, 1fr);
+  background-color: tokens.$color-background-main;
+
+  // container-fluid centers its children and applies the app's standard
+  // responsive edge padding — without it ul-stepper (a block-level element)
+  // stretched edge-to-edge on desktop instead of staying in the same narrow
+  // column as the content/footer below it.
+  &__header {
+    @include containers.container-fluid;
+    padding-top: tokens.$spacing-spacing-8;
+
+    &-inner {
+      width: 100%;
+      max-width: shared.$onboarding-max-width;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: tokens.$spacing-spacing-6;
+
+      ul-stepper {
+        width: 100%;
+      }
+    }
+  }
+
+  &__brand {
+    display: flex;
+    align-items: center;
+    gap: tokens.$spacing-spacing-2;
+
+    &-logo {
+      width: 24px;
+      height: 24px;
+    }
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    height: 100%;
+
+    // Below md the body just fills the rest of the viewport edge-to-edge.
+    // From md up it becomes a capped, centered box instead of stretching
+    // full-bleed to whatever height/width the desktop viewport happens to
+    // have — same narrow column width as the header/footer above/below it.
+    @include bp.up('md') {
+      width: 100%;
+      max-width: shared.$onboarding-max-width;
+      max-height: shared.$onboarding-max-height;
+      margin: 0 auto;
+      align-self: start;
+      overflow-y: auto;
+    }
+  }
+}

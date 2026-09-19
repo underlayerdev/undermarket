@@ -1,0 +1,59 @@
+@use 'pkg:@underlayerdev/ui/design-tokens' as tokens;
+@use 'pkg:@underlayerdev/ui/containers' as containers;
+@use '../onboarding-shared' as shared;
+
+// This route has no parent layout (it's a sibling of AppLayoutComponent in
+// app.routes.ts, not a child) — no navbar/sidebar/dock ever mounts here.
+:host {
+  display: block;
+  min-height: 100vh;
+  background-color: tokens.$color-background-main;
+}
+
+.um-onboarding-done {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+
+  // container-fluid centers its children and applies the app's standard
+  // responsive edge padding — without it the content/button stretched to
+  // the full viewport width on desktop instead of staying a narrow column.
+  &__content,
+  &__footer {
+    @include containers.container-fluid;
+  }
+
+  &__content {
+    flex: 1;
+    display: flex;
+    padding-top: tokens.$spacing-spacing-6;
+    padding-bottom: tokens.$spacing-spacing-6;
+    align-items: center;
+  }
+
+  &__content-inner {
+    width: 100%;
+    max-width: shared.$onboarding-max-width;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: tokens.$spacing-spacing-6;
+  }
+
+  &__footer {
+    padding-top: tokens.$spacing-spacing-5;
+    padding-bottom: tokens.$spacing-spacing-8;
+  }
+
+  &__footer-inner {
+    width: 100%;
+    max-width: shared.$onboarding-max-width;
+  }
+
+  ul-button {
+    display: block;
+    width: 100%;
+  }
+}
