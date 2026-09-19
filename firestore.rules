@@ -2,8 +2,9 @@ rules_version = '2';
 
 // Keep these in sync with src/app/domain/listing/listing-constraints.ts,
 // src/app/domain/category/category.model.ts,
-// src/app/domain/currency/currency.model.ts, and
-// src/app/domain/location/location.model.ts.
+// src/app/domain/currency/currency.model.ts,
+// src/app/domain/location/location.model.ts, and
+// src/app/domain/user/user-constraints.ts.
 service cloud.firestore {
   match /databases/{database}/documents {
 
@@ -109,17 +110,55 @@ service cloud.firestore {
         && profileCity.countryCode is string;
     }
 
+    // Absent `onboarded` means onboarded — mirrors mapDoc() in
+    // firestore-user.repository.ts, which defaults a missing field to
+    // `true` (pre-feature accounts) rather than `false`.
+    function isOnboarded(data) {
+      return !data.keys().hasAny(['onboarded']) || data.onboarded == true;
+    }
+
+    // Mirrors DISPLAY_NAME_MIN_LENGTH/DISPLAY_NAME_MAX_LENGTH in
+    // user-constraints.ts. Empty is only valid while the resulting doc is
+    // still `onboarded: false` — onUserCreate seeds email/password signups
+    // with '' until the onboarding name step runs, and a settings-only write
+    // (e.g. changing language) during that window must not get rejected
+    // just because displayName is still that placeholder. Once onboarded,
+    // it must never go back to empty — a non-empty name, once set, must
+    // always fall in range.
+    function isValidDisplayName(displayName, data) {
+      return displayName is string
+        && (
+          (!isOnboarded(data) && displayName.size() == 0)
+          || (displayName.size() >= 2 && displayName.size() <= 50)
+        );
+    }
+
     match /users/{userId} {
       // Display names/avatars are shown on listings, so profiles are
-      // publicly readable; only the account owner can write their own doc.
-      // profileCity is opted-in and validated when present — absent (not a
-      // hidden/false flag) is how "not shown" is represented, so there's
-      // nothing city-shaped to leak from a direct read either way.
+      // publicly readable. profileCity is opted-in and validated when
+      // present — absent (not a hidden/false flag) is how "not shown" is
+      // represented, so there's nothing city-shaped to leak from a direct
+      // read either way.
       allow read: if true;
-      allow write: if isSignedIn() && request.auth.uid == userId
+      // Created only by the onUserCreate Cloud Function (Admin SDK bypasses
+      // rules) — see functions/src/users/on-create.ts. Clients never create
+      // their own doc, mirroring mercadoLibreConnections' server-only
+      // pattern below — this is what makes onboarding's `onboarded: false`
+      // starting state trustworthy rather than just a UI convention.
+      allow create: if false;
+      // `onboarded` must come out of the write unchanged — clients (see
+      // FirestoreUserRepository.update()) never include it, but this is the
+      // actual enforcement, not just a client-side convention. Only the
+      // onUserProfileUpdated Cloud Function (functions/src/users/on-update.ts,
+      // Admin SDK) is allowed to flip it, once it observes a not-yet-onboarded
+      // profile pick up a valid displayName.
+      allow update: if isSignedIn() && request.auth.uid == userId
+        && request.resource.data.onboarded == resource.data.onboarded
+        && isValidDisplayName(request.resource.data.displayName, request.resource.data)
         && (!request.resource.data.keys().hasAny(['profileCity'])
           || request.resource.data.profileCity == null
           || isValidProfileCity(request.resource.data.profileCity));
+      allow delete: if isSignedIn() && request.auth.uid == userId;
     }
 
     // The user's "where am I browsing right now" preference — kept out of
