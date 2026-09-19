@@ -1,0 +1,11 @@
+@use 'pkg:@underlayerdev/ui/design-tokens' as tokens;
+
+.app__loading {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: tokens.$spacing-spacing-4;
+  background-color: tokens.$color-background-main;
+}

@@ -1,1 +1,9 @@
-<router-outlet />
+<ng-container *transloco="let t">
+  @if (isNavigating()) {
+    <div class="app__loading">
+      <ul-radial [size]="64" [infinite]="true" [percentage]="0" />
+    </div>
+  } @else {
+    <router-outlet />
+  }
+</ng-container>
