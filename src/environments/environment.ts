@@ -14,6 +14,7 @@ export const environment = {
     uploadPreset: 'listing',
   },
   mapbox: {
+    api: 'https://api.mapbox.com',
     // Public token restricted by URL (Mapbox's own client-side security
     // model) — unlike MercadoLibre's OAuth secret, this does not need to be
     // proxied through a Cloud Function. Replace with the real dev token.

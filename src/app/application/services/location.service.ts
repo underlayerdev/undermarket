@@ -1,7 +1,11 @@
 import { inject, Injectable } from '@angular/core';
 import { GEOCODING_PROVIDER, GEOLOCATION_PROVIDER } from '../../core/configuration/tokens';
 import { toLocationArea } from '../../domain/location/geohash.util';
-import type { LocationArea, LocationSuggestion } from '../../domain/location/location.model';
+import type {
+  GeoPoint,
+  LocationArea,
+  LocationSuggestion,
+} from '../../domain/location/location.model';
 
 @Injectable({ providedIn: 'root' })
 export class LocationService {
@@ -23,5 +27,9 @@ export class LocationService {
     const suggestion = await this.geocoding.reverseGeocode(point);
     if (!suggestion) throw new Error('locationService.unresolvedArea');
     return toLocationArea(suggestion);
+  }
+
+  staticMapUrl(point: GeoPoint, opts?: { width?: number; height?: number; zoom?: number }): string {
+    return this.geocoding.staticMapUrl(point, opts);
   }
 }

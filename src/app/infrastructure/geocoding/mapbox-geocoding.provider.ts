@@ -107,7 +107,7 @@ export class MapboxGeocodingProvider implements GeocodingProvider {
   // Mapbox's REST API takes both as the same URL path segment, distinguished
   // only by the `types` param each caller above already sets accordingly.
   private async get(pathQuery: string, params: Record<string, string>): Promise<MapboxResponse> {
-    const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(pathQuery)}.json`;
+    const url = `${environment.mapbox.api}/geocoding/v5/mapbox.places/${encodeURIComponent(pathQuery)}.json`;
     return firstValueFrom(this.http.get<MapboxResponse>(url, { params }));
   }
 
@@ -141,5 +141,19 @@ export class MapboxGeocodingProvider implements GeocodingProvider {
   private countryCode(feature: MapboxFeature): string {
     const countryEntry = feature.context?.find((entry) => entry.id.startsWith('country.'));
     return (countryEntry?.short_code ?? '').toUpperCase();
+  }
+
+  // Mapbox's Static Images API — a plain image URL, not a JSON endpoint, so
+  // this is synchronous string-building rather than an HTTP call. Dark style
+  // and brand purple pin to match the app's theme; there's nothing to drag,
+  // this is for visually confirming a resolved point, not adjusting it.
+  staticMapUrl(point: GeoPoint, opts?: { width?: number; height?: number; zoom?: number }): string {
+    const { width = 320, height = 160, zoom = 13 } = opts ?? {};
+    const pin = `pin-s+6f3de0(${point.longitude},${point.latitude})`;
+    return (
+      `${environment.mapbox.api}/styles/v1/mapbox/dark-v11/static/${pin}/` +
+      `${point.longitude},${point.latitude},${zoom}/${width}x${height}@2x` +
+      `?access_token=${environment.mapbox.accessToken}`
+    );
   }
 }

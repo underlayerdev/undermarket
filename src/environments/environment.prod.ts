@@ -14,6 +14,7 @@ export const environment = {
     uploadPreset: 'listing',
   },
   mapbox: {
+    api: 'https://api.mapbox.com',
     // Public token restricted by URL — replace with the real prod token.
     accessToken:
       'pk.eyJ1IjoidW5kZXJsYXllciIsImEiOiJjbXR6cXJheTMwb3k4NGpzODc4OG1uZG50In0.d1EazLtjfmdusOMpCrUsXQ',

@@ -13,4 +13,10 @@ export interface GeocodingProvider {
     opts?: { proximity?: GeoPoint; language?: string },
   ): Promise<LocationSuggestion[]>;
   reverseGeocode(point: GeoPoint): Promise<LocationSuggestion | null>;
+  /**
+   * A static map preview image URL centered on the given point, so a user
+   * can visually double-check a resolved location. Synchronous — plain URL
+   * construction, no network call — so templates can bind it directly.
+   */
+  staticMapUrl(point: GeoPoint, opts?: { width?: number; height?: number; zoom?: number }): string;
 }
