@@ -38,6 +38,25 @@
         [avatarSrc]="currentUser()?.photoUrl"
         class="app-navbar__desktop-only"
       />
+    } @else {
+      <ul-button
+        type="button"
+        theme="outline-white"
+        [ariaLabel]="t('register.signInLink')"
+        routerLink="/login"
+        class="app-navbar__desktop-only"
+      >
+        {{ t('register.signInLink') }}
+      </ul-button>
+      <ul-button
+        type="button"
+        theme="fill-purple"
+        [ariaLabel]="t('register.createAccount')"
+        routerLink="/register"
+        class="app-navbar__desktop-only"
+      >
+        {{ t('register.createAccount') }}
+      </ul-button>
     }
   </div>
 </ul-navbar>
