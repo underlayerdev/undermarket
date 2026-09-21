@@ -1,0 +1,25 @@
+<div class="um-onboarding-footer" *transloco="let t">
+  @if (onboardingService.errorMessage()) {
+    <p class="ul-typography-caption-l-regular ul-text-red">
+      {{ onboardingService.errorMessage() }}
+    </p>
+  }
+  <ul-button
+    theme="fill-purple"
+    size="lg"
+    [disabled]="!onboardingService.canContinue() || onboardingService.loading()"
+    (buttonClick)="continue()"
+  >
+    {{ onboardingService.loading() ? t('onboarding.saving') : onboardingService.continueLabel() }}
+  </ul-button>
+  @if (onboardingService.showBack()) {
+    <ul-button
+      theme="transparent-white"
+      size="lg"
+      [disabled]="onboardingService.loading()"
+      (buttonClick)="goBack()"
+    >
+      {{ t('onboarding.back') }}
+    </ul-button>
+  }
+</div>

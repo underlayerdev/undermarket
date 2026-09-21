@@ -1,15 +1,16 @@
 @use 'pkg:@underlayerdev/ui/design-tokens' as tokens;
 
-// Flattens into the shell's flex column — see onboarding-step.scss.
+// Flattens into the shell's .um-onboarding__body-content column, so this
+// step's children are laid out by it directly.
 :host {
   display: contents;
 }
 
-.onboarding__step-header {
-  align-self: flex-start;
-}
-
+// The shared column stretches its children, which is right for the text and
+// the inputs on other steps but not for a round avatar — it alone opts out,
+// rather than the column centering everything and each step re-stretching.
 .onboarding__avatar-button {
+  justify-self: center;
   padding: 0;
   border: 0;
   background: none;

@@ -1,0 +1,22 @@
+@use 'pkg:@underlayerdev/ui/design-tokens' as tokens;
+@use '../../onboarding-shared' as shared;
+
+:host {
+  display: contents;
+}
+
+// Capped to the same width as the shell's content column above it — without
+// that the buttons stretched to the full viewport width on desktop while the
+// content stayed at 360px, visibly misaligned with it.
+.um-onboarding-footer {
+  width: 100%;
+  max-width: shared.$onboarding-max-width;
+  display: flex;
+  flex-direction: column;
+  gap: tokens.$spacing-spacing-3;
+
+  ul-button {
+    display: block;
+    width: 100%;
+  }
+}

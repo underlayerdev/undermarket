@@ -1,6 +1,7 @@
 @use 'pkg:@underlayerdev/ui/design-tokens' as tokens;
 
-// Flattens into the shell's flex column — see onboarding-step.scss.
+// Flattens into the shell's .um-onboarding__body-content column, so this
+// step's children are laid out by it directly.
 :host {
   display: contents;
 }

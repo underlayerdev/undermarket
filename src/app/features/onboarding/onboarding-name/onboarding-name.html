@@ -1,27 +1,19 @@
 <ng-container *transloco="let t">
-  <um-onboarding-step
-    [showBack]="false"
-    [canContinue]="onboardingNameService.canContinue()"
-    [isLoading]="isSaving()"
-    [errorMessage]="saveError()"
-    (continueClicked)="continue()"
-  >
-    <div>
-      <h1 class="ul-typography-headline-l-extrablack">
-        {{ t('onboarding.name.title') }}
-      </h1>
-      <p class="ul-typography-body-m-regular ul-text-secondary">
-        {{ t('onboarding.name.subtitle') }}
-      </p>
-    </div>
-    <ul-input
-      [label]="t('onboarding.name.label')"
-      [placeholder]="t('onboarding.name.placeholder')"
-      [required]="true"
-      [(value)]="onboardingNameService.displayNameValue"
-      [error]="!!onboardingNameService.displayNameError()"
-      [errorText]="onboardingNameService.displayNameError()"
-      (inputBlur)="onboardingNameService.markTouched()"
-    />
-  </um-onboarding-step>
+  <div>
+    <h1 class="ul-typography-headline-l-extrablack">
+      {{ t('onboarding.name.title') }}
+    </h1>
+    <p class="ul-typography-body-m-regular ul-text-secondary">
+      {{ t('onboarding.name.subtitle') }}
+    </p>
+  </div>
+  <ul-input
+    [label]="t('onboarding.name.label')"
+    [placeholder]="t('onboarding.name.placeholder')"
+    [required]="true"
+    [(value)]="displayNameValue"
+    [error]="!!displayNameError()"
+    [errorText]="displayNameError()"
+    (inputBlur)="markTouched()"
+  />
 </ng-container>

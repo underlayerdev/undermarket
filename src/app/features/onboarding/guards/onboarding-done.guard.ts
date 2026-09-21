@@ -3,7 +3,7 @@ import { Router, type CanActivateFn } from '@angular/router';
 import { AuthService } from '../../../application/services/auth.service';
 import { UserService } from '../../../application/services/user.service';
 import { isFullyOnboarded } from '../../../domain/user/user-display';
-import { onboardingNamePath } from '../onboarding.routes';
+import { ONBOARDING_ROUTES } from '../onboarding.config';
 
 const POLL_ATTEMPTS = 5;
 const POLL_DELAY_MS = 400;
@@ -34,5 +34,5 @@ export const onboardingDoneGuard: CanActivateFn = async () => {
       await new Promise((resolve) => setTimeout(resolve, POLL_DELAY_MS));
     }
   }
-  return router.createUrlTree([`/${onboardingNamePath}`]);
+  return router.createUrlTree([`/${ONBOARDING_ROUTES.name}`]);
 };

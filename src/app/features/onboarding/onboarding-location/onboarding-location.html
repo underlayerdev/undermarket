@@ -1,54 +1,47 @@
 <ng-container *transloco="let t">
-  <um-onboarding-step
-    [continueLabel]="t('onboarding.finish')"
-    [isLoading]="isNavigating()"
-    (back)="back()"
-    (continueClicked)="finish()"
+  <div>
+    <h1 class="ul-typography-headline-l-extrablack">
+      {{ t('onboarding.location.title') }}
+    </h1>
+    <p class="ul-typography-body-m-regular ul-text-secondary">
+      {{ t('onboarding.location.subtitle') }}
+    </p>
+  </div>
+
+  <ul-button
+    theme="outline-white"
+    size="md"
+    [disabled]="onboardingLocationService.isResolvingLocation()"
+    (buttonClick)="onUseCurrentLocation()"
   >
-    <div>
-      <h1 class="ul-typography-headline-l-extrablack">
-        {{ t('onboarding.location.title') }}
-      </h1>
-      <p class="ul-typography-body-m-regular ul-text-secondary">
-        {{ t('onboarding.location.subtitle') }}
+    {{
+      onboardingLocationService.isResolvingLocation()
+        ? t('onboarding.location.resolving')
+        : t('onboarding.location.useCurrentLocation')
+    }}
+  </ul-button>
+
+  <um-location-picker
+    [label]="t('onboarding.location.searchLabel')"
+    [placeholder]="t('location.searchPlaceholder')"
+    [suggestions]="onboardingLocationService.locationSuggestions()"
+    [showUseCurrentLocation]="false"
+    (queryChanged)="onLocationQueryChanged($event)"
+    (suggestionSelected)="onLocationPicked($event)"
+  />
+
+  @if (onboardingLocationService.locationError()) {
+    <p class="ul-typography-caption-l-regular ul-text-red">
+      {{ onboardingLocationService.locationError() }}
+    </p>
+  }
+
+  @if (onboardingLocationService.mapPreview(); as preview) {
+    <div class="onboarding__map-preview">
+      <img [src]="preview.url" [alt]="preview.label" />
+      <p class="ul-typography-caption-l-regular ul-text-secondary">
+        {{ preview.label }}
       </p>
     </div>
-
-    <ul-button
-      theme="outline-white"
-      size="md"
-      [disabled]="onboardingLocationService.isResolvingLocation()"
-      (buttonClick)="onUseCurrentLocation()"
-    >
-      {{
-        onboardingLocationService.isResolvingLocation()
-          ? t('onboarding.location.resolving')
-          : t('onboarding.location.useCurrentLocation')
-      }}
-    </ul-button>
-
-    <um-location-picker
-      [label]="t('onboarding.location.searchLabel')"
-      [placeholder]="t('location.searchPlaceholder')"
-      [suggestions]="onboardingLocationService.locationSuggestions()"
-      [showUseCurrentLocation]="false"
-      (queryChanged)="onLocationQueryChanged($event)"
-      (suggestionSelected)="onLocationPicked($event)"
-    />
-
-    @if (onboardingLocationService.locationError()) {
-      <p class="ul-typography-caption-l-regular ul-text-red">
-        {{ onboardingLocationService.locationError() }}
-      </p>
-    }
-
-    @if (onboardingLocationService.mapPreview(); as preview) {
-      <div class="onboarding__map-preview">
-        <img [src]="preview.url" [alt]="preview.label" />
-        <p class="ul-typography-caption-l-regular ul-text-secondary">
-          {{ preview.label }}
-        </p>
-      </div>
-    }
-  </um-onboarding-step>
+  }
 </ng-container>

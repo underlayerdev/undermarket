@@ -1,23 +1,22 @@
 <ng-container *transloco="let t">
   <div class="um-onboarding">
     <ul-navbar variant="minimal" logoSrc="assets/img/logo.png" logoAlt="Undermarket" />
-    <div class="um-onboarding__header">
-      <div class="um-onboarding__header-inner">
 
-        <ul-stepper
-          [totalSteps]="onboardingProgress.totalSteps"
-          [currentStep]="onboardingProgress.currentStep()"
-          [labels]="[
-            t('onboarding.stepLabels.name'),
-            t('onboarding.stepLabels.photo'),
-            t('onboarding.stepLabels.location'),
-          ]"
-          [ariaLabel]="t('onboarding.stepperAriaLabel')"
-        />
-      </div>
+    <div class="um-onboarding__stepper">
+      <ul-stepper
+        [totalSteps]="onboardingService.totalSteps"
+        [currentStep]="onboardingService.stepperPosition()"
+        [labels]="onboardingService.stepperLabels()"
+        [ariaLabel]="t('onboarding.stepperAriaLabel')"
+      />
     </div>
+
     <div class="um-onboarding__body">
       <router-outlet />
+    </div>
+
+    <div class="um-onboarding__footer">
+      <um-onboarding-footer />
     </div>
   </div>
 </ng-container>
