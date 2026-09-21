@@ -25,6 +25,21 @@
           (useCurrentLocationRequested)="onUseCurrentCity()"
         />
       </div>
+
+      @if (suggestedCity(); as suggested) {
+        <div class="ul-mt-3">
+          <p class="ul-typography-body-s-regular ul-text-secondary ul-mb-2">
+            {{ t('settings.suggestedCityHelper') }}
+          </p>
+          <ul-button
+            theme="transparent-white"
+            size="sm"
+            (buttonClick)="onUseSuggestedCity(suggested)"
+          >
+            {{ t('settings.useSuggestedCity', { city: suggested.displayName }) }}
+          </ul-button>
+        </div>
+      }
     }
   </div>
 </ng-container>

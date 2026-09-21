@@ -1,17 +1,19 @@
 import { TestBed } from '@angular/core/testing';
+import { Router } from '@angular/router';
 import { App } from './app';
 import { UserService } from './application/services/user.service';
 import { getTranslocoTestingModule } from '../testing/transloco-testing';
 
 describe('App', () => {
-  let isCheckingProfile: ReturnType<typeof vi.fn>;
-
-  function setup() {
-    isCheckingProfile = vi.fn().mockReturnValue(false);
-
+  // The spinner tracks router navigation, so a truthy currentNavigation() is
+  // what "in flight" looks like to the component.
+  function setup(currentNavigation: unknown = null) {
     TestBed.configureTestingModule({
       imports: [App, getTranslocoTestingModule()],
-      providers: [{ provide: UserService, useValue: { isCheckingProfile } }],
+      providers: [
+        { provide: Router, useValue: { currentNavigation: () => currentNavigation } },
+        { provide: UserService, useValue: { isCheckingProfile: () => false } },
+      ],
     });
 
     const fixture = TestBed.createComponent(App);
@@ -24,21 +26,15 @@ describe('App', () => {
     expect(fixture.componentInstance).toBeTruthy();
   });
 
-  it('should render the router outlet when not checking the profile', () => {
+  it('should render the router outlet while no navigation is in flight', () => {
     const fixture = setup();
 
     expect(fixture.nativeElement.querySelector('router-outlet')).toBeTruthy();
     expect(fixture.nativeElement.querySelector('.app__loading')).toBeNull();
   });
 
-  it('should show a loading indicator while the profile is being polled', () => {
-    isCheckingProfile = vi.fn().mockReturnValue(true);
-    TestBed.configureTestingModule({
-      imports: [App, getTranslocoTestingModule()],
-      providers: [{ provide: UserService, useValue: { isCheckingProfile } }],
-    });
-    const fixture = TestBed.createComponent(App);
-    fixture.detectChanges();
+  it('should show a loading indicator while a navigation is in flight', () => {
+    const fixture = setup({ id: 1 });
 
     expect(fixture.nativeElement.querySelector('.app__loading')).toBeTruthy();
     expect(fixture.nativeElement.querySelector('router-outlet')).toBeNull();

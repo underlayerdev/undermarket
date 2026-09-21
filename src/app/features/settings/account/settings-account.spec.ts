@@ -3,6 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { ToastService } from '@underlayerdev/ui';
 import { SettingsAccountComponent } from './settings-account';
 import { AuthService } from '../../../application/services/auth.service';
+import { SearchLocationService } from '../../../application/services/search-location.service';
 import { UserService } from '../../../application/services/user.service';
 import { GEOCODING_PROVIDER, GEOLOCATION_PROVIDER } from '../../../core/configuration/tokens';
 import { getTranslocoTestingModule } from '../../../../testing/transloco-testing';
@@ -56,6 +57,9 @@ describe('SettingsAccountComponent', () => {
         { provide: ActivatedRoute, useValue: {} },
         { provide: GEOCODING_PROVIDER, useValue: { search: vi.fn(), reverseGeocode: vi.fn() } },
         { provide: GEOLOCATION_PROVIDER, useValue: { getCurrentPosition: vi.fn() } },
+        // The public-profile panel reads it to suggest the user's search area
+        // as their public city; none of the assertions here depend on it.
+        { provide: SearchLocationService, useValue: { searchLocation: () => null } },
       ],
     });
 

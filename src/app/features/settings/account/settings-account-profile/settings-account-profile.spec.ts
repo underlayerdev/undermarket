@@ -1,15 +1,36 @@
 import { TestBed } from '@angular/core/testing';
 import { ToastService } from '@underlayerdev/ui';
 import { SettingsAccountProfileComponent } from './settings-account-profile';
+import { SearchLocationService } from '../../../../application/services/search-location.service';
 import { UserService } from '../../../../application/services/user.service';
 import { GEOCODING_PROVIDER, GEOLOCATION_PROVIDER } from '../../../../core/configuration/tokens';
 import { getTranslocoTestingModule } from '../../../../../testing/transloco-testing';
+import type { SearchLocation } from '../../../../domain/location/location.model';
 import { mockUser } from '../../../../domain/user/user.mock';
 import type { User } from '../../../../domain/user/user.model';
 
+const PALERMO_SEARCH_LOCATION: SearchLocation = {
+  displayName: 'Palermo, Buenos Aires',
+  city: 'Buenos Aires',
+  region: 'Buenos Aires',
+  countryCode: 'AR',
+  neighborhood: 'Palermo',
+  latitude: -34.5784,
+  longitude: -58.4265,
+  geohash: '69y7pkxfb',
+  radiusKm: 10,
+  source: 'saved',
+  updatedAt: new Date('2026-09-20T10:00:00Z'),
+};
+
 describe('SettingsAccountProfileComponent', () => {
   let currentUser: User | null;
+  let searchLocation: SearchLocation | null;
   let updateProfileSpy: ReturnType<typeof vi.fn>;
+
+  beforeEach(() => {
+    searchLocation = null;
+  });
 
   function setup() {
     updateProfileSpy = vi.fn().mockResolvedValue(undefined);
@@ -24,6 +45,7 @@ describe('SettingsAccountProfileComponent', () => {
             updateProfile: updateProfileSpy,
           },
         },
+        { provide: SearchLocationService, useValue: { searchLocation: () => searchLocation } },
         { provide: GEOCODING_PROVIDER, useValue: { search: vi.fn(), reverseGeocode: vi.fn() } },
         { provide: GEOLOCATION_PROVIDER, useValue: { getCurrentPosition: vi.fn() } },
       ],
@@ -123,6 +145,71 @@ describe('SettingsAccountProfileComponent', () => {
         },
       }),
     );
+  });
+
+  describe('search-location suggestion', () => {
+    it('should offer the search area as a one-tap value when no city is set yet', () => {
+      currentUser = mockUser({ profileCity: undefined });
+      searchLocation = PALERMO_SEARCH_LOCATION;
+      const fixture = setup();
+
+      // Only the four public fields — the coordinates, geohash, radius and
+      // neighborhood of the private search doc are dropped by construction.
+      expect(fixture.componentInstance.suggestedCity()).toEqual({
+        displayName: 'Palermo, Buenos Aires',
+        city: 'Buenos Aires',
+        region: 'Buenos Aires',
+        countryCode: 'AR',
+      });
+    });
+
+    it('should not offer a suggestion when there is no search area', () => {
+      currentUser = mockUser({ profileCity: undefined });
+      const fixture = setup();
+
+      expect(fixture.componentInstance.suggestedCity()).toBeNull();
+    });
+
+    it('should not offer a suggestion over a city the user already chose', () => {
+      currentUser = mockUser({
+        profileCity: {
+          displayName: 'Recoleta, Buenos Aires',
+          city: 'Buenos Aires',
+          region: 'Buenos Aires',
+          countryCode: 'AR',
+        },
+      });
+      searchLocation = PALERMO_SEARCH_LOCATION;
+      const fixture = setup();
+
+      expect(fixture.componentInstance.suggestedCity()).toBeNull();
+    });
+
+    it('should publish nothing until the suggestion is actually tapped', () => {
+      currentUser = mockUser({ profileCity: undefined });
+      searchLocation = PALERMO_SEARCH_LOCATION;
+      const fixture = setup();
+
+      fixture.componentInstance.onToggleShowCity(true);
+      fixture.detectChanges();
+
+      expect(updateProfileSpy).not.toHaveBeenCalled();
+    });
+
+    it('should save the suggested city once tapped, and stop suggesting it', async () => {
+      currentUser = mockUser({ profileCity: undefined });
+      searchLocation = PALERMO_SEARCH_LOCATION;
+      const fixture = setup();
+      const suggested = fixture.componentInstance.suggestedCity()!;
+
+      await fixture.componentInstance.onUseSuggestedCity(suggested);
+
+      expect(updateProfileSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ profileCity: suggested }),
+      );
+      expect(fixture.componentInstance.selectedCity()).toEqual(suggested);
+      expect(fixture.componentInstance.suggestedCity()).toBeNull();
+    });
   });
 
   it('should show an error toast when saving the profile city fails', async () => {

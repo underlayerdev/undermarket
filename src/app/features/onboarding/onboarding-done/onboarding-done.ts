@@ -1,12 +1,15 @@
 import { Component, inject } from '@angular/core';
-import { Router } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { ButtonComponent, NavbarComponent } from '@underlayerdev/ui';
+import { OnboardingService } from '../onboarding.service';
 
-// A congratulations screen, not another input step — a sibling of the shell
-// (own navbar/layout, no stepper), same shape as OnboardingWelcomeComponent.
-// Reachable only once onboardingDoneGuard confirms the profile is actually
-// onboarded; see guards/onboarding-done.guard.ts.
+// A congratulations screen, not another input step — a full-page sibling of the
+// shell (own navbar, no stepper, no Back button), same shape as
+// OnboardingWelcomeComponent. Reachable only once onboardingDoneGuard confirms
+// the profile really is onboarded; see guards/onboarding-done.guard.ts.
+//
+// Its Continue leads out of the flow entirely (ONBOARDING_EXIT_ROUTE), which is
+// why the destination is worth reading from the config rather than inlining.
 @Component({
   selector: 'um-onboarding-done',
   templateUrl: './onboarding-done.html',
@@ -14,9 +17,13 @@ import { ButtonComponent, NavbarComponent } from '@underlayerdev/ui';
   imports: [ButtonComponent, NavbarComponent, TranslocoDirective],
 })
 export class OnboardingDoneComponent {
-  private readonly router = inject(Router);
+  readonly onboardingService = inject(OnboardingService);
+
+  constructor() {
+    this.onboardingService.startStep({ id: 'done' });
+  }
 
   goToHome(): void {
-    void this.router.navigateByUrl('/home');
+    void this.onboardingService.continue();
   }
 }

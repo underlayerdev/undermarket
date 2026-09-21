@@ -1,76 +1,78 @@
 @use 'pkg:@underlayerdev/ui/design-tokens' as tokens;
 @use 'pkg:@underlayerdev/ui/containers' as containers;
-@use 'pkg:@underlayerdev/ui/breakpoints' as bp;
 @use './onboarding-shared' as shared;
 
 // This route has no parent layout (it's a sibling of AppLayoutComponent in
 // app.routes.ts, not a child) — no navbar/sidebar/dock ever mounts here, so
-// unlike listing-detail/new-listing's mobile-only takeover trick, this is
-// just a normal full-height page on every breakpoint.
+// the grid below owns the whole viewport.
 :host {
   display: contents;
 }
 
 .um-onboarding {
-  min-height: 100vh;
+  // dvh rather than vh: on mobile browsers vh counts the retractable URL bar,
+  // so 100vh is taller than the visible area and the page scrolls by exactly
+  // that difference. Nothing in this flow is allowed to scroll.
+  height: 100dvh;
+  overflow: hidden;
   display: grid;
-  // navbar/header size to their own content (auto) instead of sharing
-  // leftover space with each other — with two 1fr rows here before, the
-  // stepper's rendered height depended on how tall the current step's body
-  // was, so it visibly changed from step to step. Only the body row flexes.
-  grid-template-rows: auto auto minmax(0, 1fr);
+  // navbar | stepper | body | footer. Only the body track flexes, and
+  // minmax(0, 1fr) lets it shrink below its content instead of growing the
+  // grid past the viewport — that's what keeps the footer on screen and the
+  // navbar/stepper at a fixed height no matter how tall the active step is.
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
   background-color: tokens.$color-background-main;
+
+  // The navbar is a direct grid row, deliberately outside the padded
+  // containers below: it brings its own padding, background and bottom border,
+  // which need to run edge to edge.
 
   // container-fluid centers its children and applies the app's standard
   // responsive edge padding — without it ul-stepper (a block-level element)
   // stretched edge-to-edge on desktop instead of staying in the same narrow
-  // column as the content/footer below it.
-  &__header {
+  // column as the body/footer below it.
+  &__stepper {
     @include containers.container-fluid;
-    padding-top: tokens.$spacing-spacing-8;
+    padding-top: tokens.$spacing-spacing-6;
 
-    &-inner {
+    ul-stepper {
       width: 100%;
       max-width: shared.$onboarding-max-width;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: tokens.$spacing-spacing-6;
-
-      ul-stepper {
-        width: 100%;
-      }
-    }
-  }
-
-  &__brand {
-    display: flex;
-    align-items: center;
-    gap: tokens.$spacing-spacing-2;
-
-    &-logo {
-      width: 24px;
-      height: 24px;
     }
   }
 
   &__body {
-    display: flex;
-    flex-direction: column;
+    @include containers.container-fluid;
+    // Overrides container-fluid's flex: the step components are
+    // `display: contents`, so their children are laid out by this box
+    // directly. A single capped, centered column track gives every step the
+    // same narrow column, and align-content centers it in the leftover height
+    // without anything needing an explicit height of its own.
+    display: grid;
+    grid-template-columns: min(100%, #{shared.$onboarding-max-width});
+    justify-content: center;
+    align-content: center;
+    // `safe` only kicks in when the step is taller than the row (the location
+    // step with a map preview, on a short viewport): centering would then push
+    // its heading off the top, where overflow: hidden cuts it with no way to
+    // scroll it back. Aligning to the start instead keeps the top of the step
+    // readable. Browsers without `safe` keep the plain `center` above.
+    align-content: safe center;
+    gap: tokens.$spacing-spacing-5;
+    padding-block: tokens.$spacing-spacing-6;
     min-height: 0;
-    height: 100%;
+    overflow: hidden;
 
-    // Below md the body just fills the rest of the viewport edge-to-edge.
-    // From md up it becomes a capped, centered box instead of stretching
-    // full-bleed to whatever height/width the desktop viewport happens to
-    // have — same narrow column width as the header/footer above/below it.
-    @include bp.up('md') {
-      width: 100%;
-      max-width: shared.$onboarding-max-width;
-      max-height: shared.$onboarding-max-height;
-      margin: 0 auto;
-      align-self: start;
-      overflow-y: auto;
+    // Renders nothing itself, but would still occupy a grid row and consume a
+    // gap as an empty item.
+    router-outlet {
+      display: none;
     }
+  }
+
+  &__footer {
+    @include containers.container-fluid;
+    padding-top: tokens.$spacing-spacing-4;
+    padding-bottom: tokens.$spacing-spacing-6;
   }
 }

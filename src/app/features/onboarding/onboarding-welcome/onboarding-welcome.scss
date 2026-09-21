@@ -3,65 +3,81 @@
 @use '../onboarding-shared' as shared;
 
 // This route has no parent layout (it's a sibling of AppLayoutComponent in
-// app.routes.ts, not a child) — no navbar/sidebar/dock ever mounts here.
+// app.routes.ts, not a child) — no navbar/sidebar/dock ever mounts here, so
+// the grid below owns the whole viewport.
 :host {
-  display: block;
-  min-height: 100vh;
-  background-color: tokens.$color-background-main;
+  display: contents;
 }
+
+// Same three-row shape as the shell, minus the stepper: there's no progress to
+// report before the flow has started. See onboarding-shell.scss for why the
+// height is dvh and why nothing here scrolls.
 .um-onboarding__welcome {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
+  height: 100dvh;
+  overflow: hidden;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  background-color: tokens.$color-background-main;
   text-align: center;
 
   // container-fluid centers its children and applies the app's standard
   // responsive edge padding — without it the content/button stretched to
   // the full viewport width on desktop instead of staying a narrow column.
-  &-content,
+  &-content {
+    @include containers.container-fluid;
+    // Overrides container-fluid's flex, matching the shell's body: one capped,
+    // centered column track, centered in whatever height is left over.
+    display: grid;
+    grid-template-columns: min(100%, #{shared.$onboarding-max-width});
+    justify-content: center;
+    align-content: center;
+    // See onboarding-shell.scss: on a viewport too short for the copy, start
+    // alignment keeps the title on screen rather than clipping it off the top.
+    align-content: safe center;
+    gap: tokens.$spacing-spacing-6;
+    padding-block: tokens.$spacing-spacing-6;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  // The PNG's own canvas is a slightly different near-black than
+  // $color-background-main, so a hard rectangle showed a visible seam
+  // against the page. `closest-side` (not `farthest-corner`) is what makes
+  // that seam actually disappear: it sizes the ellipse so the fade only hits
+  // full transparency exactly at the box's own edge — with farthest-corner
+  // the fade is stretched all the way out to the corner distance, so the
+  // flat edges barely fade at all and the rectangle stays visible. This way
+  // every edge, not just the corners, dissolves into the page's own
+  // background by the time it gets there.
+  &-hero {
+    justify-self: center;
+    width: min(100%, 380px);
+    height: auto;
+    display: block;
+    -webkit-mask-image: radial-gradient(ellipse closest-side at center, #000 40%, transparent 100%);
+    mask-image: radial-gradient(ellipse closest-side at center, #000 40%, transparent 100%);
+  }
+
   &-footer {
     @include containers.container-fluid;
-  }
-
-  &-content {
-    flex: 1;
-    padding-top: tokens.$spacing-spacing-6;
+    padding-top: tokens.$spacing-spacing-4;
     padding-bottom: tokens.$spacing-spacing-6;
-    align-items: center;
-  }
 
-  &-content-inner {
-    width: 100%;
-    max-width: shared.$onboarding-max-width;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: tokens.$spacing-spacing-6;
-  }
-
-  &-footer {
-    padding-top: tokens.$spacing-spacing-5;
-    padding-bottom: tokens.$spacing-spacing-8;
-  }
-
-  &-footer-inner {
-    width: 100%;
-    max-width: shared.$onboarding-max-width;
-  }
-
-  ul-button {
-    display: block;
-    width: 100%;
+    ul-button {
+      display: block;
+      width: 100%;
+      max-width: shared.$onboarding-max-width;
+    }
   }
 }
 
 // A hand-drawn shopping-bag-with-tag mark instead of a photographic logo:
 // no asset to ship, scales crisply at any size, and reads as "marketplace"
-// rather than a generic brand lockup.
+// rather than a generic brand lockup. Not currently projected by the template.
 .um-onboarding__welcome-illustration {
   width: 140px;
   height: 140px;
+  justify-self: center;
 
   &-glow {
     fill: tokens.$color-background-purple;
