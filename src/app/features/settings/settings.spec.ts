@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { Subject } from 'rxjs';
 import { SettingsComponent } from './settings';
+import { SettingsFeedbackService } from './shared/settings-feedback/settings-feedback.service';
 import { getTranslocoTestingModule } from '../../../testing/transloco-testing';
 
 describe('SettingsComponent', () => {
@@ -64,5 +65,44 @@ describe('SettingsComponent', () => {
     fixture.componentInstance.onItemSelected({ label: 'Language', path: 'display' });
 
     expect(navigateByUrlSpy).toHaveBeenCalledWith('/settings/display');
+  });
+
+  // The modal itself is mounted here rather than by each settings page, so
+  // every page's save/error feedback shows through this one instance.
+  describe('feedback modal', () => {
+    it('should show the success icon and message the service was given', () => {
+      const fixture = setup();
+      const feedbackService = TestBed.inject(SettingsFeedbackService);
+
+      feedbackService.success('Display name updated.');
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.querySelector('.ul-icon-check_circle')).toBeTruthy();
+      expect(fixture.nativeElement.textContent).toContain('Display name updated.');
+    });
+
+    it('should show the error icon and message the service was given', () => {
+      const fixture = setup();
+      const feedbackService = TestBed.inject(SettingsFeedbackService);
+
+      feedbackService.error('Something went wrong.');
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.querySelector('.ul-icon-cross_circle')).toBeTruthy();
+      expect(fixture.nativeElement.textContent).toContain('Something went wrong.');
+    });
+
+    it('should close through the service when the modal closes itself', () => {
+      const fixture = setup();
+      const feedbackService = TestBed.inject(SettingsFeedbackService);
+      feedbackService.success('Display name updated.');
+      fixture.detectChanges();
+
+      const closeButton: HTMLButtonElement =
+        fixture.nativeElement.querySelector('.ul-modal__close button');
+      closeButton.click();
+
+      expect(feedbackService.open()).toBe(false);
+    });
   });
 });

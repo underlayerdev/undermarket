@@ -56,7 +56,7 @@ describe('SettingsIntegrationsComponent', () => {
     expect(navigateSpy).not.toHaveBeenCalled();
   });
 
-  it('should clear the connected query param after showing the success toast', async () => {
+  it('should clear the connected query param after showing the success modal', async () => {
     const fixture = setup({ connected: 'true' });
     await fixture.whenStable();
 
@@ -68,7 +68,7 @@ describe('SettingsIntegrationsComponent', () => {
     expect(refreshStatusSpy).toHaveBeenCalled();
   });
 
-  it('should clear the error query param after showing the error toast', async () => {
+  it('should clear the error query param after showing the error modal', async () => {
     const fixture = setup({ error: 'token_exchange_failed' });
     await fixture.whenStable();
 

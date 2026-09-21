@@ -4,14 +4,15 @@ import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { filter, map, startWith } from 'rxjs';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { SeoService } from '../../core/seo/seo.service';
-import { SidebarComponent } from '@underlayerdev/ui';
+import { ModalComponent, SidebarComponent } from '@underlayerdev/ui';
 import type { SidebarItem } from '@underlayerdev/ui';
+import { SettingsFeedbackService } from './shared/settings-feedback/settings-feedback.service';
 
 type SettingsSidebarItem = SidebarItem & { path?: string };
 
 @Component({
   selector: 'um-settings',
-  imports: [RouterOutlet, SidebarComponent, TranslocoDirective],
+  imports: [ModalComponent, RouterOutlet, SidebarComponent, TranslocoDirective],
   templateUrl: './settings.html',
   styleUrl: './settings.scss',
 })
@@ -19,6 +20,7 @@ export class SettingsComponent implements OnInit {
   private readonly seoService = inject(SeoService);
   private readonly transloco = inject(TranslocoService);
   private readonly router = inject(Router);
+  protected readonly feedbackService = inject(SettingsFeedbackService);
 
   readonly sidebarItems = computed<SettingsSidebarItem[]>(() => {
     this.transloco.activeLang();

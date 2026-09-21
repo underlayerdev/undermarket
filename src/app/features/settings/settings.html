@@ -23,3 +23,7 @@
     </ng-container>
   </div>
 </div>
+
+<ul-modal [(open)]="feedbackService.open" [variant]="feedbackService.variant()">
+  <p class="ul-typography-body-m-regular">{{ feedbackService.message() }}</p>
+</ul-modal>

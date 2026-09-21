@@ -133,7 +133,7 @@
   "location.errors.unresolved": "We couldn't resolve that location. Please try a different search.",
   "onboarding.welcome.title": "Welcome to ",
   "onboarding.welcome.slogan": "A collaborative marketplace to buy and sell whay you need, near you. ",
-  "onboarding.welcome.subtitle": "Let's set up your account — it only takes a minute.", 
+  "onboarding.welcome.subtitle": "Let's set up your account — it only takes a minute.",
   "onboarding.welcome.getStarted": "Get started",
   "onboarding.stepperAriaLabel": "Onboarding steps",
   "onboarding.stepLabels.name": "Name",

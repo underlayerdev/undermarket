@@ -6,8 +6,9 @@ import { AuthService } from '../../../application/services/auth.service';
 import { ErrorService } from '../../../application/services/error.service';
 import { validateConfirmPassword, validatePassword } from '../../../shared/utils/auth-validation';
 import { LocaleDatePipe } from '../../../shared/pipes';
-import { ButtonComponent, InputComponent, ModalComponent, ToastService } from '@underlayerdev/ui';
+import { ButtonComponent, InputComponent, ModalComponent } from '@underlayerdev/ui';
 import { validateDisplayName } from '../../../domain/user/user-display.validator';
+import { SettingsFeedbackService } from '../shared/settings-feedback/settings-feedback.service';
 import { SettingsLayoutComponent } from '../shared/settings-layout/settings-layout';
 import { SettingsAccountProfileComponent } from './settings-account-profile/settings-account-profile';
 
@@ -30,7 +31,7 @@ export class SettingsAccountComponent implements OnInit {
   protected readonly authService = inject(AuthService);
   private readonly errorService = inject(ErrorService);
   private readonly transloco = inject(TranslocoService);
-  private readonly toastService = inject(ToastService);
+  private readonly feedbackService = inject(SettingsFeedbackService);
   private readonly router = inject(Router);
 
   readonly isEmailPasswordUser = computed(
@@ -137,9 +138,9 @@ export class SettingsAccountComponent implements OnInit {
       await this.authService.updateDisplayName(trimmed);
       this.displayNameValue.set(trimmed);
       this.displayNameTouched.set(false);
-      this.toastService.success(this.transloco.translate('settings.displayNameUpdated'));
+      this.feedbackService.success(this.transloco.translate('settings.displayNameUpdated'));
     } catch (err) {
-      this.toastService.error(this.errorService.toUserMessage(err));
+      this.feedbackService.error(this.errorService.toUserMessage(err));
     } finally {
       this.isSavingDisplayName.set(false);
     }
@@ -152,13 +153,13 @@ export class SettingsAccountComponent implements OnInit {
     this.isChangingPassword.set(true);
     try {
       await this.authService.changePassword(this.newPasswordValue(), this.currentPasswordValue());
-      this.toastService.success(this.transloco.translate('settings.passwordChanged'));
+      this.feedbackService.success(this.transloco.translate('settings.passwordChanged'));
       this.currentPasswordValue.set('');
       this.newPasswordValue.set('');
       this.confirmNewPasswordValue.set('');
       this.passwordFormTouched.set(false);
     } catch (err) {
-      this.toastService.error(this.errorService.toUserMessage(err));
+      this.feedbackService.error(this.errorService.toUserMessage(err));
     } finally {
       this.isChangingPassword.set(false);
     }
@@ -186,7 +187,7 @@ export class SettingsAccountComponent implements OnInit {
       this.showDeleteModal.set(false);
       await this.router.navigateByUrl('/login');
     } catch (err) {
-      this.toastService.error(this.errorService.toUserMessage(err));
+      this.feedbackService.error(this.errorService.toUserMessage(err));
     } finally {
       this.isDeletingAccount.set(false);
     }

@@ -1,5 +1,5 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
-import { ButtonComponent, ToastService, ToggleComponent } from '@underlayerdev/ui';
+import { ButtonComponent, ToggleComponent } from '@underlayerdev/ui';
 import { LocationPickerComponent } from '../../../../shared/location';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { LocationSuggestion } from '../../../../domain/location/location.model';
@@ -9,6 +9,7 @@ import { SearchLocationService } from '../../../../application/services/search-l
 import { PublicCityInfo } from '../../../../domain/user/user.model';
 import { UserService } from '../../../../application/services/user.service';
 import { ErrorService } from '../../../../application/services/error.service';
+import { SettingsFeedbackService } from '../../shared/settings-feedback/settings-feedback.service';
 
 /**
  * Narrows anything city-shaped down to exactly the four fields that go on the
@@ -35,7 +36,7 @@ export class SettingsAccountProfileComponent {
   private readonly errorService = inject(ErrorService);
   private readonly locationService = inject(LocationService);
   private readonly searchLocationService = inject(SearchLocationService);
-  private readonly toastService = inject(ToastService);
+  private readonly feedbackService = inject(SettingsFeedbackService);
   private readonly transloco = inject(TranslocoService);
 
   // Seeded once from the loaded profile, then a purely local UI toggle from
@@ -112,7 +113,7 @@ export class SettingsAccountProfileComponent {
       const area = await this.locationService.resolveCurrentArea();
       await this.onCityPicked({ id: '', ...area });
     } catch (err) {
-      this.toastService.error(toLocationErrorMessage(err, this.transloco));
+      this.feedbackService.error(toLocationErrorMessage(err, this.transloco));
     } finally {
       this.isResolvingCurrentCity.set(false);
     }
@@ -129,9 +130,9 @@ export class SettingsAccountProfileComponent {
 
     try {
       await this.userService.updateProfile({ ...profile, profileCity: profileCity ?? undefined });
-      this.toastService.success(this.transloco.translate('settings.profileCityUpdated'));
+      this.feedbackService.success(this.transloco.translate('settings.profileCityUpdated'));
     } catch (err) {
-      this.toastService.error(this.errorService.toUserMessage(err));
+      this.feedbackService.error(this.errorService.toUserMessage(err));
     }
   }
 }

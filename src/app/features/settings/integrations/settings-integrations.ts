@@ -2,7 +2,8 @@ import { Component, inject, OnInit } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { MercadoLibreService } from '../../../application/services/mercado-libre.service';
-import { ButtonComponent, ToastService } from '@underlayerdev/ui';
+import { ButtonComponent } from '@underlayerdev/ui';
+import { SettingsFeedbackService } from '../shared/settings-feedback/settings-feedback.service';
 import { SettingsLayoutComponent } from '../shared/settings-layout/settings-layout';
 
 @Component({
@@ -16,7 +17,7 @@ export class SettingsIntegrationsComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly transloco = inject(TranslocoService);
-  private readonly toastService = inject(ToastService);
+  private readonly feedbackService = inject(SettingsFeedbackService);
 
   async ngOnInit(): Promise<void> {
     const params = this.route.snapshot.queryParamMap;
@@ -24,14 +25,14 @@ export class SettingsIntegrationsComponent implements OnInit {
     const error = params.get('error');
 
     if (connected) {
-      this.toastService.success(this.transloco.translate('settings.mercadoLibreConnected'));
+      this.feedbackService.success(this.transloco.translate('settings.mercadoLibreConnected'));
     } else if (error) {
-      this.toastService.error(this.transloco.translate('settings.mercadoLibreConnectError'));
+      this.feedbackService.error(this.transloco.translate('settings.mercadoLibreConnectError'));
     }
 
     if (connected || error) {
       // Clears ?connected=/?error= so refreshing the page doesn't re-show
-      // the toast; replaceUrl so back doesn't return to this transient state.
+      // the modal; replaceUrl so back doesn't return to this transient state.
       await this.router.navigate([], { relativeTo: this.route, queryParams: {}, replaceUrl: true });
     }
 
@@ -45,14 +46,14 @@ export class SettingsIntegrationsComponent implements OnInit {
   async onImportClick(): Promise<void> {
     try {
       const { importedCount, skippedCount } = await this.mercadoLibreService.importListings();
-      this.toastService.success(
+      this.feedbackService.success(
         this.transloco.translate('settings.mercadoLibreImportResult', {
           imported: importedCount,
           skipped: skippedCount,
         }),
       );
     } catch {
-      this.toastService.error(this.transloco.translate('settings.mercadoLibreImportError'));
+      this.feedbackService.error(this.transloco.translate('settings.mercadoLibreImportError'));
     }
   }
 }

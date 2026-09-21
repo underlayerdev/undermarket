@@ -1,9 +1,9 @@
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router } from '@angular/router';
-import { ToastService } from '@underlayerdev/ui';
 import { SettingsAccountComponent } from './settings-account';
 import { AuthService } from '../../../application/services/auth.service';
 import { SearchLocationService } from '../../../application/services/search-location.service';
+import { SettingsFeedbackService } from '../shared/settings-feedback/settings-feedback.service';
 import { UserService } from '../../../application/services/user.service';
 import { GEOCODING_PROVIDER, GEOLOCATION_PROVIDER } from '../../../core/configuration/tokens';
 import { getTranslocoTestingModule } from '../../../../testing/transloco-testing';
@@ -108,8 +108,8 @@ describe('SettingsAccountComponent', () => {
   it('should call authService.changePassword with valid input', async () => {
     currentUser = mockUser();
     const fixture = setup();
-    const toastService = TestBed.inject(ToastService);
-    const successSpy = vi.spyOn(toastService, 'success');
+    const feedbackService = TestBed.inject(SettingsFeedbackService);
+    const successSpy = vi.spyOn(feedbackService, 'success');
     fixture.componentInstance.currentPasswordValue.set('oldpass1');
     fixture.componentInstance.newPasswordValue.set('newpass1');
     fixture.componentInstance.confirmNewPasswordValue.set('newpass1');
@@ -210,12 +210,12 @@ describe('SettingsAccountComponent', () => {
       expect(fixture.componentInstance.displayNameTouched()).toBe(false);
     });
 
-    it('should show an error toast and not clear touched state when saving fails', async () => {
+    it('should show an error modal and not clear touched state when saving fails', async () => {
       currentUser = mockUser();
       const fixture = setup();
       updateProfileSpy.mockRejectedValue(new Error('network down'));
-      const toastService = TestBed.inject(ToastService);
-      const errorSpy = vi.spyOn(toastService, 'error');
+      const feedbackService = TestBed.inject(SettingsFeedbackService);
+      const errorSpy = vi.spyOn(feedbackService, 'error');
       fixture.componentInstance.displayNameValue.set('New Name');
 
       await fixture.componentInstance.onSaveDisplayName();

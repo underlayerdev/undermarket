@@ -132,7 +132,7 @@
   "location.errors.unsupported": "Tu navegador no admite el acceso a la ubicación. Busca una ciudad o zona en su lugar.",
   "location.errors.unresolved": "No pudimos resolver esa ubicación. Intenta con otra búsqueda.",
   "onboarding.welcome.title": "¡Bienvenido a ",
-  "onboarding.welcome.slogan":"El mercado colaborativo para comprar y vender cerca tuyo.",
+  "onboarding.welcome.slogan": "El mercado colaborativo para comprar y vender cerca tuyo.",
   "onboarding.welcome.subtitle": "Vamos a configurar tu cuenta, solo toma un minuto.",
   "onboarding.welcome.getStarted": "Comenzar",
   "onboarding.stepperAriaLabel": "Pasos de bienvenida",

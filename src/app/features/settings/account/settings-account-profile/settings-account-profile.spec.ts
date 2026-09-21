@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
-import { ToastService } from '@underlayerdev/ui';
 import { SettingsAccountProfileComponent } from './settings-account-profile';
 import { SearchLocationService } from '../../../../application/services/search-location.service';
+import { SettingsFeedbackService } from '../../shared/settings-feedback/settings-feedback.service';
 import { UserService } from '../../../../application/services/user.service';
 import { GEOCODING_PROVIDER, GEOLOCATION_PROVIDER } from '../../../../core/configuration/tokens';
 import { getTranslocoTestingModule } from '../../../../../testing/transloco-testing';
@@ -212,12 +212,12 @@ describe('SettingsAccountProfileComponent', () => {
     });
   });
 
-  it('should show an error toast when saving the profile city fails', async () => {
+  it('should show an error modal when saving the profile city fails', async () => {
     currentUser = mockUser({ profileCity: undefined });
     const fixture = setup();
     updateProfileSpy.mockRejectedValue(new Error('network down'));
-    const toastService = TestBed.inject(ToastService);
-    const errorSpy = vi.spyOn(toastService, 'error');
+    const feedbackService = TestBed.inject(SettingsFeedbackService);
+    const errorSpy = vi.spyOn(feedbackService, 'error');
 
     await fixture.componentInstance.onCityPicked({
       id: 'place.1',
