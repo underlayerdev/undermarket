@@ -1,0 +1,153 @@
+@use 'pkg:@underlayerdev/ui/design-tokens' as tokens;
+@use 'pkg:@underlayerdev/ui/breakpoints' as bp;
+
+// Mirrors listing-detail.scss's layout so the skeleton occupies the same
+// boxes the real content will, which is the whole point of a skeleton: swap
+// in the loaded page and nothing above the fold should jump.
+.um-listing-detail-loading {
+  &__breadcrumb {
+    display: none;
+    align-items: center;
+    gap: tokens.$spacing-spacing-2;
+    padding-top: tokens.$spacing-spacing-4;
+
+    @include bp.up('sm') {
+      display: flex;
+    }
+  }
+
+  &__gallery {
+    position: relative;
+    padding: 0;
+
+    // Same edge-to-edge trick as the real gallery: break out of
+    // .ul-container-product's fixed side padding on mobile only.
+    @include bp.below('md') {
+      width: calc(100% + #{tokens.$spacing-spacing-8} * 2);
+      margin-left: -#{tokens.$spacing-spacing-8};
+      margin-right: -#{tokens.$spacing-spacing-8};
+    }
+  }
+
+  &__media {
+    display: block;
+  }
+
+  &__info {
+    display: flex;
+    flex-direction: column;
+
+    @include bp.below('md') {
+      margin-top: tokens.$spacing-spacing-4;
+    }
+  }
+
+  &__pills {
+    display: flex;
+    align-items: center;
+    gap: tokens.$spacing-spacing-2;
+  }
+
+  &__seller {
+    display: flex;
+    align-items: center;
+    gap: tokens.$spacing-spacing-3;
+  }
+
+  &__seller-info {
+    display: flex;
+    flex-direction: column;
+    gap: tokens.$spacing-spacing-1;
+  }
+
+  // Desktop-only, like .listing-detail__owner-actions / __contact-actions —
+  // there is no md:ul-flex utility to pair with ul-hidden, so (as in that
+  // stylesheet) the breakpoint is handled here rather than on the element.
+  &__actions {
+    display: none;
+    gap: tokens.$spacing-spacing-3;
+
+    @include bp.up('md') {
+      display: flex;
+    }
+
+    ul-skeleton {
+      flex: 1 1 0;
+    }
+  }
+
+  &__description {
+    max-width: 70ch;
+
+    // A custom element with no host style defaults to `display: inline`, same
+    // trap as `.listing-detail__carousel` — a bare `ul-skeleton` here would
+    // size to its content instead of the width/height inputs bound below.
+    // A *child* combinator, not a descendant/universal one: `ul-skeleton`'s
+    // own template sets `display: flex` on its internal shimmer overlay
+    // (`.ul-skeleton__overlay`), and that rule ties with a universal
+    // selector on specificity (`*` contributes nothing) — a tie this
+    // component's own stylesheet would win, since it's injected after the
+    // library's bundled styles, collapsing the overlay's flex layout (no
+    // gap between lines, no vertical centering). Scoping to `>` reaches
+    // only the two skeleton host tags themselves, never their insides.
+    > ul-skeleton {
+      display: block;
+    }
+  }
+
+  &__similar-row {
+    display: flex;
+    gap: tokens.$spacing-spacing-4;
+    overflow: hidden;
+  }
+
+  // Percentages rather than the carousel's own perPage breakpoints (5/4/3/2):
+  // this row doesn't scroll, so the count has to divide evenly into the width
+  // instead of just being "how many happen to be visible".
+  &__card {
+    display: flex;
+    flex: 0 0 calc(50% - #{tokens.$spacing-spacing-2});
+    flex-direction: column;
+    gap: tokens.$spacing-spacing-2;
+
+    @include bp.up('sm') {
+      flex-basis: calc(33.333% - #{tokens.$spacing-spacing-4});
+    }
+
+    @include bp.up('md') {
+      flex-basis: calc(25% - #{tokens.$spacing-spacing-4});
+    }
+  }
+
+  &__card-media {
+    // Square, same as the real cards' mediaAspectRatio="square" — height is
+    // left to derive from the aspect ratio rather than being passed as an
+    // input, since the card's width (and therefore its height) changes across
+    // the breakpoints above.
+    aspect-ratio: 1 / 1;
+    height: auto;
+  }
+
+  // Mobile-only docked CTA placeholder. Fixed, like the real
+  // .listing-detail__dock, so it reserves the same strip of the viewport
+  // rather than just sitting at the end of the skeleton's own flow.
+  &__dock {
+    display: none;
+    position: fixed;
+    inset: auto 0 0;
+    align-items: center;
+    gap: tokens.$spacing-spacing-3;
+    min-height: var(--listing-detail-dock-height);
+    padding: tokens.$spacing-spacing-3 tokens.$spacing-spacing-4;
+    padding-bottom: calc(#{tokens.$spacing-spacing-3} + env(safe-area-inset-bottom));
+    border-top: 1px solid tokens.$color-border-white-light;
+
+    @include bp.below('md') {
+      display: flex;
+    }
+
+    ul-skeleton {
+      flex: 1 1 0;
+    }
+  }
+}

@@ -1,0 +1,18 @@
+<!--
+    The description gets its own full-width section rather than being
+    squeezed into the info column: alongside the title and price it's the
+    part of the page a buyer actually reads. ul-collapse only renders its
+    toggle once the content exceeds maxHeight, so short descriptions show
+    in full with no "view more" at all.
+-->
+<ng-container *transloco="let t">
+  <h2 class="ul-typography-headline-s-extrabold">{{ t('listingDetail.description') }}</h2>
+  <ul-collapse
+    class="ul-mt-4"
+    [maxHeight]="260"
+    [expandLabel]="t('listingDetail.viewMore')"
+    [collapseLabel]="t('listingDetail.viewLess')"
+  >
+    <ul-rich-text [content]="descriptionHtml()" />
+  </ul-collapse>
+</ng-container>

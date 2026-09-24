@@ -1,0 +1,43 @@
+<ng-container *transloco="let t">
+  @if (variant() === 'menu') {
+    <!--
+      ul-menu renders itself as a bottom sheet below the md breakpoint
+      and as a dropdown panel above it, so this single trigger covers
+      the mobile requirement on its own — it's just hidden on desktop,
+      where the same actions show as an inline button row instead.
+      -->
+    <ul-menu
+      class="listing-detail__actions-menu ul-bg-black-medium ul-rounded-full md:ul-hidden"
+      theme="ghost-white"
+      triggerIconOnly="more_options"
+      [iconOnlyLabel]="t('listingDetail.listingActions')"
+      [items]="ownerActions()"
+      (itemSelected)="onOwnerAction($event)"
+    />
+  } @else {
+    <div class="listing-detail__owner-actions ul-gap-3">
+      @for (action of ownerActions(); track action.value) {
+        @if (action.value === 'edit') {
+          <ul-button
+            type="button"
+            [theme]="actionTheme(action)"
+            size="md"
+            [routerLink]="editRoute()"
+          >
+            {{ action.label }}
+          </ul-button>
+        } @else {
+          <ul-button
+            type="button"
+            [theme]="actionTheme(action)"
+            size="md"
+            [disabled]="isActionPending(action)"
+            (buttonClick)="onOwnerAction(action)"
+          >
+            {{ actionLabel(action) }}
+          </ul-button>
+        }
+      }
+    </div>
+  }
+</ng-container>

@@ -35,7 +35,7 @@
                 >
                   @if (listing.imageUrls[0]; as image) {
                     <img
-                      udsCardMedia
+                      ulCardMedia
                       [ngSrc]="image"
                       fill
                       sizes="(min-width: 1280px) 16vw, (min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw"
@@ -43,7 +43,7 @@
                       [alt]="listing.title"
                     />
                   } @else {
-                    <div udsCardMedia class="home__placeholder"></div>
+                    <div ulCardMedia class="home__placeholder"></div>
                   }
                 </ul-card>
               </a>

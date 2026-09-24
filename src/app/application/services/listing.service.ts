@@ -68,4 +68,9 @@ export class ListingService {
   async delete(id: ListingId): Promise<void> {
     await this.listingRepository.delete(id);
   }
+
+  isOwner(ownerId: string): boolean {
+    const user = this.authService.currentUser();
+    return user !== null && ownerId === user.id;
+  }
 }

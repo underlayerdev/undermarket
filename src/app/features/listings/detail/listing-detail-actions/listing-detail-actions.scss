@@ -1,0 +1,37 @@
+@use 'pkg:@underlayerdev/ui/design-tokens' as tokens;
+@use 'pkg:@underlayerdev/ui/breakpoints' as bp;
+
+// Neither variant's own root should have to fight a box the host itself
+// introduces: `contents` removes the host from the box model entirely, so
+// whichever element the template renders (the ul-menu trigger, or the
+// button-row div) behaves exactly as if it sat directly in
+// ListingDetailComponent's template — which is where this markup used to
+// live, before it moved into its own component.
+:host {
+  display: contents;
+}
+
+// Sits on top of the photo rather than above it, so the gallery keeps the
+// full width of the screen. Fixed (not absolute) so it stays pinned to the
+// viewport corner as the user scrolls past the image, and — unlike absolute
+// — doesn't care that `display: contents` above gives it no positioned
+// ancestor of its own to anchor to. Desktop-only via `md:ul-hidden`; the
+// same actions show as the button row below instead.
+.listing-detail__actions-menu {
+  position: fixed;
+  top: tokens.$spacing-spacing-4;
+  right: tokens.$spacing-spacing-4;
+  z-index: 1;
+}
+
+// Desktop-only: on mobile these same actions are reached through the bottom
+// sheet above instead. There is no `md:ul-flex` utility to pair with
+// `ul-hidden`, so the breakpoint is handled here.
+.listing-detail__owner-actions {
+  display: none;
+
+  @include bp.up('md') {
+    display: flex;
+    flex-wrap: wrap;
+  }
+}

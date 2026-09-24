@@ -1,0 +1,17 @@
+<div class="um-listing-detail-cta" *transloco="let t">
+  <ul-button
+    class="listing-detail__whatsapp"
+    type="button"
+    theme="fill-green"
+    size="md"
+    (buttonClick)="onWhatsAppClick()"
+  >
+    <ul-icon icon="message_chat" size="5" />
+    {{ t('listingDetail.contactWhatsApp') }}
+  </ul-button>
+
+  <ul-button type="button" theme="outline-purple" size="md" (buttonClick)="onMessageClick()">
+    <ul-icon icon="message" size="5" />
+    {{ t('listingDetail.contactMessage') }}
+  </ul-button>
+</div>

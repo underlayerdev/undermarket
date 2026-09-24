@@ -1,6 +1,6 @@
 import { Component, input } from '@angular/core';
 import { PillComponent } from '@underlayerdev/ui';
-import { Listing } from '../../../domain/listing/listing.model';
+import { Listing } from '../../../../domain/listing/listing.model';
 import { TranslocoDirective } from '@jsverse/transloco';
 
 @Component({

@@ -1,6 +1,25 @@
 @use 'pkg:@underlayerdev/ui/design-tokens' as tokens;
 @use 'pkg:@underlayerdev/ui/breakpoints' as bp;
 
+:host {
+  // A fixed height rather than one derived from each photo's aspect ratio: every
+  // listing's gallery then occupies exactly the same box, and the loading
+  // skeleton can reserve that box to the pixel so nothing reflows when the
+  // photos arrive. Exposed as a custom property precisely so the skeleton — which
+  // renders in a different branch of the template, outside `.listing-detail` —
+  // can read the same number instead of duplicating it.
+  --listing-detail-media-height: 420px;
+
+  // Height of the mobile CTA dock. Used twice: to size the bar, and to reserve
+  // the matching run-off space so the last of the content can be scrolled clear
+  // of it. One value, so the two can't drift apart.
+  --listing-detail-dock-height: 72px;
+
+  @include bp.up('md') {
+    --listing-detail-media-height: 480px;
+  }
+}
+
 ul-breadcrumb {
   padding-top: tokens.$spacing-spacing-4;
   display: none;
@@ -19,11 +38,26 @@ ul-breadcrumb {
   z-index: tokens.$elevation-modal;
   overflow-y: auto;
 
+  // Unconditional run-off at the end of the page, at both breakpoints: without
+  // it the similar-items carousel ends flush against the bottom edge, which
+  // reads as truncated content.
+  padding-bottom: tokens.$spacing-spacing-8;
+
   @include bp.up('md') {
     position: static;
     inset: auto;
     z-index: auto;
     overflow-y: visible;
+    padding-bottom: tokens.$spacing-spacing-12;
+  }
+}
+
+// Non-owners get the docked CTA bar, which is fixed and therefore out of flow —
+// so the scroll container has to reserve its height itself, on top of the run-off
+// above, or the bar permanently covers the end of the page.
+.listing-detail--has-dock {
+  @include bp.below('md') {
+    padding-bottom: calc(var(--listing-detail-dock-height) + #{tokens.$spacing-spacing-8});
   }
 }
 
@@ -43,12 +77,17 @@ ul-breadcrumb {
   }
 }
 
+// Sits on top of the photo rather than above it, so the gallery keeps the
+// full width of the screen. Fixed (not absolute) so it stays pinned to the
+// viewport corner as the user scrolls past the image instead of scrolling
+// away with the gallery: `.listing-detail` sets no transform or filter, so
+// `fixed` here still anchors to the real viewport. Mobile-only — hidden on
+// desktop via `md:ul-hidden`.
+//
+// The equivalent owner-actions rule (`.listing-detail__actions-menu`) now
+// lives in listing-detail-actions.scss — that markup moved into
+// ListingDetailActionsComponent, so the rule styling it moved with it.
 .listing-detail__back {
-  // Fixed (not absolute) so it stays pinned to the viewport corner as the
-  // user scrolls past the image, instead of scrolling away with the
-  // gallery. `.listing-detail` has no transform/filter, so `fixed` here
-  // still anchors to the real viewport, not to that ancestor's box. Only
-  // relevant on mobile — hidden on desktop via `md:ul-hidden`.
   position: fixed;
   top: tokens.$spacing-spacing-4;
   left: tokens.$spacing-spacing-4;
@@ -58,32 +97,27 @@ ul-breadcrumb {
 .listing-detail__carousel,
 .listing-detail__placeholder {
   // ul-carousel is a custom element with no display set by the library,
-  // defaulting to inline — height/aspect-ratio below are no-ops without
-  // this, and Splide falls back to sizing the track from each photo's own
-  // natural aspect ratio instead, which is why the height used to vary
-  // per listing depending on that photo's dimensions.
+  // defaulting to inline — the height below is a no-op without this, and Splide
+  // falls back to sizing the track from each photo's own natural aspect ratio
+  // instead, which is why the height used to vary per listing.
   display: block;
-  // With the default overflow: visible, a taller-than-4:3 photo's intrinsic
-  // size still wins over aspect-ratio/height (the automatic minimum size
-  // defers to content unless overflow is clipped) — hidden is also correct
-  // here regardless, since object-fit: cover is meant to crop the photo to
-  // this box, not have the box grow around it.
+  // With the default overflow: visible, a tall photo's intrinsic size still wins
+  // over the fixed height (the automatic minimum size defers to content unless
+  // overflow is clipped) — hidden is also correct here regardless, since
+  // object-fit: cover is meant to crop the photo to this box, not have the box
+  // grow around it.
   overflow: hidden;
-  height: 63vh;
-
-  @include bp.up('md') {
-    height: auto;
-    aspect-ratio: 4 / 3;
-  }
+  height: var(--listing-detail-media-height);
 }
 
 .listing-detail__placeholder {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  // Positioned so the absolutely-placed ul-image-not-found inside it has this
+  // box to fill rather than escaping to some ancestor.
+  position: relative;
 }
 
 .listing-detail__photo-trigger {
+  position: relative;
   display: block;
   width: 100%;
   height: 100%;
@@ -97,11 +131,22 @@ ul-breadcrumb {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  // The placeholder is a positioned sibling and would otherwise paint over the
+  // photo, since positioned elements paint above in-flow ones. Lifting the image
+  // into the same layer above it means no toggling is needed: a loaded photo
+  // covers the placeholder, and a broken one is set to `visibility: hidden` by
+  // peCatchImageNotFound, letting the placeholder show through from behind.
+  position: relative;
+  z-index: 1;
 }
 
 .listing-detail__info {
   display: flex;
   flex-direction: column;
+
+  @include bp.below('md') {
+    margin-top: tokens.$spacing-spacing-4;
+  }
 }
 
 .listing-detail__wrap-row {
@@ -110,8 +155,80 @@ ul-breadcrumb {
   align-items: center;
 }
 
+// Desktop-only: on mobile the same contact actions are reached through the
+// docked bar instead. There is no `md:ul-flex` utility to pair with
+// `ul-hidden`, so the breakpoint is handled here.
+//
+// The equivalent owner-actions rule now lives in listing-detail-actions.scss,
+// alongside the markup it styles — same reasoning as .listing-detail__back
+// above. The full-width button pair inside .listing-detail__contact-actions
+// is likewise now ListingDetailCtaComponent's own concern (see
+// listing-detail-cta.scss): its buttons are that component's own encapsulated
+// template, not reachable from here.
+.listing-detail__contact-actions {
+  display: none;
+
+  @include bp.up('md') {
+    display: flex;
+    flex-wrap: wrap;
+  }
+}
+
 .listing-detail__seller {
   display: flex;
   align-items: center;
   text-decoration: none;
+}
+
+// Given the full content width rather than the narrow info column: alongside the
+// title and price this is the part of the page a buyer actually reads. Capped so
+// the lines stay a comfortable length on wide screens even so.
+.listing-detail__description {
+  max-width: 70ch;
+}
+
+.listing-detail__similar-carousel {
+  // Same reason as the photo carousel: ul-carousel defaults to `display: inline`,
+  // which leaves Splide unable to size its track.
+  display: block;
+  overflow: hidden;
+
+  a {
+    display: block;
+    text-decoration: none;
+  }
+}
+
+// Mobile-only docked CTA bar. Rendered outside `.listing-detail` so the page's
+// own scrolling never moves it; `.listing-detail--has-dock` reserves the
+// matching space above. Sits one level above the full-screen page, which itself
+// is raised to the modal elevation on mobile.
+//
+// The breakpoint is owned here rather than by a `md:ul-hidden` class on the
+// element: that utility is `display: none` on a single class inside a media
+// query, so it ties with the rule below on specificity and loses on source order
+// (component styles are injected after the global stylesheet). Setting `display`
+// at all on an element carrying a `ul-hidden` utility silently defeats it.
+.listing-detail__dock {
+  display: none;
+  position: fixed;
+  inset: auto 0 0;
+  z-index: tokens.$elevation-modal + 1;
+  align-items: center;
+  gap: tokens.$spacing-spacing-3;
+  min-height: var(--listing-detail-dock-height);
+  padding: tokens.$spacing-spacing-3 tokens.$spacing-spacing-4;
+  // Keeps the buttons clear of the home indicator on notched devices; resolves
+  // to 0 everywhere else.
+  padding-bottom: calc(#{tokens.$spacing-spacing-3} + env(safe-area-inset-bottom));
+  border-top: 1px solid tokens.$color-border-white-light;
+
+  @include bp.below('md') {
+    display: flex;
+  }
+
+  ul-button {
+    flex: 1 1 0;
+    min-width: 0;
+  }
 }

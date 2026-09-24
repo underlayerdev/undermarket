@@ -1,0 +1,36 @@
+<div class="um-listing-detail__similar-items" *transloco="let t">
+  <h2 class="ul-typography-headline-s-extrabold">
+    {{ t('listingDetail.similarItems') }}
+  </h2>
+  <ul-carousel
+    class="um-listing-detail-similar-items__carousel ul-mt-4"
+    [options]="similarCarouselOptions"
+    [autoMount]="true"
+  >
+    @for (similar of similarListings(); track similar.id) {
+      <ul-carousel-item>
+        <a [routerLink]="['/listings', createListingSlug(similar.title, similar.id)]">
+          <ul-card
+            [cardTitle]="similar.title"
+            [cardSubtitle]="similar.price | listingPrice: similar.currency"
+            [cardCaption]="similar.category"
+            [cardTitleSingleLine]="true"
+            cardDirection="vertical"
+            mediaAspectRatio="square"
+          >
+            @if (similar.imageUrls[0]; as image) {
+              <!--
+                Unlike the gallery there's no placeholder stacked
+                behind these, so the directive's own placeholder is
+                left on to cover a dead thumbnail URL.
+              -->
+              <img ulCardMedia ulCatchImageNotFound [src]="image" [alt]="similar.title" />
+            } @else {
+              <ul-image-not-found ulCardMedia iconSize="8" />
+            }
+          </ul-card>
+        </a>
+      </ul-carousel-item>
+    }
+  </ul-carousel>
+</div>

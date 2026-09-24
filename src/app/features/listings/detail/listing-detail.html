@@ -1,15 +1,13 @@
 <ng-container *transloco="let t">
-  @if (isLoading()) {
-    <div class="ul-container-product">
-      <div class="ul-content">
-        <ul-skeleton variant="rect" width="100%" height="500px" [show]="true" />
-        <ul-skeleton variant="text" [lines]="5" [show]="true" />
-      </div>
-    </div>
-  } @else if (errorType(); as type) {
+  @if (store.isLoading()) {
+    <um-listing-detail-loading />
+  } @else if (store.errorType(); as type) {
     <um-listing-detail-error [errorType]="type" (retry)="retry()" />
-  } @else if (listing(); as item) {
-    <div class="ul-container-product listing-detail ul-bg-main">
+  } @else if (store.listing(); as item) {
+    <div
+      class="ul-container-product listing-detail ul-bg-main"
+      [class.listing-detail--has-dock]="!store.isOwner()"
+    >
       <div class="ul-content">
         <ul-breadcrumb [items]="breadcrumbItems()" />
 
@@ -27,30 +25,15 @@
               </ul-button>
             </div>
 
-            @if (item.imageUrls.length > 0) {
-              <ul-carousel
-                [options]="carouselOptions"
-                [autoMount]="true"
-                class="listing-detail__carousel"
-              >
-                @for (url of item.imageUrls; track url; let i = $index) {
-                  <ul-carousel-item>
-                    <button
-                      type="button"
-                      class="listing-detail__photo-trigger"
-                      [attr.aria-label]="photoAltText(i)"
-                      (click)="openLightbox(i)"
-                    >
-                      <img [src]="url" [alt]="photoAltText(i)" class="listing-detail__image" />
-                    </button>
-                  </ul-carousel-item>
-                }
-              </ul-carousel>
-            } @else {
-              <div class="ul-bg-grey-lvl-1 ul-rounded-2 listing-detail__placeholder">
-                <p class="ul-typography-caption-l-regular">{{ t('listingDetail.noPhotos') }}</p>
-              </div>
+            @if (store.isOwner()) {
+              <um-listing-detail-actions
+                variant="menu"
+                (deleteRequested)="showDeleteModal.set(true)"
+                (actionResult)="resultModal.set($event)"
+              />
             }
+
+            <um-listing-detail-images [imageUrls]="item.imageUrls" />
           </div>
 
           <div class="ul-col-12 ul-col-md-5 ul-gap-4 listing-detail__info">
@@ -75,12 +58,7 @@
                 {{ locationLabel }}
               </p>
             }
-
-            <div>
-              <p class="ul-typography-body-m-regular">{{ item.description }}</p>
-            </div>
-
-            @if (owner(); as seller) {
+            @if (store.owner(); as seller) {
               <a [routerLink]="['/profile', seller.id]" class="listing-detail__seller ul-gap-3">
                 <ul-avatar [initials]="getInitials(seller)" [src]="seller.photoUrl" size="sm" />
                 <div>
@@ -99,41 +77,51 @@
             <p class="ul-typography-caption-l-regular ul-text-secondary">
               {{ t('listingDetail.listedOn', { value: item.createdAt | localeDate }) }}
             </p>
-
-            @if (isOwner()) {
-              <div class="listing-detail__wrap-row ul-gap-3">
-                @if (item.status === 'draft') {
-                  <ul-button
-                    type="button"
-                    theme="fill-yellow"
-                    size="md"
-                    [disabled]="isPublishing()"
-                    (buttonClick)="onPublishClick()"
-                  >
-                    {{
-                      isPublishing()
-                        ? t('listingDetail.publishing')
-                        : t('listingDetail.publishListing')
-                    }}
-                  </ul-button>
-                }
-                <ul-button
-                  type="button"
-                  theme="outline-purple"
-                  size="md"
-                  [routerLink]="['/listings', createListingSlug(item.title, item.id), 'edit']"
-                >
-                  {{ t('listingDetail.editListing') }}
-                </ul-button>
-                <ul-button type="button" theme="fill-red" size="md" (buttonClick)="onDeleteClick()">
-                  {{ t('listingDetail.deleteListing') }}
-                </ul-button>
+            @if (store.isOwner()) {
+              <um-listing-detail-actions
+                variant="list"
+                (deleteRequested)="showDeleteModal.set(true)"
+                (actionResult)="resultModal.set($event)"
+              />
+            } @else {
+              <div class="listing-detail__contact-actions ul-gap-3">
+                <um-listing-detail-cta />
               </div>
             }
           </div>
         </article>
+
+        <!--
+          The description gets its own full-width section rather than being
+          squeezed into the info column: alongside the title and price it's the
+          part of the page a buyer actually reads. ul-collapse only renders its
+          toggle once the content exceeds maxHeight, so short descriptions show
+          in full with no "view more" at all.
+        -->
+        <section class="listing-detail__description ul-mt-8">
+          <um-listing-detail-description [description]="item.description" />
+        </section>
+
+        @defer {
+          <section class="listing-detail__similar-items ul-mt-12">
+            <um-listing-detail-similar-items [listing]="item" />
+          </section>
+        }
       </div>
     </div>
+
+    @if (!store.isOwner()) {
+      <!--
+        Mobile-only docked CTA bar. It lives outside `.listing-detail` so the
+        page's own scrolling never moves it, and `.listing-detail--has-dock`
+        above reserves matching bottom padding so the last of the content can
+        always be scrolled clear of it. No md:ul-hidden here — the stylesheet
+        sets `display` on this element, which would override that utility.
+      -->
+      <div class="listing-detail__dock ul-bg-main">
+        <um-listing-detail-cta />
+      </div>
+    }
 
     <ul-modal
       [(open)]="showDeleteModal"
@@ -147,6 +135,22 @@
       <p class="ul-typography-body-m-regular">
         {{ t('listingDetail.deleteModalBody', { value: item.title }) }}
       </p>
+    </ul-modal>
+
+    <!--
+      This page's only feedback surface for publish/mark-as-sold/delete —
+      no toasts here by design. One modal shared by both
+      um-listing-detail-actions instances (menu + list variants both emit
+      actionResult into the same resultModal signal) rather than either
+      instance showing its own: a modal is a singleton, unlike a toast
+      queue, so there can only sensibly be one.
+    -->
+    <ul-modal
+      [open]="resultModal() !== null"
+      [variant]="resultModal()?.variant ?? 'success'"
+      (closed)="resultModal.set(null)"
+    >
+      <p class="ul-typography-body-m-regular">{{ resultModal()?.message }}</p>
     </ul-modal>
   }
 </ng-container>

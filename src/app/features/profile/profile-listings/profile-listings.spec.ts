@@ -6,6 +6,7 @@ import type { Listing } from '../../../domain/listing/listing.model';
 import { getTranslocoTestingModule } from '../../../../testing/transloco-testing';
 import { installFakeLocalStorage } from '../../../../testing/fake-local-storage';
 import { getRecentSearches } from '../../../shared/search/recent-searches.util';
+import { stubMatchMedia } from '../../../../testing/match-media';
 
 function listing(overrides: Partial<Listing> = {}): Listing {
   return {
@@ -28,21 +29,6 @@ function listing(overrides: Partial<Listing> = {}): Listing {
 // a real macrotask boundary guarantees every pending microtask has drained.
 function flushAsync(): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, 0));
-}
-
-// jsdom doesn't implement matchMedia at all — ul-search-input's mobile
-// breakpoint check needs it assigned outright, not spied on.
-function mockMatchMedia(matches: boolean): void {
-  window.matchMedia = vi.fn().mockImplementation((query: string) => ({
-    matches,
-    media: query,
-    addListener: () => {},
-    removeListener: () => {},
-    addEventListener: () => {},
-    removeEventListener: () => {},
-    onchange: null,
-    dispatchEvent: () => false,
-  }));
 }
 
 describe('ProfileListingsComponent', () => {
@@ -162,7 +148,7 @@ describe('ProfileListingsComponent', () => {
   });
 
   it('should show a second listings list with live results inside the mobile search takeover', async () => {
-    mockMatchMedia(true);
+    stubMatchMedia(true);
     const fixture = setup([
       listing({ id: 'a', title: 'Vintage lamp' }),
       listing({ id: 'b', title: 'Mountain bike' }),

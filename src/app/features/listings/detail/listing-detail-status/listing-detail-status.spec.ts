@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { ListingDetailStatusComponent } from './listing-detail-status';
-import { getTranslocoTestingModule } from '../../../../testing/transloco-testing';
-import type { Listing } from '../../../domain/listing/listing.model';
+import { getTranslocoTestingModule } from '../../../../../testing/transloco-testing';
+import type { Listing } from '../../../../domain/listing/listing.model';
 
 function listing(overrides: Partial<Listing> = {}): Listing {
   return {

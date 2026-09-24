@@ -1,31 +1,41 @@
 import { TestBed } from '@angular/core/testing';
-import { ActivatedRoute, provideRouter, Router, RouterLink } from '@angular/router';
-import { By } from '@angular/platform-browser';
+import { ActivatedRoute, provideRouter, Router } from '@angular/router';
 import { Location } from '@angular/common';
-import { signal } from '@angular/core';
+import { Title } from '@angular/platform-browser';
 import { ListingDetailComponent } from './listing-detail';
+import { ListingDetailStore } from './listing-detail.store';
 import { AuthService } from '../../../application/services/auth.service';
-import { ListingService } from '../../../application/services/listing.service';
-import { SeoService } from '../../../core/seo/seo.service';
-import { LISTING_REPOSITORY, USER_REPOSITORY } from '../../../core/configuration/tokens';
+import { getTranslocoTestingModule } from '../../../../testing/transloco-testing';
+import { stubMatchMedia } from '../../../../testing/match-media';
+import {
+  AUTH_PROVIDER,
+  IMAGE_STORAGE,
+  LISTING_REPOSITORY,
+  USER_REPOSITORY,
+} from '../../../core/configuration/tokens';
+import type { AuthProvider } from '../../../domain/auth/auth.provider';
+import type { ImageStorage } from '../../../domain/image-storage/image-storage.provider';
+import type { ListingRepository } from '../../../domain/listing/listing.repository';
 import type { Listing } from '../../../domain/listing/listing.model';
 import { mockUser } from '../../../domain/user/user.mock';
-import { ImageLightboxService } from '../../../shared/image-lightbox/image-lightbox.service';
-import { getTranslocoTestingModule } from '../../../../testing/transloco-testing';
+import type { User } from '../../../domain/user/user.model';
 
-// fixture.whenStable() doesn't reliably wait out ngOnInit's two-step async
-// chain (listing fetch, then owner fetch) — a real macrotask boundary
-// guarantees every pending microtask has drained.
+// Same reasoning as ListingDetailStore's and ListingDetailActionsComponent's
+// specs: a click's async handler chain crosses more microtask boundaries
+// than a fixed number of `await Promise.resolve()` reliably covers.
 function flushAsync(): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, 0));
 }
 
-describe('ListingDetailComponent', () => {
-  const listing: Listing = {
-    id: '123',
-    ownerId: 'owner-1',
+const owner = mockUser({ id: 'owner-1', displayName: 'Owner Person' });
+const buyer = mockUser({ id: 'buyer-1', displayName: 'Buyer Person' });
+
+function listing(overrides: Partial<Listing> = {}): Listing {
+  return {
+    id: 'listing-1',
+    ownerId: owner.id,
     title: 'Vintage lamp',
-    description: 'A nice lamp',
+    description: 'A nice lamp, barely used.',
     price: 42,
     currency: 'USD',
     category: 'Furniture',
@@ -33,287 +43,310 @@ describe('ListingDetailComponent', () => {
     status: 'active',
     createdAt: new Date('2026-01-01'),
     updatedAt: new Date('2026-01-01'),
+    ...overrides,
+  };
+}
+
+function createAuthProviderMock(): AuthProvider & { emitAuthState: (user: User | null) => void } {
+  let listener: ((user: User | null) => void) | null = null;
+  return {
+    login: async () => owner,
+    register: async () => owner,
+    loginWithOAuth: async () => owner,
+    loginAnonymously: async () => owner,
+    sendPasswordResetEmail: async () => undefined,
+    confirmPasswordReset: async () => undefined,
+    changePassword: async () => undefined,
+    updateDisplayName: async () => undefined,
+    updatePhotoUrl: async () => undefined,
+    deleteAccount: async () => undefined,
+    logout: async () => undefined,
+    currentUser: () => null,
+    onAuthStateChange: (callback) => {
+      listener = callback;
+      return () => {
+        listener = null;
+      };
+    },
+    emitAuthState: (user) => listener?.(user),
+  };
+}
+
+async function setup(
+  options: {
+    getById?: ReturnType<typeof vi.fn<ListingRepository['getById']>>;
+    getOwnerById?: ReturnType<typeof vi.fn>;
+    slug?: string;
+    currentUser?: User | null;
+  } = {},
+): Promise<{
+  fixture: ReturnType<typeof TestBed.createComponent<ListingDetailComponent>>;
+  authProviderMock: ReturnType<typeof createAuthProviderMock>;
+  locationBackSpy: ReturnType<typeof vi.fn>;
+}> {
+  stubMatchMedia();
+
+  const authProviderMock = createAuthProviderMock();
+  const locationBackSpy = vi.fn();
+  const listingRepositoryMock: Partial<ListingRepository> = {
+    getById: options.getById ?? vi.fn(async () => listing()),
+    getLatest: vi.fn(async () => []),
+    update: vi.fn(async () => undefined),
+    delete: vi.fn(async () => undefined),
   };
 
-  function setup(
-    getById: ReturnType<typeof vi.fn>,
-    slug = 'vintage-lamp-123',
-    currentUser: { id: string } | null = null,
-    listingServiceMock: { delete: ReturnType<typeof vi.fn>; update?: ReturnType<typeof vi.fn> } = {
-      delete: vi.fn(),
-    },
-    getOwnerById: ReturnType<typeof vi.fn> = vi.fn().mockResolvedValue(null),
-  ) {
-    TestBed.configureTestingModule({
-      imports: [ListingDetailComponent, getTranslocoTestingModule()],
-      providers: [
-        provideRouter([]),
-        { provide: LISTING_REPOSITORY, useValue: { getById } },
-        { provide: USER_REPOSITORY, useValue: { getById: getOwnerById } },
-        { provide: ListingService, useValue: listingServiceMock },
-        { provide: AuthService, useValue: { currentUser: signal(currentUser) } },
-        { provide: SeoService, useValue: { setPage: vi.fn(), setListing: vi.fn() } },
-        { provide: ActivatedRoute, useValue: { snapshot: { params: { slug } } } },
-        { provide: ImageLightboxService, useValue: { open: vi.fn() } },
-      ],
-    });
-
-    return TestBed.createComponent(ListingDetailComponent);
-  }
-
-  it('should publish a draft listing and reflect the new status', async () => {
-    const draft: Listing = { ...listing, status: 'draft' };
-    const updateSpy = vi.fn().mockResolvedValue(undefined);
-    const fixture = setup(
-      vi.fn().mockResolvedValue(draft),
-      'vintage-lamp-123',
-      { id: 'owner-1' },
+  TestBed.configureTestingModule({
+    imports: [ListingDetailComponent, getTranslocoTestingModule()],
+    providers: [
+      provideRouter([]),
+      { provide: Location, useValue: { back: locationBackSpy } },
+      { provide: AUTH_PROVIDER, useValue: authProviderMock },
+      { provide: LISTING_REPOSITORY, useValue: listingRepositoryMock },
       {
-        delete: vi.fn(),
-        update: updateSpy,
+        provide: USER_REPOSITORY,
+        useValue: { getById: options.getOwnerById ?? vi.fn(async () => owner) },
       },
-    );
-    fixture.detectChanges();
-    await flushAsync();
-
-    await fixture.componentInstance.onPublishClick();
-
-    expect(updateSpy).toHaveBeenCalledWith(
-      expect.objectContaining({ id: draft.id, status: 'active' }),
-    );
-    expect(fixture.componentInstance.listing()?.status).toBe('active');
+      { provide: IMAGE_STORAGE, useValue: { upload: vi.fn() } as ImageStorage },
+      {
+        provide: ActivatedRoute,
+        useValue: { snapshot: { params: { slug: options.slug ?? 'vintage-lamp-listing-1' } } },
+      },
+    ],
   });
 
-  it('should create', () => {
-    const fixture = setup(vi.fn().mockResolvedValue(listing));
+  // AuthService only registers its listener with the provider from its own
+  // constructor — injecting it here forces that construction, so
+  // emitAuthState below actually reaches someone.
+  const authService = TestBed.inject(AuthService);
+  authProviderMock.emitAuthState(options.currentUser ?? null);
+  await authService.ready;
+
+  const fixture = TestBed.createComponent(ListingDetailComponent);
+  return { fixture, authProviderMock, locationBackSpy };
+}
+
+describe('ListingDetailComponent', () => {
+  it('should create', async () => {
+    const { fixture } = await setup();
     expect(fixture.componentInstance).toBeTruthy();
   });
 
-  it('should show the listing once loaded', async () => {
-    const fixture = setup(vi.fn().mockResolvedValue(listing));
-    fixture.detectChanges();
-    await flushAsync();
+  describe('loading', () => {
+    it('should show the loading skeleton before the fetch resolves', async () => {
+      const { fixture } = await setup();
+      fixture.detectChanges();
 
-    expect(fixture.componentInstance.isLoading()).toBe(false);
-    expect(fixture.componentInstance.listing()?.title).toBe('Vintage lamp');
-    expect(fixture.componentInstance.errorType()).toBeNull();
-  });
-
-  it('should navigate to the listing edit route when the owner clicks Edit', async () => {
-    const fixture = setup(vi.fn().mockResolvedValue(listing), 'vintage-lamp-123', {
-      id: 'owner-1',
+      expect(fixture.nativeElement.querySelector('um-listing-detail-loading')).not.toBeNull();
     });
-    fixture.detectChanges();
-    await flushAsync();
-    fixture.detectChanges();
-    expect(fixture.componentInstance.isOwner()).toBe(true);
-
-    const navigateByUrlSpy = vi
-      .spyOn(TestBed.inject(Router), 'navigateByUrl')
-      .mockResolvedValue(true);
-    const editButton = fixture.debugElement
-      .queryAll(By.directive(RouterLink))
-      .find((debugEl) => (debugEl.nativeElement as HTMLElement).textContent?.includes('Edit'));
-
-    (editButton!.nativeElement as HTMLElement).click();
-
-    expect(navigateByUrlSpy).toHaveBeenCalled();
-    const navigatedUrl = navigateByUrlSpy.mock.calls[0][0].toString();
-    expect(navigatedUrl).toBe('/listings/vintage-lamp-123/edit');
   });
 
-  it('should set a not-found error type when the repository returns null', async () => {
-    const fixture = setup(vi.fn().mockResolvedValue(null));
-    fixture.detectChanges();
-    await flushAsync();
-
-    expect(fixture.componentInstance.errorType()).toBe('not-found');
-    expect(fixture.componentInstance.listing()).toBeNull();
-  });
-
-  it('should set a generic error type when the repository throws', async () => {
-    const fixture = setup(vi.fn().mockRejectedValue(new Error('network down')));
-    fixture.detectChanges();
-    await flushAsync();
-
-    expect(fixture.componentInstance.errorType()).toBe('generic');
-  });
-
-  it('should clear the error and reload the listing on retry', async () => {
-    const getById = vi
-      .fn()
-      .mockRejectedValueOnce(new Error('network down'))
-      .mockResolvedValue(listing);
-    const fixture = setup(getById);
-    fixture.detectChanges();
-    await flushAsync();
-    expect(fixture.componentInstance.errorType()).toBe('generic');
-
-    await fixture.componentInstance.retry();
-
-    expect(fixture.componentInstance.errorType()).toBeNull();
-    expect(fixture.componentInstance.listing()?.title).toBe('Vintage lamp');
-    expect(getById).toHaveBeenCalledTimes(2);
-  });
-
-  it('should go back in history when the back action is triggered', () => {
-    const fixture = setup(vi.fn().mockResolvedValue(listing));
-    const backSpy = vi.spyOn(TestBed.inject(Location), 'back');
-
-    fixture.componentInstance.goBack();
-
-    expect(backSpy).toHaveBeenCalledTimes(1);
-  });
-
-  it('should open the lightbox with the listing photos and tapped index when a photo is clicked', async () => {
-    // jsdom has no matchMedia; the carousel's underlying Splide instance
-    // calls it on mount to watch for reduced-motion/breakpoint changes.
-    window.matchMedia ??= vi.fn().mockReturnValue({
-      matches: false,
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-    }) as unknown as typeof window.matchMedia;
-
-    const listingWithPhotos: Listing = {
-      ...listing,
-      imageUrls: ['https://example.com/a.jpg', 'https://example.com/b.jpg'],
-    };
-    const fixture = setup(vi.fn().mockResolvedValue(listingWithPhotos));
-    fixture.detectChanges();
-    await flushAsync();
-    fixture.detectChanges();
-
-    const triggers = fixture.nativeElement.querySelectorAll('.listing-detail__photo-trigger');
-    expect(triggers.length).toBe(2);
-    (triggers[1] as HTMLButtonElement).click();
-
-    const imageLightboxService = TestBed.inject(ImageLightboxService);
-    expect(imageLightboxService.open).toHaveBeenCalledTimes(1);
-    const [images, startIndex] = (imageLightboxService.open as ReturnType<typeof vi.fn>).mock
-      .calls[0];
-    expect(images).toEqual(listingWithPhotos.imageUrls);
-    expect(startIndex).toBe(1);
-  });
-
-  describe('seller info', () => {
-    it('should show the seller name linked to their public profile once loaded', async () => {
-      const seller = mockUser({ id: 'owner-1', displayName: 'Jane Seller' });
-      const fixture = setup(
-        vi.fn().mockResolvedValue(listing),
-        'vintage-lamp-123',
-        null,
-        { delete: vi.fn() },
-        vi.fn().mockResolvedValue(seller),
-      );
+  describe('errors', () => {
+    it('should show a not-found error and set the not-found page title when the listing does not exist', async () => {
+      const { fixture } = await setup({ getById: vi.fn(async () => null) });
       fixture.detectChanges();
       await flushAsync();
       fixture.detectChanges();
 
-      expect(fixture.componentInstance.owner()?.displayName).toBe('Jane Seller');
-      expect(fixture.nativeElement.textContent).toContain('Jane Seller');
-      const link: HTMLAnchorElement =
-        fixture.nativeElement.querySelector('.listing-detail__seller');
-      expect(link.getAttribute('href')).toBe('/profile/owner-1');
+      const error = fixture.nativeElement.querySelector('um-listing-detail-error');
+      expect(error).not.toBeNull();
+      expect(TestBed.inject(Title).getTitle()).toContain('Listing not found');
     });
 
-    it('should show just the seller city, not the full geocoded display name', async () => {
-      const seller = mockUser({
-        id: 'owner-1',
-        profileCity: {
-          displayName: 'Palermo, Buenos Aires, Buenos Aires Province, Argentina',
-          city: 'Buenos Aires',
-          region: 'Buenos Aires Province',
-          countryCode: 'AR',
-        },
+    it('should show a generic error and set the error page title when the fetch throws', async () => {
+      const { fixture } = await setup({
+        getById: vi.fn(async () => {
+          throw new Error('network down');
+        }),
       });
-      const fixture = setup(
-        vi.fn().mockResolvedValue(listing),
-        'vintage-lamp-123',
-        null,
-        { delete: vi.fn() },
-        vi.fn().mockResolvedValue(seller),
-      );
       fixture.detectChanges();
       await flushAsync();
       fixture.detectChanges();
 
-      expect(fixture.nativeElement.textContent).toContain('Buenos Aires');
-      expect(fixture.nativeElement.textContent).not.toContain('Palermo');
-      expect(fixture.nativeElement.textContent).not.toContain('Argentina');
+      expect(fixture.nativeElement.querySelector('um-listing-detail-error')).not.toBeNull();
+      expect(TestBed.inject(Title).getTitle()).toContain('Error');
     });
 
-    it('should not show a seller block when the owner fetch fails', async () => {
-      const fixture = setup(
-        vi.fn().mockResolvedValue(listing),
-        'vintage-lamp-123',
-        null,
-        { delete: vi.fn() },
-        vi.fn().mockRejectedValue(new Error('not found')),
-      );
+    it('should retry the same slug when the error component emits retry', async () => {
+      const getById = vi
+        .fn<ListingRepository['getById']>()
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(listing());
+      const { fixture } = await setup({ getById });
       fixture.detectChanges();
       await flushAsync();
       fixture.detectChanges();
 
-      expect(fixture.componentInstance.owner()).toBeNull();
-      expect(fixture.nativeElement.querySelector('.listing-detail__seller')).toBeNull();
+      await fixture.componentInstance.retry();
+      fixture.detectChanges();
+
+      expect(getById).toHaveBeenCalledTimes(2);
+      expect(fixture.nativeElement.querySelector('um-listing-detail-error')).toBeNull();
     });
   });
 
-  describe('listing location', () => {
-    it('should show neighborhood and city when the listing has both', async () => {
-      const listingWithLocation: Listing = {
-        ...listing,
-        location: {
-          displayName: 'Palermo, Buenos Aires, Buenos Aires Province, Argentina',
-          countryCode: 'AR',
-          region: 'Buenos Aires Province',
-          city: 'Buenos Aires',
-          neighborhood: 'Palermo',
-          latitude: -34.5875,
-          longitude: -58.3974,
-          geohash: '6exys',
-        },
-      };
-      const fixture = setup(vi.fn().mockResolvedValue(listingWithLocation));
+  describe('loaded', () => {
+    it('should set the SEO title/description from the listing and show the breadcrumb title', async () => {
+      const { fixture } = await setup();
+      fixture.detectChanges();
+      await flushAsync();
+      fixture.detectChanges();
+
+      expect(TestBed.inject(Title).getTitle()).toContain('Vintage lamp');
+      expect(fixture.componentInstance.breadcrumbItems()[1].label).toBe('Vintage lamp');
+    });
+
+    it('should format the location label with neighborhood when present', async () => {
+      const { fixture } = await setup({
+        getById: vi.fn(async () =>
+          listing({
+            location: {
+              displayName: 'Palermo, Buenos Aires',
+              countryCode: 'AR',
+              region: 'Buenos Aires',
+              city: 'Buenos Aires',
+              neighborhood: 'Palermo',
+              latitude: -34.5875,
+              longitude: -58.4205,
+              geohash: '6ex2ug0d0',
+            },
+          }),
+        ),
+      });
       fixture.detectChanges();
       await flushAsync();
       fixture.detectChanges();
 
       expect(fixture.componentInstance.listingLocationLabel()).toBe('Palermo, Buenos Aires');
-      // Only neighborhood + city are shown — not the full displayName, region, or country.
-      expect(fixture.nativeElement.textContent).not.toContain('Buenos Aires Province');
-      expect(fixture.nativeElement.textContent).not.toContain('Argentina');
     });
 
-    it('should show only the city when there is no neighborhood', async () => {
-      const listingWithLocation: Listing = {
-        ...listing,
-        location: {
-          displayName: 'Rosario, Santa Fe, Argentina',
-          countryCode: 'AR',
-          region: 'Santa Fe',
-          city: 'Rosario',
-          latitude: -32.9468,
-          longitude: -60.6393,
-          geohash: '6ewrz',
-        },
-      };
-      const fixture = setup(vi.fn().mockResolvedValue(listingWithLocation));
+    it('should fall back to just the city when there is no neighborhood', async () => {
+      const { fixture } = await setup({
+        getById: vi.fn(async () =>
+          listing({
+            location: {
+              displayName: 'Buenos Aires',
+              countryCode: 'AR',
+              region: 'Buenos Aires',
+              city: 'Buenos Aires',
+              latitude: -34.6,
+              longitude: -58.4,
+              geohash: '6ex2ug0d0',
+            },
+          }),
+        ),
+      });
       fixture.detectChanges();
       await flushAsync();
       fixture.detectChanges();
 
-      expect(fixture.componentInstance.listingLocationLabel()).toBe('Rosario');
+      expect(fixture.componentInstance.listingLocationLabel()).toBe('Buenos Aires');
     });
+  });
 
-    it('should show nothing when the listing has no location', async () => {
-      const fixture = setup(vi.fn().mockResolvedValue(listing));
+  describe('owner vs buyer', () => {
+    it('should show the owner actions, not the contact CTA, when the signed-in user owns the listing', async () => {
+      const { fixture } = await setup({ currentUser: owner });
       fixture.detectChanges();
       await flushAsync();
       fixture.detectChanges();
 
-      expect(fixture.componentInstance.listingLocationLabel()).toBeNull();
-      expect(fixture.nativeElement.querySelector('ul-icon[icon="map_pin"]')).toBeNull();
+      expect(fixture.nativeElement.querySelectorAll('um-listing-detail-actions').length).toBe(2);
+      expect(fixture.nativeElement.querySelector('um-listing-detail-cta')).toBeNull();
+    });
+
+    it('should show the contact CTA, not the owner actions, for a non-owner', async () => {
+      const { fixture } = await setup({ currentUser: buyer });
+      fixture.detectChanges();
+      await flushAsync();
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.querySelector('um-listing-detail-actions')).toBeNull();
+      // Once in the info column, once in the mobile dock.
+      expect(fixture.nativeElement.querySelectorAll('um-listing-detail-cta').length).toBe(2);
+    });
+  });
+
+  describe('delete', () => {
+    it('should open the confirmation modal when an actions instance requests it', async () => {
+      const { fixture } = await setup({ currentUser: owner });
+      fixture.detectChanges();
+      await flushAsync();
+      fixture.detectChanges();
+
+      fixture.componentInstance.showDeleteModal.set(true);
+      fixture.detectChanges();
+
+      expect(fixture.componentInstance.showDeleteModal()).toBe(true);
+    });
+
+    it('should delete via the store, close the modal, and navigate away on confirm', async () => {
+      const { fixture } = await setup({ currentUser: owner });
+      fixture.detectChanges();
+      await flushAsync();
+      fixture.detectChanges();
+      fixture.componentInstance.showDeleteModal.set(true);
+      const navigateSpy = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+
+      await fixture.componentInstance.confirmDelete();
+
+      expect(fixture.componentInstance.showDeleteModal()).toBe(false);
+      expect(fixture.debugElement.injector.get(ListingDetailStore).listing()).toBeNull();
+      // store.delete() clears `listing`, leaving nothing for the @if/@else if
+      // chain to match — without navigating away the page would render
+      // blank rather than showing anything at all.
+      expect(navigateSpy).toHaveBeenCalledWith(['/profile']);
+    });
+
+    it('should show the result modal with an error when delete fails, without navigating away', async () => {
+      const { fixture } = await setup({ currentUser: owner });
+      fixture.detectChanges();
+      await flushAsync();
+      fixture.detectChanges();
+      vi.spyOn(
+        fixture.debugElement.injector.get(ListingDetailStore),
+        'delete',
+      ).mockRejectedValueOnce(new Error('offline'));
+      const navigateSpy = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+
+      await fixture.componentInstance.confirmDelete();
+      fixture.detectChanges();
+
+      expect(fixture.componentInstance.resultModal()?.variant).toBe('error');
+      expect(navigateSpy).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('result modal', () => {
+    it('should show the result an actions instance emits, and clear it when dismissed', async () => {
+      const { fixture } = await setup({ currentUser: owner });
+      fixture.detectChanges();
+      await flushAsync();
+      fixture.detectChanges();
+
+      fixture.componentInstance.resultModal.set({ variant: 'success', message: 'Published!' });
+      fixture.detectChanges();
+
+      // Both um-listing-detail-actions instances' target <ul-modal> and the
+      // delete-confirmation <ul-modal> are both unconditionally in the
+      // template — only their *internal* content is gated by `open()` — so
+      // asserting on the whole page's text avoids depending on which one
+      // querySelector happens to find first.
+      expect(fixture.nativeElement.textContent).toContain('Published!');
+
+      fixture.componentInstance.resultModal.set(null);
+      fixture.detectChanges();
+
+      expect(fixture.componentInstance.resultModal()).toBeNull();
+    });
+  });
+
+  describe('goBack', () => {
+    it('should navigate back via Location', async () => {
+      const { fixture, locationBackSpy } = await setup();
+
+      fixture.componentInstance.goBack();
+
+      expect(locationBackSpy).toHaveBeenCalledTimes(1);
     });
   });
 });

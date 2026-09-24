@@ -1,0 +1,17 @@
+@use 'pkg:@underlayerdev/ui/design-tokens' as tokens;
+@use 'pkg:@underlayerdev/ui/breakpoints' as bp;
+
+.um-listing-detail-cta {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  gap: tokens.$spacing-spacing-4;
+
+  @include bp.up('md') {
+    flex-direction: column;
+  }
+
+  ul-button {
+    flex: 1;
+  }
+}

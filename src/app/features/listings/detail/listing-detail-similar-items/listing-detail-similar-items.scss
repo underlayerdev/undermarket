@@ -1,0 +1,19 @@
+@use 'pkg:@underlayerdev/ui/design-tokens' as tokens;
+
+
+.um-listing-detail__similar-items {
+  display: flex;
+  flex-direction: column;
+}
+
+.listing-detail-similar-items_carousel {
+  // Same reason as the photo carousel: ul-carousel defaults to `display: inline`,
+  // which leaves Splide unable to size its track.
+  display: block;
+  overflow: hidden;
+
+  a {
+    display: block;
+    text-decoration: none;
+  }
+}

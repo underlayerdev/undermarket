@@ -1,0 +1,100 @@
+<div class="ul-container-product um-listing-detail-loading">
+  <div class="ul-content">
+    <!--
+      Hidden below sm to match ul-breadcrumb itself, which the real page also
+      only shows from that breakpoint up.
+    -->
+    <div class="um-listing-detail-loading__breadcrumb">
+      <ul-skeleton variant="rect" width="44px" height="14px" borderRadius="xs" />
+      <ul-skeleton variant="rect" width="120px" height="14px" borderRadius="xs" />
+    </div>
+
+    <div class="ul-row um-listing-detail-loading__article md:ul-mt-8">
+      <div class="ul-col-12 ul-col-md-7 um-listing-detail-loading__gallery">
+        <!--
+          Same custom property the loaded gallery sizes itself to, so nothing
+          reflows vertically the moment the real photos mount.
+        -->
+        <ul-skeleton
+          class="um-listing-detail-loading__media"
+          variant="rect"
+          width="100%"
+          height="var(--listing-detail-media-height)"
+        />
+      </div>
+
+      <div class="ul-col-12 ul-col-md-5 ul-gap-4 um-listing-detail-loading__info">
+        <div class="um-listing-detail-loading__pills">
+          <ul-skeleton variant="rect" width="84px" height="24px" borderRadius="full" />
+          <ul-skeleton variant="rect" width="68px" height="24px" borderRadius="full" />
+        </div>
+
+        <!-- Title -->
+        <ul-skeleton variant="rect" width="85%" height="32px" borderRadius="sm" />
+        <!-- Price -->
+        <ul-skeleton variant="rect" width="42%" height="28px" borderRadius="sm" />
+
+        <!-- Seller -->
+        <div class="um-listing-detail-loading__seller">
+          <ul-skeleton variant="rect" width="40px" height="40px" borderRadius="full" />
+          <div class="um-listing-detail-loading__seller-info">
+            <ul-skeleton variant="rect" width="140px" height="14px" borderRadius="xs" />
+            <ul-skeleton variant="rect" width="90px" height="12px" borderRadius="xs" />
+          </div>
+        </div>
+
+        <!--
+          Desktop-only, same as .listing-detail__owner-actions /
+          .listing-detail__contact-actions — on mobile the equivalent controls
+          are the bottom sheet / docked bar, not this column.
+        -->
+        <div class="um-listing-detail-loading__actions">
+          <ul-skeleton variant="rect" width="100%" height="44px" borderRadius="lg" />
+          <ul-skeleton variant="rect" width="100%" height="44px" borderRadius="lg" />
+        </div>
+      </div>
+    </div>
+
+    <section class="um-listing-detail-loading__description ul-mt-8 ul-gap-4">
+      <ul-skeleton class="ul-mt-4" variant="text" [lines]="3" width="80%" height="50px" />
+      <ul-skeleton class="ul-mt-8" variant="text" [lines]="3" width="80%" height="50px" />
+    </section>
+
+    <section class="um-listing-detail-loading__similar ul-mt-12">
+      <div class="um-listing-detail-loading__similar-row ul-mt-4">
+        @for (card of similarCards; track card) {
+          <div class="um-listing-detail-loading__card">
+            <!--
+              No height input on purpose: ul-skeleton applies width/height
+              inputs as inline styles on its own root element, which would
+              beat the `aspect-ratio` + `height: auto` this class sets in
+              listing-detail-loading.scss — the actual mechanism sizing this
+              box, since the card's width (and so its height) changes across
+              the breakpoints above. Width is still an input because nothing
+              in the stylesheet sets it.
+            -->
+            <ul-skeleton
+              class="um-listing-detail-loading__card-media"
+              variant="rect"
+              width="100%"
+              borderRadius="sm"
+            />
+            <ul-skeleton variant="rect" width="80%" height="14px" borderRadius="xs" />
+            <ul-skeleton variant="rect" width="50%" height="12px" borderRadius="xs" />
+          </div>
+        }
+      </div>
+    </section>
+  </div>
+</div>
+
+<!--
+  Mobile-only docked CTA placeholder, matching .listing-detail__dock. Whether
+  it actually appears once the listing loads depends on ownership, which isn't
+  known yet — reserving the space anyway is the safer guess, since most
+  visitors to a listing page aren't its owner.
+-->
+<div class="um-listing-detail-loading__dock">
+  <ul-skeleton variant="rect" width="100%" height="44px" borderRadius="lg" />
+  <ul-skeleton variant="rect" width="100%" height="44px" borderRadius="lg" />
+</div>

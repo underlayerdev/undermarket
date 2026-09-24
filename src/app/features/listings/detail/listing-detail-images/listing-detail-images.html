@@ -1,0 +1,34 @@
+@if (imageUrls().length > 0) {
+  <ul-carousel [options]="carouselOptions" [autoMount]="true" class="listing-detail__carousel">
+    @for (url of imageUrls(); track url; let i = $index) {
+      <ul-carousel-item>
+        <button
+          type="button"
+          class="listing-detail__photo-trigger"
+          [attr.aria-label]="photoAltText(i)"
+          (click)="openLightbox(i)"
+        >
+          <!--
+            showPlaceholder is off on purpose: the directive's own
+            placeholder is a pseudo-element on the <img>, which would
+            draw a second icon on top of the ul-image-not-found
+            already sitting behind it. All that's wanted from the
+            directive here is that it hide a broken image, which is
+            what reveals the placeholder underneath.
+          -->
+          <img
+            ulCatchImageNotFound
+            [showPlaceholder]="true"
+            [src]="url"
+            [alt]="photoAltText(i)"
+            class="listing-detail__image"
+          />
+        </button>
+      </ul-carousel-item>
+    }
+  </ul-carousel>
+} @else {
+  <div class="listing-detail__placeholder">
+    <ul-image-not-found iconSize="16" />
+  </div>
+}

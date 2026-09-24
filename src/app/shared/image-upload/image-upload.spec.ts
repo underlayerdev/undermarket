@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import imageCompression from 'browser-image-compression';
 import { ImageUploadComponent } from './image-upload';
 import { getTranslocoTestingModule } from '../../../testing/transloco-testing';
+import { stubMatchMedia } from '../../../testing/match-media';
 
 vi.mock('browser-image-compression', () => ({
   default: vi.fn(async (file: File) => file),
@@ -17,13 +18,7 @@ describe('ImageUploadComponent', () => {
     vi.mocked(imageCompression).mockImplementation(async (file) => file as File);
     URL.createObjectURL = vi.fn(() => 'blob:mock-url');
     URL.revokeObjectURL = vi.fn();
-    // jsdom has no matchMedia; the carousel's underlying Splide instance calls
-    // it on mount to watch for reduced-motion/breakpoint changes.
-    window.matchMedia ??= vi.fn().mockReturnValue({
-      matches: false,
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-    }) as unknown as typeof window.matchMedia;
+    stubMatchMedia();
 
     TestBed.configureTestingModule({
       imports: [ImageUploadComponent, getTranslocoTestingModule()],
