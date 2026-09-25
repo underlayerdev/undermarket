@@ -9,12 +9,8 @@ import {
   viewChild,
 } from '@angular/core';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
-import {
-  CarouselComponent,
-  CarouselItemComponent,
-  ButtonComponent,
-  IconComponent,
-} from '@underlayerdev/ui';
+import { ButtonComponent, IconComponent } from '@underlayerdev/ui';
+import { CarouselComponent, CarouselItemComponent } from '@underlayerdev/ui/carousel';
 import type { Options } from '@splidejs/splide';
 import { compressImage } from '../utils/image-compression';
 

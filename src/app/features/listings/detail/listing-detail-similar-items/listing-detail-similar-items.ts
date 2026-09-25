@@ -1,11 +1,6 @@
 import { Component, inject, input, signal } from '@angular/core';
-import {
-  CardComponent,
-  CarouselComponent,
-  CarouselItemComponent,
-  ImageNotFoundComponent,
-  ImageNotFoundDirective,
-} from '@underlayerdev/ui';
+import { CardComponent, ImageNotFoundComponent, ImageNotFoundDirective } from '@underlayerdev/ui';
+import { CarouselComponent, CarouselItemComponent } from '@underlayerdev/ui/carousel';
 import { Listing } from '../../../../domain/listing/listing.model';
 import { RouterLink } from '@angular/router';
 import { Options } from '@splidejs/splide';

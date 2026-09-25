@@ -1,12 +1,8 @@
 import { Component, inject, input } from '@angular/core';
 import { TranslocoService } from '@jsverse/transloco';
 import { Options } from '@splidejs/splide';
-import {
-  CarouselComponent,
-  CarouselItemComponent,
-  ImageNotFoundComponent,
-  ImageNotFoundDirective,
-} from '@underlayerdev/ui';
+import { ImageNotFoundComponent, ImageNotFoundDirective } from '@underlayerdev/ui';
+import { CarouselComponent, CarouselItemComponent } from '@underlayerdev/ui/carousel';
 import { ImageLightboxService } from '../../../../shared/image-lightbox/image-lightbox.service';
 
 @Component({
