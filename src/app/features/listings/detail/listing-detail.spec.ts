@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, provideRouter, Router } from '@angular/router';
 import { Location } from '@angular/common';
-import { Title } from '@angular/platform-browser';
+import { By, Title } from '@angular/platform-browser';
 import { ListingDetailComponent } from './listing-detail';
 import { ListingDetailStore } from './listing-detail.store';
 import { AuthService } from '../../../application/services/auth.service';
@@ -219,6 +219,16 @@ describe('ListingDetailComponent', () => {
       expect(fixture.componentInstance.listingLocationLabel()).toBe('Palermo, Buenos Aires');
     });
 
+    it('should render the desktop share button with the listing title, for owner and buyer alike', async () => {
+      const { fixture } = await setup({ currentUser: buyer });
+      fixture.detectChanges();
+      await flushAsync();
+      fixture.detectChanges();
+
+      const shareButton = fixture.debugElement.query(By.css('um-share-button'));
+      expect(shareButton.componentInstance.title()).toBe('Vintage lamp');
+    });
+
     it('should fall back to just the city when there is no neighborhood', async () => {
       const { fixture } = await setup({
         getById: vi.fn(async () =>
@@ -260,7 +270,11 @@ describe('ListingDetailComponent', () => {
       await flushAsync();
       fixture.detectChanges();
 
-      expect(fixture.nativeElement.querySelector('um-listing-detail-actions')).toBeNull();
+      // Still one instance: the mobile "..." menu, which renders for every
+      // viewer so a non-owner can still share — see
+      // ListingDetailActionsComponent's class doc.
+      expect(fixture.nativeElement.querySelectorAll('um-listing-detail-actions').length).toBe(1);
+      expect(fixture.nativeElement.querySelector('.listing-detail__owner-actions')).toBeNull();
       // Once in the info column, once in the mobile dock.
       expect(fixture.nativeElement.querySelectorAll('um-listing-detail-cta').length).toBe(2);
     });

@@ -166,6 +166,28 @@ ul-breadcrumb {
   }
 }
 
+.listing-detail__title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+// Desktop-only: mobile shares through um-listing-detail-actions's "..."
+// menu instead — same reasoning and same technique as
+// .listing-detail__contact-actions below (no md:ul-flex utility to pair
+// with ul-hidden, so the breakpoint is handled here).
+.listing-detail__share {
+  display: none;
+
+  @include bp.up('md') {
+    display: inline-flex;
+    // Keeps the icon aligned with the title's cap-height rather than its
+    // full line-height, which would sit it visibly low next to a
+    // multi-line heading.
+    margin-top: tokens.$spacing-spacing-1;
+  }
+}
+
 .listing-detail__wrap-row {
   display: flex;
   flex-wrap: wrap;

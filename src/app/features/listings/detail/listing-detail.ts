@@ -30,6 +30,7 @@ import {
 } from './listing-detail-actions/listing-detail-actions';
 import { ListingDetailCtaComponent } from './listing-detail-cta/listing-detail-cta';
 import { ListingDetailStore } from './listing-detail.store';
+import { ShareButtonComponent } from '../../../shared/share-button/share-button';
 
 @Component({
   selector: 'um-listing-detail',
@@ -52,6 +53,7 @@ import { ListingDetailStore } from './listing-detail.store';
     ListingDetailDescriptionComponent,
     ListingDetailActionsComponent,
     ListingDetailCtaComponent,
+    ShareButtonComponent,
   ],
   providers: [ListingDetailStore],
   templateUrl: './listing-detail.html',

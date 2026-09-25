@@ -25,13 +25,11 @@
               </ul-button>
             </div>
 
-            @if (store.isOwner()) {
-              <um-listing-detail-actions
-                variant="menu"
-                (deleteRequested)="showDeleteModal.set(true)"
-                (actionResult)="resultModal.set($event)"
-              />
-            }
+            <um-listing-detail-actions
+              variant="menu"
+              (deleteRequested)="showDeleteModal.set(true)"
+              (actionResult)="resultModal.set($event)"
+            />
 
             <um-listing-detail-images [imageUrls]="item.imageUrls" />
           </div>
@@ -44,7 +42,10 @@
               <um-listing-detail-status [item]="item" />
             </div>
 
-            <h1 class="ul-typography-headline-l-extrablack">{{ item.title }}</h1>
+            <div class="listing-detail__title-row ul-gap-2">
+              <h1 class="ul-typography-headline-l-extrablack">{{ item.title }}</h1>
+              <um-share-button class="listing-detail__share" [title]="item.title" />
+            </div>
 
             <p class="ul-typography-headline-m-extrabold">
               {{ item.price | listingPrice: item.currency }}

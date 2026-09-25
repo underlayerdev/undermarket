@@ -4,11 +4,15 @@ import { ButtonComponent, MenuComponent } from '@underlayerdev/ui';
 import type { MenuItem } from '@underlayerdev/ui';
 import { Router, RouterLink } from '@angular/router';
 import { ErrorService } from '../../../../application/services/error.service';
+import { ShareService } from '../../../../shared/share/share.service';
 import { createListingSlug } from '../../../../shared/utils/slugify';
 import { ListingDetailStore } from '../listing-detail.store';
 
 /** The owner-only actions, shared by the mobile bottom sheet and the desktop row. */
 type ListingAction = 'edit' | 'publish' | 'markSold' | 'delete';
+
+/** A `menu`-variant-only action, offered to every viewer, not just the owner. */
+type MenuOnlyAction = 'share';
 
 // Only the desktop row needs these — the bottom sheet's rows are all styled
 // alike. Kept beside the action list so adding an action forces a theme choice.
@@ -26,21 +30,25 @@ export interface ListingActionResult {
 }
 
 /**
- * The owner-only controls for a listing. Rendered twice by
- * `ListingDetailComponent` — once with `variant="menu"` (a bottom-sheet
- * trigger over the gallery; `ul-menu` itself decides bottom sheet vs
- * dropdown by breakpoint) and once with `variant="list"` (the same actions
- * as an inline desktop button row) — both instances exist in the DOM at
- * once, CSS just shows one per breakpoint, same as the markup this replaces
- * used to. Both variants read the same `ListingDetailStore` instance,
- * injected rather than passed in as a `listing`/`isOwner` input: this
- * component is a descendant of `ListingDetailComponent`, which provides the
- * store, so `inject()` here resolves to it directly.
+ * The mobile action menu and the desktop owner-actions row for a listing.
+ * Rendered twice by `ListingDetailComponent` — once with `variant="menu"`
+ * (a bottom-sheet trigger over the gallery; `ul-menu` itself decides bottom
+ * sheet vs dropdown by breakpoint) and once with `variant="list"` (the
+ * owner actions as an inline desktop button row) — both instances exist in
+ * the DOM at once, CSS just shows one per breakpoint. Both variants read
+ * the same `ListingDetailStore` instance, injected rather than passed in as
+ * a `listing`/`isOwner` input: this component is a descendant of
+ * `ListingDetailComponent`, which provides the store, so `inject()` here
+ * resolves to it directly.
  *
- * Whether to render at all (i.e. whether the signed-in user owns the
- * listing) is decided by the caller, the same way `ListingDetailComponent`
- * already decides whether to show this or `ListingDetailCtaComponent` — not
- * repeated here as a second, redundant check.
+ * `variant="list"` is owner-only — whether to render it at all is decided
+ * by the caller, the same way `ListingDetailComponent` decides whether to
+ * show it or `ListingDetailCtaComponent` instead. `variant="menu"` renders
+ * for every viewer regardless of ownership: sharing belongs to everyone,
+ * and desktop already gets its own dedicated `ShareButtonComponent` rather
+ * than needing this menu, so this is the only place sharing needs a
+ * mobile-friendly home. Owner actions are appended to the same menu when
+ * the viewer is the owner, rather than showing a second trigger.
  *
  * `deleteRequested` and `actionResult` are the deliberate exceptions to
  * "call the store directly, no outputs" — and both for the same reason:
@@ -63,6 +71,7 @@ export class ListingDetailActionsComponent {
   private readonly router = inject(Router);
   private readonly transloco = inject(TranslocoService);
   private readonly errorService = inject(ErrorService);
+  private readonly shareService = inject(ShareService);
 
   readonly variant = input.required<'menu' | 'list'>();
   readonly deleteRequested = output<void>();
@@ -107,6 +116,23 @@ export class ListingDetailActionsComponent {
     return actions;
   });
 
+  // Share first, then the owner actions when the viewer is the owner — same
+  // menu, same trigger, so a non-owner still gets a "..." button to share
+  // from without also seeing edit/mark-as-sold/delete for a listing that
+  // isn't theirs (ownerActions() itself doesn't check ownership: it's built
+  // from listing status alone, trusting the caller to gate it — true for
+  // `variant="list"`, which only ever renders behind `@if (store.isOwner())`
+  // in the parent template, but no longer true for this variant now that it
+  // renders unconditionally).
+  protected readonly menuItems = computed<MenuItem[]>(() => {
+    const shareItem: MenuItem = {
+      label: this.transloco.translate('listingDetail.share'),
+      value: 'share' satisfies MenuOnlyAction,
+      leftIcons: ['share'],
+    };
+    return this.store.isOwner() ? [shareItem, ...this.ownerActions()] : [shareItem];
+  });
+
   protected actionTheme(item: MenuItem): (typeof ACTION_THEMES)[ListingAction] {
     return ACTION_THEMES[item.value as ListingAction];
   }
@@ -132,14 +158,22 @@ export class ListingDetailActionsComponent {
 
   // The desktop row binds this directly via [routerLink]; the bottom sheet's
   // items are data rather than elements a directive can sit on, so it goes
-  // through onOwnerAction → navigateToEdit instead.
+  // through onActionSelected → navigateToEdit instead.
   protected editRoute(): string[] {
     const listing = this.store.listing();
     return listing ? ['/listings', createListingSlug(listing.title, listing.id), 'edit'] : [];
   }
 
-  protected onOwnerAction(item: MenuItem): void {
-    switch (item.value as ListingAction) {
+  // Bound to both variants: the menu's `itemSelected` (which can carry
+  // `share`, from every viewer, alongside the owner actions) and the
+  // desktop row's per-button `buttonClick` (owner actions only, `share`
+  // never reaches this from there — desktop shares via its own
+  // `ShareButtonComponent` instead).
+  protected onActionSelected(item: MenuItem): void {
+    switch (item.value as ListingAction | MenuOnlyAction) {
+      case 'share':
+        void this.onShareClick();
+        break;
       case 'publish':
         void this.onPublishClick();
         break;
@@ -159,6 +193,28 @@ export class ListingDetailActionsComponent {
     const listing = this.store.listing();
     if (!listing) return;
     void this.router.navigate(['/listings', createListingSlug(listing.title, listing.id), 'edit']);
+  }
+
+  // The native share sheet (the expected path on the phones this menu
+  // targets) needs no feedback of its own — the OS already showed one.
+  // Only the clipboard fallback is silent on its own, so that's the only
+  // outcome that reports through the shared result modal.
+  protected async onShareClick(): Promise<void> {
+    const listing = this.store.listing();
+    if (!listing) return;
+
+    const result = await this.shareService.share({ title: listing.title, url: location.href });
+    if (result === 'copied') {
+      this.actionResult.emit({
+        variant: 'success',
+        message: this.transloco.translate('listingDetail.linkCopied'),
+      });
+    } else if (result === 'unsupported') {
+      this.actionResult.emit({
+        variant: 'error',
+        message: this.transloco.translate('listingDetail.shareUnsupported'),
+      });
+    }
   }
 
   protected async onPublishClick(): Promise<void> {

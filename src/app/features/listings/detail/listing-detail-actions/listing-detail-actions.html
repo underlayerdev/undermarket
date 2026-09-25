@@ -11,8 +11,8 @@
       theme="ghost-white"
       triggerIconOnly="more_options"
       [iconOnlyLabel]="t('listingDetail.listingActions')"
-      [items]="ownerActions()"
-      (itemSelected)="onOwnerAction($event)"
+      [items]="menuItems()"
+      (itemSelected)="onActionSelected($event)"
     />
   } @else {
     <div class="listing-detail__owner-actions ul-gap-3">
@@ -32,7 +32,7 @@
             [theme]="actionTheme(action)"
             size="md"
             [disabled]="isActionPending(action)"
-            (buttonClick)="onOwnerAction(action)"
+            (buttonClick)="onActionSelected(action)"
           >
             {{ actionLabel(action) }}
           </ul-button>
