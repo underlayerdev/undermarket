@@ -147,6 +147,23 @@ ul-breadcrumb {
   @include bp.below('md') {
     margin-top: tokens.$spacing-spacing-4;
   }
+
+  // `.ul-row` is a grid, and a grid row's items default to `align-items:
+  // stretch` — at md+, where gallery and info share one row (7+5 columns),
+  // info is already stretched to the gallery's fixed height, just with
+  // unused space below a short title/description. Below md the two are
+  // col-12 each, which overflows to separate rows instead of sharing a
+  // height, so this margin has nothing to push against there — exactly
+  // where the actions/CTA block is hidden anyway (owner actions and the
+  // contact buttons both move to the bottom sheet/dock on mobile).
+  //
+  // Targets whichever of the two blocks the @if/@else actually rendered —
+  // um-listing-detail-actions (owner) or .listing-detail__contact-actions
+  // (buyer) — rather than naming either directly, since exactly one of them
+  // is always the last child here regardless of listing state.
+  > :last-child {
+    margin-top: auto;
+  }
 }
 
 .listing-detail__wrap-row {
@@ -226,9 +243,11 @@ ul-breadcrumb {
   @include bp.below('md') {
     display: flex;
   }
+}
+um-listing-detail-cta {
+  width: 100%;
 
-  ul-button {
-    flex: 1 1 0;
-    min-width: 0;
+  @include bp.up('md') {
+    width: 70%;
   }
 }
