@@ -1,4 +1,12 @@
-.listing-detail-map__image {
-  display: block;
-  width: 100%;
+@use 'pkg:@underlayerdev/ui/design-tokens' as tokens;
+
+.um-listing-detail-map {
+  display: flex;
+  flex-direction: column;
+  gap: tokens.$spacing-spacing-2;
+
+  &__image {
+    display: block;
+    width: 100%;
+  }
 }

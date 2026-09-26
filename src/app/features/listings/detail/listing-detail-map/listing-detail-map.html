@@ -1,7 +1,7 @@
-<ng-container *transloco="let t">
+<div class="um-listing-detail-map" *transloco="let t">
   <h2 class="ul-typography-headline-s-extrabold">{{ t('listingDetail.location') }}</h2>
-  <img [src]="mapUrl()" [alt]="label()" class="listing-detail-map__image ul-rounded-3 ul-mt-4" />
-  <p class="ul-typography-caption-l-regular ul-text-secondary ul-mt-2">{{ label() }}</p>
+  <p class="ul-typography-caption-l-regular ul-text-secondary">{{ label() }}</p>
+  <img [src]="mapUrl()" [alt]="label()" class="listing-detail-map__image ul-rounded-3" />
   <ul-button
     class="ul-mt-3"
     type="button"
@@ -12,4 +12,4 @@
     <ul-icon icon="navigation" size="5" />
     {{ t('listingDetail.getDirections') }}
   </ul-button>
-</ng-container>
+</div>
