@@ -22,6 +22,7 @@ import { ListingDetailErrorComponent } from './listing-detail-error/listing-deta
 import { ListingDetailStatusComponent } from './listing-detail-status/listing-detail-status';
 import { ListingDetailLoadingComponent } from './listing-detail-loading/listing-detail-loading';
 import { ListingDetailSimilarItems } from './listing-detail-similar-items/listing-detail-similar-items';
+import { ListingDetailMapComponent } from './listing-detail-map/listing-detail-map';
 import { ListingDetailDescriptionComponent } from './listing-detail-description/listing-detail-description';
 import { ListingDetailImagesComponent } from './listing-detail-images/listing-detail-images';
 import {
@@ -50,6 +51,7 @@ import { ShareButtonComponent } from '../../../shared/share-button/share-button'
     ListingDetailStatusComponent,
     ListingDetailLoadingComponent,
     ListingDetailSimilarItems,
+    ListingDetailMapComponent,
     ListingDetailDescriptionComponent,
     ListingDetailActionsComponent,
     ListingDetailCtaComponent,

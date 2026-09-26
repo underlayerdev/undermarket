@@ -226,6 +226,16 @@ ul-breadcrumb {
   max-width: 70ch;
 }
 
+// Full width on mobile (the default for a block-level section); capped to
+// half the content width on desktop, where the description column next to
+// it already caps itself to 70ch and would otherwise leave the map
+// stretching disproportionately wide.
+.listing-detail__map {
+  @include bp.up('md') {
+    width: 50%;
+  }
+}
+
 .listing-detail__similar-carousel {
   // Same reason as the photo carousel: ul-carousel defaults to `display: inline`,
   // which leaves Splide unable to size its track.

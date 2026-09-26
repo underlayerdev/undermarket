@@ -103,6 +103,14 @@
           <um-listing-detail-description [description]="item.description" />
         </section>
 
+        @if (item.location; as location) {
+          @defer {
+            <section class="listing-detail__map ul-mt-8">
+              <um-listing-detail-map [location]="location" [label]="listingLocationLabel()!" />
+            </section>
+          }
+        }
+
         @defer {
           <section class="listing-detail__similar-items ul-mt-12">
             <um-listing-detail-similar-items [listing]="item" />

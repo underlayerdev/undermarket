@@ -110,6 +110,8 @@
   "listingDetail.viewMore": "Ver más",
   "listingDetail.viewLess": "Ver menos",
   "listingDetail.similarItems": "Artículos similares",
+  "listingDetail.location": "Ubicación",
+  "listingDetail.getDirections": "Cómo llegar",
   "listingDetail.listedOn": "Publicado el {{value}}",
   "listingDetail.editListing": "Editar publicación",
   "listingDetail.deleteListing": "Eliminar publicación",

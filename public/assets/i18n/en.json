@@ -110,6 +110,8 @@
   "listingDetail.viewMore": "View more",
   "listingDetail.viewLess": "View less",
   "listingDetail.similarItems": "Similar items",
+  "listingDetail.location": "Location",
+  "listingDetail.getDirections": "Get directions",
   "listingDetail.listedOn": "Listed on {{value}}",
   "listingDetail.editListing": "Edit listing",
   "listingDetail.deleteListing": "Delete listing",

@@ -1,0 +1,15 @@
+<ng-container *transloco="let t">
+  <h2 class="ul-typography-headline-s-extrabold">{{ t('listingDetail.location') }}</h2>
+  <img [src]="mapUrl()" [alt]="label()" class="listing-detail-map__image ul-rounded-3 ul-mt-4" />
+  <p class="ul-typography-caption-l-regular ul-text-secondary ul-mt-2">{{ label() }}</p>
+  <ul-button
+    class="ul-mt-3"
+    type="button"
+    theme="outline-white"
+    size="md"
+    (buttonClick)="openDirections()"
+  >
+    <ul-icon icon="navigation" size="5" />
+    {{ t('listingDetail.getDirections') }}
+  </ul-button>
+</ng-container>
