@@ -15,6 +15,12 @@
   // of it. One value, so the two can't drift apart.
   --listing-detail-dock-height: 72px;
 
+  // Tall enough to sit behind the back button/action menu regardless of
+  // scroll position ($spacing-spacing-4 top padding + their own 40px
+  // diameter + $spacing-spacing-4 bottom), without depending on either
+  // floating button's own layout to size itself.
+  --listing-detail-header-height: 72px;
+
   @include bp.up('md') {
     --listing-detail-media-height: 480px;
   }
@@ -24,7 +30,7 @@ ul-breadcrumb {
   padding-top: tokens.$spacing-spacing-4;
   display: none;
 
-  @include bp.up('sm') {
+  @include bp.up('md') {
     display: flex;
   }
 }
@@ -77,21 +83,25 @@ ul-breadcrumb {
   }
 }
 
-// Sits on top of the photo rather than above it, so the gallery keeps the
-// full width of the screen. Fixed (not absolute) so it stays pinned to the
-// viewport corner as the user scrolls past the image instead of scrolling
-// away with the gallery: `.listing-detail` sets no transform or filter, so
-// `fixed` here still anchors to the real viewport. Mobile-only — hidden on
-// desktop via `md:ul-hidden`.
-//
-// The equivalent owner-actions rule (`.listing-detail__actions-menu`) now
-// lives in listing-detail-actions.scss — that markup moved into
-// ListingDetailActionsComponent, so the rule styling it moved with it.
-.listing-detail__back {
+// Vinted/Wallapop-style scroll header: transparent while the gallery photo
+// still shows through it, filled in behind the back button/action menu
+// (both `position: fixed`, rendered by the nested um-listing-detail-header —
+// see listing-detail-header.scss — and painted above this bar by z-index)
+// once `isHeaderScrolled()` adds `ul-bg-main` — the same page background
+// used elsewhere, so it reads as "the page has scrolled up to here" rather
+// than a one-off color. `ul-bg-main` is toggled from the template rather
+// than baked into a `--scrolled` class here, since it's already the
+// approved utility for this exact color. Mobile-only, matching every other
+// piece of this floating header — desktop replaces it with in-flow
+// controls that have nothing to scroll behind.
+.listing-detail__header {
   position: fixed;
-  top: tokens.$spacing-spacing-4;
-  left: tokens.$spacing-spacing-4;
-  z-index: 1;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--listing-detail-header-height);
+  transition: background-color 0.2s ease;
+  z-index: tokens.$elevation-modal;
 }
 
 .listing-detail__carousel,

@@ -1,0 +1,32 @@
+@use 'pkg:@underlayerdev/ui/design-tokens' as tokens;
+
+// Neither variant's own root should have to fight a box the host itself
+// introduces — same reasoning, and same technique, as
+// ListingDetailActionsComponent's `:host { display: contents; }`: this
+// component's template is also an `<ng-container>` with two fixed-position
+// children (the back button, the actions menu), so the host element itself
+// would otherwise just be an empty inline box sitting between them and
+// listing-detail.scss's `.listing-detail__header` backdrop bar.
+:host {
+  display: contents;
+}
+
+// Sits on top of the photo rather than above it, so the gallery keeps the
+// full width of the screen. Fixed (not absolute) so it stays pinned to the
+// viewport corner as the user scrolls past the image instead of scrolling
+// away with the gallery. Mobile-only — hidden on desktop via `md:ul-hidden`,
+// where the same actions show as the in-flow share button/owner-actions row
+// instead.
+//
+// Moved here from listing-detail.scss when this markup moved into its own
+// component — same reasoning as `.listing-detail__actions-menu` living in
+// listing-detail-actions.scss rather than listing-detail.scss: Angular's
+// view encapsulation scopes a rule to the component whose template declares
+// the matching elements, not to whichever ancestor happens to render that
+// component.
+.listing-detail__back {
+  position: fixed;
+  top: tokens.$spacing-spacing-4;
+  left: tokens.$spacing-spacing-4;
+  z-index: 1;
+}

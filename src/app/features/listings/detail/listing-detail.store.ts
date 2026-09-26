@@ -4,6 +4,7 @@ import { ListingService } from '../../../application/services/listing.service';
 import type { Listing, ListingId } from '../../../domain/listing/listing.model';
 import type { User } from '../../../domain/user/user.model';
 import type { ListingDetailErrorType } from './listing-detail-error/listing-detail-error';
+import type { ListingActionResult } from './listing-detail-actions/listing-detail-actions';
 
 /**
  * Holds the state a listing detail page is built from — the listing itself,
@@ -19,21 +20,26 @@ import type { ListingDetailErrorType } from './listing-detail-error/listing-deta
  *   loads its own data off a `listing` input. Folding that in here would
  *   make this store responsible for a concern that doesn't need to be
  *   shared with anything else.
- * - Toasts — a presentation decision, and one that can legitimately differ
- *   by caller. `publish()`/`markAsSold()`/`delete()` below throw on failure
- *   (matching `ListingService.create`'s own convention) and let whichever
- *   component actually invoked the action decide how to report the result,
- *   the same way `listing-detail.ts` already handles it today.
  * - SEO (`SeoService.setListing`/`setPage`) — page metadata is a routing/view
  *   concern, not feature state; the calling component should react to
  *   `listing`/`errorType` itself rather than this store reaching for
  *   `document.title`.
- * - Delete-confirmation modal open/closed — that's ephemeral UI state for
- *   whichever component renders the confirmation dialog, not something any
- *   other descendant needs to read. `delete()` here performs the deletion
- *   itself; asking "are you sure?" first is the caller's job.
  *
- * Every signal below is exposed `.asReadonly()` — that's what actually
+ * `showDeleteModal`/`resultModal` are the deliberate exception to "every
+ * other signal here is `.asReadonly()`": both back a single page-level
+ * dialog (`ListingDetailComponent`'s own two `ul-modal`s) that *two* live
+ * `ListingDetailActionsComponent` instances need to open — the `list`
+ * variant, still a direct child of `ListingDetailComponent`, and the `menu`
+ * variant, now nested inside `ListingDetailHeaderComponent`. Neither variant
+ * can own either signal itself without the other's writes going nowhere, so
+ * both live here instead, mutable by any descendant that needs to trigger
+ * them. `publish()`/`markAsSold()`/`delete()` below still just throw on
+ * failure (matching `ListingService.create`'s own convention) rather than
+ * writing `resultModal` themselves — that keeps this store from having an
+ * opinion about *how* a failure is reported, only where the "how" ends up
+ * once a caller decides.
+ *
+ * Every other signal below is exposed `.asReadonly()` — that's what actually
  * enforces one-way data flow (nothing outside this class can call `.set()`
  * on them), not a naming convention callers have to remember to respect.
  *
@@ -64,6 +70,9 @@ export class ListingDetailStore {
   readonly errorType = this._errorType.asReadonly();
   readonly isPublishing = this._isPublishing.asReadonly();
   readonly isMarkingSold = this._isMarkingSold.asReadonly();
+
+  readonly showDeleteModal = signal(false);
+  readonly resultModal = signal<ListingActionResult | null>(null);
 
   readonly isOwner = computed(() => {
     const listing = this._listing();

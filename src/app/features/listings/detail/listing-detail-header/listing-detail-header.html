@@ -1,0 +1,22 @@
+<ng-container *transloco="let t">
+  <div
+    class="listing-detail__back ul-bg-black-medium ul-rounded-full md:ul-hidden"
+    [class.ul-bg-main]="showBackground()"
+  >
+    <ul-button
+      type="button"
+      theme="ghost-white"
+      [iconOnly]="true"
+      [ariaLabel]="t('common.back')"
+      (buttonClick)="goBack()"
+    >
+      <ul-icon icon="arrow_left" size="6" weight="bold" />
+    </ul-button>
+  </div>
+
+  <um-listing-detail-actions
+    variant="menu"
+    (deleteRequested)="openDeleteModal()"
+    (actionResult)="onActionResult($event)"
+  />
+</ng-container>

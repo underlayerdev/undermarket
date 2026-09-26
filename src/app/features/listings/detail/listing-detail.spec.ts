@@ -1,6 +1,5 @@
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, provideRouter, Router } from '@angular/router';
-import { Location } from '@angular/common';
 import { By, Title } from '@angular/platform-browser';
 import { ListingDetailComponent } from './listing-detail';
 import { ListingDetailStore } from './listing-detail.store';
@@ -82,12 +81,10 @@ async function setup(
 ): Promise<{
   fixture: ReturnType<typeof TestBed.createComponent<ListingDetailComponent>>;
   authProviderMock: ReturnType<typeof createAuthProviderMock>;
-  locationBackSpy: ReturnType<typeof vi.fn>;
 }> {
   stubMatchMedia();
 
   const authProviderMock = createAuthProviderMock();
-  const locationBackSpy = vi.fn();
   const listingRepositoryMock: Partial<ListingRepository> = {
     getById: options.getById ?? vi.fn(async () => listing()),
     getLatest: vi.fn(async () => []),
@@ -99,7 +96,6 @@ async function setup(
     imports: [ListingDetailComponent, getTranslocoTestingModule()],
     providers: [
       provideRouter([]),
-      { provide: Location, useValue: { back: locationBackSpy } },
       { provide: AUTH_PROVIDER, useValue: authProviderMock },
       { provide: LISTING_REPOSITORY, useValue: listingRepositoryMock },
       {
@@ -122,7 +118,7 @@ async function setup(
   await authService.ready;
 
   const fixture = TestBed.createComponent(ListingDetailComponent);
-  return { fixture, authProviderMock, locationBackSpy };
+  return { fixture, authProviderMock };
 }
 
 describe('ListingDetailComponent', () => {
@@ -354,13 +350,27 @@ describe('ListingDetailComponent', () => {
     });
   });
 
-  describe('goBack', () => {
-    it('should navigate back via Location', async () => {
-      const { fixture, locationBackSpy } = await setup();
+  describe('scroll header', () => {
+    it('should stay transparent below the scroll threshold', async () => {
+      const { fixture } = await setup();
+      fixture.detectChanges();
+      await flushAsync();
+      fixture.detectChanges();
 
-      fixture.componentInstance.goBack();
+      fixture.componentInstance.onGalleryScroll({ target: { scrollTop: 10 } } as unknown as Event);
 
-      expect(locationBackSpy).toHaveBeenCalledTimes(1);
+      expect(fixture.componentInstance.isHeaderScrolled()).toBe(false);
+    });
+
+    it('should turn solid once the gallery scrolls past the threshold', async () => {
+      const { fixture } = await setup();
+      fixture.detectChanges();
+      await flushAsync();
+      fixture.detectChanges();
+
+      fixture.componentInstance.onGalleryScroll({ target: { scrollTop: 40 } } as unknown as Event);
+
+      expect(fixture.componentInstance.isHeaderScrolled()).toBe(true);
     });
   });
 });

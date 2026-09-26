@@ -1,5 +1,4 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
-import { Location } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { AuthService } from '../../../application/services/auth.service';
@@ -12,7 +11,6 @@ import { extractIdFromSlug } from '../../../shared/utils/slugify';
 import {
   AvatarComponent,
   BreadcrumbComponent,
-  ButtonComponent,
   IconComponent,
   ModalComponent,
   PillComponent,
@@ -25,13 +23,17 @@ import { ListingDetailSimilarItems } from './listing-detail-similar-items/listin
 import { ListingDetailMapComponent } from './listing-detail-map/listing-detail-map';
 import { ListingDetailDescriptionComponent } from './listing-detail-description/listing-detail-description';
 import { ListingDetailImagesComponent } from './listing-detail-images/listing-detail-images';
-import {
-  ListingActionResult,
-  ListingDetailActionsComponent,
-} from './listing-detail-actions/listing-detail-actions';
+import { ListingDetailActionsComponent } from './listing-detail-actions/listing-detail-actions';
 import { ListingDetailCtaComponent } from './listing-detail-cta/listing-detail-cta';
 import { ListingDetailStore } from './listing-detail.store';
 import { ShareButtonComponent } from '../../../shared/share-button/share-button';
+import { ListingDetailHeaderComponent } from './listing-detail-header/listing-detail-header';
+
+// How far into the gallery photo the user has to scroll (in px) before the
+// floating back button/action menu get a solid backdrop behind them — small
+// enough to kick in almost immediately, matching the Vinted/Wallapop pattern
+// this is modeled on, rather than waiting for the photo to scroll away.
+const HEADER_SOLID_SCROLL_THRESHOLD = 24;
 
 @Component({
   selector: 'um-listing-detail',
@@ -40,7 +42,6 @@ import { ShareButtonComponent } from '../../../shared/share-button/share-button'
     LocaleDatePipe,
     AvatarComponent,
     BreadcrumbComponent,
-    ButtonComponent,
     ModalComponent,
     PillComponent,
     RouterLink,
@@ -55,6 +56,7 @@ import { ShareButtonComponent } from '../../../shared/share-button/share-button'
     ListingDetailDescriptionComponent,
     ListingDetailActionsComponent,
     ListingDetailCtaComponent,
+    ListingDetailHeaderComponent,
     ShareButtonComponent,
   ],
   providers: [ListingDetailStore],
@@ -64,7 +66,6 @@ import { ShareButtonComponent } from '../../../shared/share-button/share-button'
 export class ListingDetailComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
-  private readonly location = inject(Location);
   protected readonly authService = inject(AuthService);
   private readonly errorService = inject(ErrorService);
   private readonly seoService = inject(SeoService);
@@ -80,13 +81,20 @@ export class ListingDetailComponent implements OnInit {
   protected readonly store = inject(ListingDetailStore);
 
   readonly getInitials = getInitials;
-  readonly showDeleteModal = signal(false);
+  readonly showDeleteModal = this.store.showDeleteModal;
+
+  // Mobile-only: `.listing-detail` is only the scroll container itself below
+  // `md` (see listing-detail.scss) — desktop replaces the floating back
+  // button/action menu this backs with in-flow controls, so there's nothing
+  // for it to matter there regardless of this signal's value.
+  readonly isHeaderScrolled = signal(false);
 
   // This page uses ul-modal, not toasts, for action feedback — a deliberate
   // choice, not just "whatever ListingDetailActionsComponent happened to
-  // call." One signal rather than a boolean + a message, so there's no way
-  // for them to disagree about whether something is currently showing.
-  readonly resultModal = signal<ListingActionResult | null>(null);
+  // call." Aliased from the store (see its own class doc): both the `list`
+  // variant here and the `menu` variant nested inside
+  // ListingDetailHeaderComponent need to write to the exact same signal.
+  readonly resultModal = this.store.resultModal;
 
   readonly breadcrumbItems = computed<BreadcrumbItem[]>(() => {
     this.transloco.activeLang();
@@ -136,8 +144,9 @@ export class ListingDetailComponent implements OnInit {
     }
   }
 
-  goBack(): void {
-    this.location.back();
+  onGalleryScroll(event: Event): void {
+    const scrollTop = (event.target as HTMLElement).scrollTop;
+    this.isHeaderScrolled.set(scrollTop > HEADER_SOLID_SCROLL_THRESHOLD);
   }
 
   // Both ListingDetailActionsComponent instances (menu + list variants) emit
@@ -145,7 +154,7 @@ export class ListingDetailComponent implements OnInit {
   // live at once (CSS just shows one per breakpoint), and there must be one
   // dialog, not two independently-toggleable ones.
   async confirmDelete(): Promise<void> {
-    this.showDeleteModal.set(false);
+    this.store.showDeleteModal.set(false);
     try {
       await this.store.delete();
       // store.delete() clears `listing`, and the template's @if/@else if

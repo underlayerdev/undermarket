@@ -7,30 +7,17 @@
     <div
       class="ul-container-product listing-detail ul-bg-main"
       [class.listing-detail--has-dock]="!store.isOwner()"
+      (scroll)="onGalleryScroll($event)"
     >
+      <div class="listing-detail__header md:ul-hidden" [class.ul-bg-main]="isHeaderScrolled()">
+        <um-listing-detail-header [showBackground]="isHeaderScrolled()" />
+      </div>
+
       <div class="ul-content">
         <ul-breadcrumb [items]="breadcrumbItems()" />
 
         <article class="ul-row listing-detail__article md:ul-mt-8">
           <div class="ul-col-12 ul-col-md-7 listing-detail__gallery">
-            <div class="listing-detail__back ul-bg-black-medium ul-rounded-full md:ul-hidden">
-              <ul-button
-                type="button"
-                theme="ghost-white"
-                [iconOnly]="true"
-                [ariaLabel]="t('common.back')"
-                (buttonClick)="goBack()"
-              >
-                <ul-icon icon="arrow_left" size="6" weight="bold" />
-              </ul-button>
-            </div>
-
-            <um-listing-detail-actions
-              variant="menu"
-              (deleteRequested)="showDeleteModal.set(true)"
-              (actionResult)="resultModal.set($event)"
-            />
-
             <um-listing-detail-images [imageUrls]="item.imageUrls" />
           </div>
 
