@@ -1,4 +1,5 @@
 import type { Category } from '../category/category.model';
+import type { Condition } from '../condition/condition.model';
 import type { CurrencyCode } from '../currency/currency.model';
 import type { ListingLocation } from '../location/location.model';
 import type { UserId } from '../user/user.model';
@@ -32,4 +33,11 @@ export interface Listing {
    * and firestore.rules), so new/edited listings always have one.
    */
   location?: ListingLocation;
+  /**
+   * Physical condition of the item, Vinted-style (see condition.model.ts).
+   * Optional for backward compatibility with listings created before this
+   * field existed; required going forward (enforced by validateNewListing
+   * and firestore.rules), so new/edited listings always have one.
+   */
+  condition?: Condition;
 }

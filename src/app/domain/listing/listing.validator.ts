@@ -1,22 +1,31 @@
 import type { TranslocoService } from '@jsverse/transloco';
 import { CATEGORIES } from '../category/category.model';
 import type { Category } from '../category/category.model';
+import { CONDITIONS } from '../condition/condition.model';
 import { CURRENCIES, getMaxPriceForCurrency } from '../currency/currency.model';
 import { validateLocationArea } from '../location/location.validator';
 import type { LocationArea } from '../location/location.model';
 import { LISTING_DESCRIPTION_MAX_LENGTH, LISTING_TITLE_MAX_LENGTH } from './listing-constraints';
 import type { Listing } from './listing.model';
 
-// currency/category are widened back to string: this is the boundary
-// validateNewListing exists to check, so it must accept values that only
-// claim to be a valid CurrencyCode/Category (e.g. via an "as" assertion)
-// without actually being one.
+// currency/category/condition are widened back to string: this is the
+// boundary validateNewListing exists to check, so it must accept values
+// that only claim to be a valid CurrencyCode/Category/Condition (e.g. via
+// an "as" assertion) without actually being one.
 export type NewListingInput = Omit<
   Listing,
-  'id' | 'createdAt' | 'updatedAt' | 'imageUrls' | 'currency' | 'category' | 'location'
+  | 'id'
+  | 'createdAt'
+  | 'updatedAt'
+  | 'imageUrls'
+  | 'currency'
+  | 'category'
+  | 'condition'
+  | 'location'
 > & {
   currency: string;
   category: string;
+  condition: string;
   location: LocationArea;
 };
 
@@ -54,6 +63,9 @@ export function validateNewListing(
 
   if (!CATEGORIES.includes(data.category as Category))
     return transloco.translate('newListing.errors.categoryInvalid');
+
+  if (!CONDITIONS.some((condition) => condition.value === data.condition))
+    return transloco.translate('newListing.errors.conditionInvalid');
 
   if (data.status !== 'active') return transloco.translate('newListing.errors.statusInvalid');
 

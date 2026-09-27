@@ -13,6 +13,7 @@ import { LISTING_REPOSITORY } from '../../../core/configuration/tokens';
 import { ImageUploadComponent } from '../../../shared/image-upload/image-upload';
 import { CATEGORIES } from '../../../domain/category/category.model';
 import type { Category } from '../../../domain/category/category.model';
+import { CONDITIONS } from '../../../domain/condition/condition.model';
 import {
   CURRENCIES,
   DEFAULT_CURRENCY,
@@ -61,6 +62,7 @@ interface NewListingFormModel {
   price: string;
   currency: string | null;
   category: string | null;
+  condition: string | null;
   // Not part of the ul-input/ul-select signal-forms graph below, and never
   // set by the seller directly — see resolveDefaultLocation(). Matches how
   // Wallapop/Vinted work: location is an account-level setting, not a
@@ -73,9 +75,11 @@ function toNewListingInput(value: NewListingFormModel, ownerId: string): NewList
     title: value.title.trim(),
     description: value.description.trim(),
     price: parseFloat(value.price),
-    // required() + validate() on currency/category guarantee non-null here.
+    // required() + validate() on currency/category/condition guarantee
+    // non-null here.
     currency: value.currency!,
     category: value.category!,
+    condition: value.condition!,
     status: 'active',
     ownerId,
     // Guaranteed non-null by the onSubmit() guard below.
@@ -129,6 +133,13 @@ export class NewListingComponent {
     value: category,
     label: category,
   }));
+  readonly conditionOptions = computed<SelectOption[]>(() => {
+    this.transloco.activeLang();
+    return CONDITIONS.map((condition) => ({
+      value: condition.value,
+      label: this.transloco.translate(condition.labelKey),
+    }));
+  });
   readonly currencyOptions = computed<SelectOption[]>(() => {
     this.transloco.activeLang();
     return CURRENCIES.map((currency) => ({
@@ -150,6 +161,7 @@ export class NewListingComponent {
     price: '',
     currency: DEFAULT_CURRENCY,
     category: null,
+    condition: null,
     location: null,
   });
 
@@ -240,6 +252,19 @@ export class NewListingComponent {
           }
         : undefined,
     );
+
+    required(listing.condition, {
+      message: this.transloco.translate('newListing.errors.conditionRequired'),
+      when: whenTouched,
+    });
+    validate(listing.condition, ({ value, state }) =>
+      state.touched() && value() && !CONDITIONS.some((condition) => condition.value === value())
+        ? {
+            kind: 'invalid',
+            message: this.transloco.translate('newListing.errors.conditionInvalid'),
+          }
+        : undefined,
+    );
   });
 
   readonly publishButtonNotReady = computed(
@@ -269,6 +294,7 @@ export class NewListingComponent {
       !!value.description.trim() ||
       !!value.price.trim() ||
       !!value.category ||
+      !!value.condition ||
       !!this.imageFiles().length
     );
   });
@@ -342,6 +368,10 @@ export class NewListingComponent {
         price: String(listing.price),
         currency: listing.currency,
         category: listing.category,
+        // Older listings predate this field too — unlike location there's no
+        // sensible default to backfill automatically, so it's just left
+        // unset and the seller picks one before the edit can be saved.
+        condition: listing.condition ?? null,
         location: listing.location ?? null,
       });
       // Older listings predate this field — backfill it the same way a new
@@ -420,6 +450,7 @@ export class NewListingComponent {
       ...input,
       currency: input.currency as Listing['currency'],
       category: input.category as Listing['category'],
+      condition: input.condition as Listing['condition'],
       status: editing.status,
       imageUrls: editing.imageUrls,
     };

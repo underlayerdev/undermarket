@@ -42,6 +42,7 @@ const EXISTING_LISTING: Listing = {
   price: 10,
   currency: 'USD',
   category: 'Electronics',
+  condition: 'New',
   imageUrls: ['https://example.com/a.jpg'],
   status: 'draft',
   createdAt: new Date(),
@@ -108,6 +109,7 @@ describe('NewListingComponent', () => {
     expect(listing.description().errors()).toEqual([]);
     expect(listing.price().errors()).toEqual([]);
     expect(listing.category().errors()).toEqual([]);
+    expect(listing.condition().errors()).toEqual([]);
   });
 
   it('should show a required error on a field once it is marked touched', () => {
@@ -143,6 +145,7 @@ describe('NewListingComponent', () => {
       price: 10,
       currency: 'USD',
       category: 'Electronics',
+      condition: 'New',
       imageUrls: [],
       status: 'active' as const,
       createdAt: new Date(),
@@ -160,6 +163,7 @@ describe('NewListingComponent', () => {
       price: String(createdListing.price),
       currency: createdListing.currency,
       category: createdListing.category,
+      condition: createdListing.condition,
       location: TEST_LOCATION,
     });
     fixture.detectChanges();
@@ -189,6 +193,7 @@ describe('NewListingComponent', () => {
         price: '10',
         currency: 'USD',
         category: 'Electronics',
+        condition: 'New',
         location: null,
       });
     });
@@ -295,6 +300,7 @@ describe('NewListingComponent', () => {
         price: '10',
         currency: value.currency,
         category: 'Electronics',
+        condition: 'New',
         location: null,
       }));
       fixture.detectChanges();

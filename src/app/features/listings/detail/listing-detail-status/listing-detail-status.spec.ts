@@ -49,15 +49,9 @@ describe('ListingDetailStatusComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Draft');
   });
 
-  it('should show "Available" for an active listing', () => {
+  it('should render no status pill for an active listing', () => {
     const fixture = setup(listing({ status: 'active' }));
 
-    expect(fixture.nativeElement.textContent).toContain('Available');
-  });
-
-  it('should render exactly one status pill', () => {
-    const fixture = setup(listing({ status: 'active' }));
-
-    expect(fixture.nativeElement.querySelectorAll('ul-pill').length).toBe(1);
+    expect(fixture.nativeElement.querySelectorAll('ul-pill').length).toBe(0);
   });
 });

@@ -88,6 +88,31 @@ describe('FirestoreListingRepository', () => {
     expect(payload).not.toHaveProperty('sourceProvider');
     expect(payload).not.toHaveProperty('sourceId');
     expect(payload).not.toHaveProperty('geohash');
+    expect(payload).not.toHaveProperty('condition');
+  });
+
+  it('should not include condition on a listing that predates that field', async () => {
+    vi.mocked(firestoreModule.getDoc).mockResolvedValue({
+      exists: () => true,
+      data: () => baseDocData,
+    } as never);
+    const repository = createRepository();
+
+    const listing = await repository.getById('123');
+
+    expect('condition' in listing!).toBe(false);
+  });
+
+  it('should include condition when present on the document', async () => {
+    vi.mocked(firestoreModule.getDoc).mockResolvedValue({
+      exists: () => true,
+      data: () => ({ ...baseDocData, condition: 'Used' }),
+    } as never);
+    const repository = createRepository();
+
+    const listing = await repository.getById('123');
+
+    expect(listing?.condition).toBe('Used');
   });
 
   const testLocation = {

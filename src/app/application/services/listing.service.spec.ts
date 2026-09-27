@@ -21,6 +21,7 @@ function validInput(overrides: Partial<NewListingInput> = {}): NewListingInput {
     price: 25,
     currency: 'ARS',
     category: 'Furniture',
+    condition: 'Used',
     status: 'active',
     location: {
       displayName: 'Palermo, Buenos Aires',
@@ -169,6 +170,7 @@ describe('ListingService', () => {
         ...validInput(),
         currency: 'ARS' as const,
         category: 'Furniture' as const,
+        condition: 'Used' as const,
         id: 'nearby-1',
         imageUrls: [],
         createdAt: new Date(),

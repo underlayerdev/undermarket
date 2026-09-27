@@ -50,6 +50,7 @@ export class ListingService {
       ...data,
       currency: data.currency as Listing['currency'],
       category: data.category as Listing['category'],
+      condition: data.condition as Listing['condition'],
       imageUrls: [],
     });
 

@@ -175,6 +175,7 @@ export class FirestoreListingRepository implements ListingRepository {
         ? { sourceProvider: data['sourceProvider'] as Listing['sourceProvider'] }
         : {}),
       ...(data['sourceId'] ? { sourceId: data['sourceId'] as Listing['sourceId'] } : {}),
+      ...(data['condition'] ? { condition: data['condition'] as Listing['condition'] } : {}),
       // `location` carries its own `geohash` (for round-tripping); the
       // top-level `geohash` field alongside it exists purely so Firestore
       // can range-query on it and is never read back here.

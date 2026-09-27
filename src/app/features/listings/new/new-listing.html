@@ -90,6 +90,13 @@
               [formField]="listingForm.category"
             />
 
+            <ul-select
+              [label]="t('newListing.conditionLabel')"
+              [placeholder]="t('newListing.conditionPlaceholder')"
+              [options]="conditionOptions()"
+              [formField]="listingForm.condition"
+            />
+
             @if (isResolvingLocation()) {
               <p class="ul-typography-caption-l-regular ul-text-secondary">
                 {{ t('newListing.detectingLocation') }}

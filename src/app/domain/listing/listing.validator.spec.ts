@@ -27,6 +27,7 @@ function validInput(overrides: Partial<NewListingInput> = {}): NewListingInput {
     price: 25,
     currency: 'ARS',
     category: 'Furniture',
+    condition: 'Used',
     status: 'active',
     location: validLocation(),
     ...overrides,
@@ -100,6 +101,12 @@ describe('validateNewListing', () => {
   it('should reject an unknown category', () => {
     expect(validateNewListing(validInput({ category: 'Not-A-Category' }), transloco)).toBe(
       'Please select a valid category.',
+    );
+  });
+
+  it('should reject an unknown condition', () => {
+    expect(validateNewListing(validInput({ condition: 'Not-A-Condition' }), transloco)).toBe(
+      'Please select a valid condition.',
     );
   });
 

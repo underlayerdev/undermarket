@@ -15,10 +15,6 @@ import { TranslocoDirective } from '@jsverse/transloco';
         <ul-pill theme="outline-white" variant="read-only" size="sm">
           {{ t('listingDetail.draft') }}
         </ul-pill>
-      } @else {
-        <ul-pill theme="transparent-green" variant="read-only" size="sm">
-          {{ t('listingDetail.available') }}
-        </ul-pill>
       }
     </ng-container>
   `,

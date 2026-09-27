@@ -23,9 +23,11 @@
 
           <div class="ul-col-12 ul-col-md-5 ul-gap-4 listing-detail__info">
             <div class="listing-detail__wrap-row ul-gap-2">
-              <ul-pill theme="outline-purple" variant="read-only" size="sm">
-                {{ item.category }}
-              </ul-pill>
+              @if (conditionLabel(); as conditionLabel) {
+                <ul-pill theme="transparent-white" variant="read-only" size="sm">
+                  {{ conditionLabel }}
+                </ul-pill>
+              }
               <um-listing-detail-status [item]="item" />
             </div>
 

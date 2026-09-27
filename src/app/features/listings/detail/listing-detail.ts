@@ -4,6 +4,7 @@ import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { AuthService } from '../../../application/services/auth.service';
 import { ErrorService } from '../../../application/services/error.service';
 import { SeoService } from '../../../core/seo/seo.service';
+import { getCondition } from '../../../domain/condition/condition.model';
 import { getInitials } from '../../../domain/user/user-display';
 import { ListingPricePipe } from '../../../shared/listing/listing-price/listing-price.pipe';
 import { LocaleDatePipe } from '../../../shared/pipes/locale-date/locale-date.pipe';
@@ -116,6 +117,17 @@ export class ListingDetailComponent implements OnInit {
     const location = this.store.listing()?.location;
     if (!location) return null;
     return location.neighborhood ? `${location.neighborhood}, ${location.city}` : location.city;
+  });
+
+  // The stored value is plain English data (see condition.model.ts, mirrors
+  // CurrencyOption), not a display string — this is the one place it gets
+  // resolved to the active language's label for the pill.
+  readonly conditionLabel = computed(() => {
+    this.transloco.activeLang();
+    const condition = this.store.listing()?.condition;
+    if (!condition) return null;
+    const option = getCondition(condition);
+    return option ? this.transloco.translate(option.labelKey) : condition;
   });
 
   async ngOnInit(): Promise<void> {

@@ -2,6 +2,7 @@ rules_version = '2';
 
 // Keep these in sync with src/app/domain/listing/listing-constraints.ts,
 // src/app/domain/category/category.model.ts,
+// src/app/domain/condition/condition.model.ts,
 // src/app/domain/currency/currency.model.ts,
 // src/app/domain/location/location.model.ts, and
 // src/app/domain/user/user-constraints.ts.
@@ -16,6 +17,10 @@ service cloud.firestore {
       return category in [
         'Electronics', 'Clothing', 'Furniture', 'Vehicles', 'Books', 'Sports', 'Other'
       ];
+    }
+
+    function isValidCondition(condition) {
+      return condition in ['New', 'Used'];
     }
 
     // Max price is per-currency (ARS runs much higher than USD due to
@@ -45,13 +50,14 @@ service cloud.firestore {
 
     function isValidNewListing(data) {
       return data.keys().hasAll(
-        ['ownerId', 'title', 'description', 'price', 'currency', 'category', 'status', 'imageUrls', 'createdAt', 'updatedAt', 'location', 'geohash']
+        ['ownerId', 'title', 'description', 'price', 'currency', 'category', 'condition', 'status', 'imageUrls', 'createdAt', 'updatedAt', 'location', 'geohash']
       )
         && data.ownerId is string
         && data.title is string && data.title.size() > 0 && data.title.size() <= 100
         && data.description is string && data.description.size() > 0 && data.description.size() <= 2000
         && isValidPrice(data.price, data.currency)
         && isValidCategory(data.category)
+        && isValidCondition(data.condition)
         && data.status == 'active'
         && data.imageUrls is list && data.imageUrls.size() == 0
         && data.createdAt is timestamp
@@ -61,15 +67,16 @@ service cloud.firestore {
     }
 
     function isValidListingUpdate(data) {
-      // location/geohash are validated when present, but not required here —
-      // unlike a brand-new listing, an update to a listing that predates this
-      // field (e.g. a status-only change) must not be blocked just because
-      // it has none. New listings always get one going forward, per
-      // isValidNewListing below.
+      // location/geohash/condition are validated when present, but not
+      // required here — unlike a brand-new listing, an update to a listing
+      // that predates one of these fields (e.g. a status-only change) must
+      // not be blocked just because it has none. New listings always get
+      // both going forward, per isValidNewListing above.
       return data.title is string && data.title.size() > 0 && data.title.size() <= 100
         && data.description is string && data.description.size() > 0 && data.description.size() <= 2000
         && isValidPrice(data.price, data.currency)
         && isValidCategory(data.category)
+        && (!data.keys().hasAny(['condition']) || isValidCondition(data.condition))
         && (data.status == 'active' || data.status == 'sold' || data.status == 'draft')
         && data.imageUrls is list
         && data.updatedAt is timestamp

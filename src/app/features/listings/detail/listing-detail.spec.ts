@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, provideRouter, Router } from '@angular/router';
+import { TranslocoService } from '@jsverse/transloco';
 import { By, Title } from '@angular/platform-browser';
 import { ListingDetailComponent } from './listing-detail';
 import { ListingDetailStore } from './listing-detail.store';
@@ -246,6 +247,35 @@ describe('ListingDetailComponent', () => {
       fixture.detectChanges();
 
       expect(fixture.componentInstance.listingLocationLabel()).toBe('Buenos Aires');
+    });
+  });
+
+  describe('condition', () => {
+    it('should translate the stored condition value for the pill, per active language', async () => {
+      const { fixture } = await setup({
+        getById: vi.fn(async () => listing({ condition: 'Used' })),
+      });
+      fixture.detectChanges();
+      await flushAsync();
+      fixture.detectChanges();
+
+      expect(fixture.componentInstance.conditionLabel()).toBe('Used');
+      expect(fixture.nativeElement.textContent).toContain('Used');
+
+      TestBed.inject(TranslocoService).setActiveLang('es');
+      fixture.detectChanges();
+
+      expect(fixture.componentInstance.conditionLabel()).toBe('Usado');
+      expect(fixture.nativeElement.textContent).toContain('Usado');
+    });
+
+    it('should render no condition pill when the listing predates the field', async () => {
+      const { fixture } = await setup();
+      fixture.detectChanges();
+      await flushAsync();
+      fixture.detectChanges();
+
+      expect(fixture.componentInstance.conditionLabel()).toBeNull();
     });
   });
 
