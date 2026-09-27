@@ -5,33 +5,43 @@ import { NavigationService } from './navigation.service';
 
 describe('NavigationService', () => {
   let locationBackSpy: ReturnType<typeof vi.fn>;
+  let getStateSpy: ReturnType<typeof vi.fn>;
 
   function setup(): NavigationService {
     locationBackSpy = vi.fn();
+    getStateSpy = vi.fn();
 
     TestBed.configureTestingModule({
-      providers: [provideRouter([]), { provide: Location, useValue: { back: locationBackSpy } }],
+      providers: [
+        provideRouter([]),
+        { provide: Location, useValue: { back: locationBackSpy, getState: getStateSpy } },
+      ],
     });
 
     return TestBed.inject(NavigationService);
   }
 
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
-
-  it('should go back via Location when the tab has history to go back to', () => {
+  it('should go back via Location when the Router has navigated before in this tab', () => {
     const service = setup();
-    vi.spyOn(window.history, 'length', 'get').mockReturnValue(2);
+    getStateSpy.mockReturnValue({ navigationId: 2 });
 
     service.goBackOr(['/home']);
 
     expect(locationBackSpy).toHaveBeenCalledTimes(1);
   });
 
-  it('should navigate to the fallback route instead when there is no history to go back to', () => {
+  it('should go back via Location when the history state has no navigationId at all', () => {
     const service = setup();
-    vi.spyOn(window.history, 'length', 'get').mockReturnValue(1);
+    getStateSpy.mockReturnValue(null);
+
+    service.goBackOr(['/home']);
+
+    expect(locationBackSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('should navigate to the fallback route instead when this is the very first navigation in the tab', () => {
+    const service = setup();
+    getStateSpy.mockReturnValue({ navigationId: 1 });
     const navigateSpy = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
 
     service.goBackOr(['/home']);
