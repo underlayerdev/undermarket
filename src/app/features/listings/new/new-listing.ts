@@ -1,4 +1,3 @@
-import { Location } from '@angular/common';
 import { Component, computed, effect, inject, input, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
@@ -8,6 +7,7 @@ import { ListingService } from '../../../application/services/listing.service';
 import { LocationService } from '../../../application/services/location.service';
 import { toLocationErrorMessage } from '../../../application/services/location-error.util';
 import { SearchLocationService } from '../../../application/services/search-location.service';
+import { NavigationService } from '../../../core/navigation/navigation.service';
 import { SeoService } from '../../../core/seo/seo.service';
 import { LISTING_REPOSITORY } from '../../../core/configuration/tokens';
 import { ImageUploadComponent } from '../../../shared/image-upload/image-upload';
@@ -109,7 +109,7 @@ export class NewListingComponent {
   private readonly seoService = inject(SeoService);
   private readonly router = inject(Router);
   private readonly toastService = inject(ToastService);
-  private readonly location = inject(Location);
+  private readonly navigationService = inject(NavigationService);
   private readonly transloco = inject(TranslocoService);
   private readonly searchLocationService = inject(SearchLocationService);
   private readonly locationService = inject(LocationService);
@@ -365,11 +365,11 @@ export class NewListingComponent {
       this.showDiscardModal.set(true);
       return;
     }
-    this.location.back();
+    this.navigationService.goBackOr(['/home']);
   }
 
   confirmDiscard(): void {
-    this.location.back();
+    this.navigationService.goBackOr(['/home']);
   }
 
   // No FormsModule in this app (state lives in signals, not NgForm), so

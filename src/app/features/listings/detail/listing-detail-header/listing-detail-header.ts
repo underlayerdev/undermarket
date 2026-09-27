@@ -6,7 +6,7 @@ import {
 } from '../listing-detail-actions/listing-detail-actions';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { ListingDetailStore } from '../listing-detail.store';
-import { Location } from '@angular/common';
+import { NavigationService } from '../../../../core/navigation/navigation.service';
 
 // The back button + mobile "..." action menu that float over the gallery
 // photo — split out of ListingDetailComponent so the scroll-backdrop bar
@@ -25,7 +25,7 @@ import { Location } from '@angular/common';
 export class ListingDetailHeaderComponent {
   readonly showBackground = input(false);
 
-  private readonly location = inject(Location);
+  private readonly navigationService = inject(NavigationService);
   protected readonly store = inject(ListingDetailStore);
 
   protected openDeleteModal(): void {
@@ -37,6 +37,6 @@ export class ListingDetailHeaderComponent {
   }
 
   goBack(): void {
-    this.location.back();
+    this.navigationService.goBackOr(['/home']);
   }
 }

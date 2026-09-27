@@ -1,10 +1,10 @@
 import { TestBed } from '@angular/core/testing';
-import { Location } from '@angular/common';
 import { By } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
 import { ListingDetailHeaderComponent } from './listing-detail-header';
 import { ListingDetailActionsComponent } from '../listing-detail-actions/listing-detail-actions';
 import { ListingDetailStore } from '../listing-detail.store';
+import { NavigationService } from '../../../../core/navigation/navigation.service';
 import { AuthService } from '../../../../application/services/auth.service';
 import { getTranslocoTestingModule } from '../../../../../testing/transloco-testing';
 import {
@@ -72,9 +72,9 @@ function createAuthProviderMock(): AuthProvider & { emitAuthState: (user: User |
 async function setup(): Promise<{
   fixture: ReturnType<typeof TestBed.createComponent<ListingDetailHeaderComponent>>;
   store: ListingDetailStore;
-  locationBackSpy: ReturnType<typeof vi.fn>;
+  goBackOrSpy: ReturnType<typeof vi.fn>;
 }> {
-  const locationBackSpy = vi.fn();
+  const goBackOrSpy = vi.fn();
   const authProviderMock = createAuthProviderMock();
 
   TestBed.configureTestingModule({
@@ -82,7 +82,7 @@ async function setup(): Promise<{
     providers: [
       ListingDetailStore,
       provideRouter([]),
-      { provide: Location, useValue: { back: locationBackSpy } },
+      { provide: NavigationService, useValue: { goBackOr: goBackOrSpy } },
       { provide: AUTH_PROVIDER, useValue: authProviderMock },
       { provide: LISTING_REPOSITORY, useValue: { getById: vi.fn(async () => listing()) } },
       { provide: USER_REPOSITORY, useValue: { getById: vi.fn(async () => null) } },
@@ -99,7 +99,7 @@ async function setup(): Promise<{
 
   const fixture = TestBed.createComponent(ListingDetailHeaderComponent);
   fixture.detectChanges();
-  return { fixture, store, locationBackSpy };
+  return { fixture, store, goBackOrSpy };
 }
 
 describe('ListingDetailHeaderComponent', () => {
@@ -113,12 +113,12 @@ describe('ListingDetailHeaderComponent', () => {
     expect(fixture.nativeElement.querySelector('um-listing-detail-actions')).not.toBeNull();
   });
 
-  it('should navigate back via Location when the back button is clicked', async () => {
-    const { fixture, locationBackSpy } = await setup();
+  it('should ask NavigationService to go back, falling back to home, when the back button is clicked', async () => {
+    const { fixture, goBackOrSpy } = await setup();
 
     fixture.nativeElement.querySelector('button').click();
 
-    expect(locationBackSpy).toHaveBeenCalledTimes(1);
+    expect(goBackOrSpy).toHaveBeenCalledWith(['/home']);
   });
 
   it("should open the store's delete modal when the actions menu requests it", async () => {

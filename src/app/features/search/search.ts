@@ -1,4 +1,3 @@
-import { Location } from '@angular/common';
 import {
   Component,
   computed,
@@ -23,6 +22,7 @@ import { ListingService } from '../../application/services/listing.service';
 import { LocationService } from '../../application/services/location.service';
 import { toLocationErrorMessage } from '../../application/services/location-error.util';
 import { SearchLocationService } from '../../application/services/search-location.service';
+import { NavigationService } from '../../core/navigation/navigation.service';
 import { SeoService } from '../../core/seo/seo.service';
 import { CATEGORIES } from '../../domain/category/category.model';
 import { SEARCH_RADIUS_OPTIONS_KM } from '../../domain/location/geohash.util';
@@ -65,7 +65,7 @@ export class SearchComponent implements OnInit {
   private readonly seoService = inject(SeoService);
   private readonly transloco = inject(TranslocoService);
   private readonly toastService = inject(ToastService);
-  private readonly location = inject(Location);
+  private readonly navigationService = inject(NavigationService);
 
   readonly categoryOptions: SelectOption[] = CATEGORIES.map((category) => ({
     value: category,
@@ -173,7 +173,7 @@ export class SearchComponent implements OnInit {
   }
 
   goBack(): void {
-    this.location.back();
+    this.navigationService.goBackOr(['/home']);
   }
 
   async onLocationQueryChanged(query: string): Promise<void> {

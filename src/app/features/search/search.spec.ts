@@ -1,7 +1,7 @@
-import { Location } from '@angular/common';
 import { TestBed } from '@angular/core/testing';
 import { SearchComponent } from './search';
 import { ListingService } from '../../application/services/listing.service';
+import { NavigationService } from '../../core/navigation/navigation.service';
 import {
   AUTH_PROVIDER,
   GEOCODING_PROVIDER,
@@ -30,14 +30,14 @@ const testSearchLocation: SearchLocation = {
 describe('SearchComponent', () => {
   let searchSpy: ReturnType<typeof vi.fn>;
   let searchNearbySpy: ReturnType<typeof vi.fn>;
-  let locationBackSpy: ReturnType<typeof vi.fn>;
+  let goBackOrSpy: ReturnType<typeof vi.fn>;
   let restoreLocalStorage: () => void;
 
   beforeEach(() => {
     restoreLocalStorage = installFakeLocalStorage();
     searchSpy = vi.fn().mockResolvedValue(undefined);
     searchNearbySpy = vi.fn().mockResolvedValue(undefined);
-    locationBackSpy = vi.fn();
+    goBackOrSpy = vi.fn();
 
     TestBed.configureTestingModule({
       imports: [SearchComponent, getTranslocoTestingModule()],
@@ -46,7 +46,7 @@ describe('SearchComponent', () => {
           provide: ListingService,
           useValue: { search: searchSpy, searchNearby: searchNearbySpy, listings: () => [] },
         },
-        { provide: Location, useValue: { back: locationBackSpy } },
+        { provide: NavigationService, useValue: { goBackOr: goBackOrSpy } },
         {
           provide: AUTH_PROVIDER,
           useValue: {
@@ -97,12 +97,12 @@ describe('SearchComponent', () => {
     expect(searchSpy).not.toHaveBeenCalled();
   });
 
-  it('should navigate back when the back button is clicked', () => {
+  it('should ask NavigationService to go back, falling back to home, when the back button is clicked', () => {
     const fixture = TestBed.createComponent(SearchComponent);
 
     fixture.componentInstance.goBack();
 
-    expect(locationBackSpy).toHaveBeenCalled();
+    expect(goBackOrSpy).toHaveBeenCalledWith(['/home']);
   });
 
   it('should render a ul-search-input for the mobile header, desktop row, and location picker', () => {

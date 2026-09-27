@@ -1,9 +1,9 @@
-import { Location } from '@angular/common';
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { NewListingComponent } from './new-listing';
 import { AuthService } from '../../../application/services/auth.service';
 import { ListingService } from '../../../application/services/listing.service';
+import { NavigationService } from '../../../core/navigation/navigation.service';
 import {
   GEOCODING_PROVIDER,
   GEOLOCATION_PROVIDER,
@@ -69,7 +69,7 @@ describe('NewListingComponent', () => {
           useValue: overrides?.listingRepository ?? { getById: vi.fn() },
         },
         { provide: Router, useValue: overrides?.router ?? { navigate: vi.fn() } },
-        { provide: Location, useValue: { back: vi.fn() } },
+        { provide: NavigationService, useValue: { goBackOr: vi.fn() } },
         {
           provide: GEOCODING_PROVIDER,
           useValue: overrides?.geocodingProvider ?? { search: vi.fn(), reverseGeocode: vi.fn() },
