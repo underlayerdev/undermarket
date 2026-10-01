@@ -1,5 +1,6 @@
 import { Component, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { TranslocoDirective } from '@jsverse/transloco';
 import { CardComponent } from '@underlayerdev/ui';
 import { ListingPricePipe } from '../listing-price/listing-price.pipe';
 import { createListingSlug } from '../../utils/slugify';
@@ -11,7 +12,7 @@ import type { Listing } from '../../../domain/listing/listing.model';
 // doesn't).
 @Component({
   selector: 'um-listing-grid',
-  imports: [RouterLink, CardComponent, ListingPricePipe],
+  imports: [RouterLink, CardComponent, ListingPricePipe, TranslocoDirective],
   templateUrl: './listing-grid.html',
 })
 export class ListingGridComponent {

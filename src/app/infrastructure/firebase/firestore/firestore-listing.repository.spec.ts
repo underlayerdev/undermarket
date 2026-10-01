@@ -24,7 +24,6 @@ const baseDocData = {
   description: 'A nice lamp',
   price: 42,
   currency: 'USD',
-  category: 'Furniture',
   imageUrls: [],
   status: 'active',
   createdAt: { toDate: () => new Date('2026-01-01') },
@@ -163,7 +162,6 @@ describe('FirestoreListingRepository', () => {
       description: 'A nice lamp',
       price: 42,
       currency: 'USD',
-      category: 'Furniture',
       imageUrls: [],
       status: 'active',
       location: testLocation,
@@ -219,11 +217,11 @@ describe('FirestoreListingRepository', () => {
       expect(result).toEqual([]);
     });
 
-    it('should apply the category filter client-side after the radius filter', async () => {
+    it('should apply the categoryId filter client-side after the radius filter', async () => {
       const furniture = docSnapshot('furniture', { ...baseDocData, location: testLocation });
       const electronics = docSnapshot('electronics', {
         ...baseDocData,
-        category: 'Electronics',
+        categoryPath: ['electronics', 'electronics-leaf'],
         location: testLocation,
       });
       vi.mocked(firestoreModule.getDocs).mockResolvedValue({
@@ -234,10 +232,38 @@ describe('FirestoreListingRepository', () => {
       const result = await repository.searchNearby({
         center: { latitude: testLocation.latitude, longitude: testLocation.longitude },
         radiusKm: 10,
-        category: 'Electronics',
+        categoryId: 'electronics',
       });
 
       expect(result.map((l) => l.id)).toEqual(['electronics']);
+    });
+  });
+
+  describe('search', () => {
+    it('should filter by categoryPath array-contains when categoryId is given', async () => {
+      vi.mocked(firestoreModule.getDocs).mockResolvedValue({ docs: [] } as never);
+      const repository = createRepository();
+
+      await repository.search({ categoryId: 'electronics' });
+
+      expect(vi.mocked(firestoreModule.where)).toHaveBeenCalledWith(
+        'categoryPath',
+        'array-contains',
+        'electronics',
+      );
+    });
+
+    it('should not filter by category when no categoryId is given', async () => {
+      vi.mocked(firestoreModule.getDocs).mockResolvedValue({ docs: [] } as never);
+      const repository = createRepository();
+
+      await repository.search({});
+
+      expect(vi.mocked(firestoreModule.where)).not.toHaveBeenCalledWith(
+        'categoryPath',
+        'array-contains',
+        expect.anything(),
+      );
     });
   });
 

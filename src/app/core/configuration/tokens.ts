@@ -4,6 +4,7 @@ import type { Auth } from 'firebase/auth';
 import type { Firestore } from 'firebase/firestore';
 import type { Functions } from 'firebase/functions';
 import type { AuthProvider } from '../../domain/auth/auth.provider';
+import type { CategoryNodeRepository } from '../../domain/category-node/category-node.repository';
 import type { ImageStorage } from '../../domain/image-storage/image-storage.provider';
 import type { MercadoLibreProvider } from '../../domain/mercado-libre/mercado-libre.provider';
 import type { NotificationProvider } from '../../domain/notification/notification.provider';
@@ -20,6 +21,9 @@ export const FIREBASE_FUNCTIONS = new InjectionToken<Functions>('FIREBASE_FUNCTI
 export const AUTH_PROVIDER = new InjectionToken<AuthProvider>('AUTH_PROVIDER');
 export const USER_REPOSITORY = new InjectionToken<UserRepository>('USER_REPOSITORY');
 export const LISTING_REPOSITORY = new InjectionToken<ListingRepository>('LISTING_REPOSITORY');
+export const CATEGORY_NODE_REPOSITORY = new InjectionToken<CategoryNodeRepository>(
+  'CATEGORY_NODE_REPOSITORY',
+);
 export const IMAGE_STORAGE = new InjectionToken<ImageStorage>('IMAGE_STORAGE');
 export const MERCADO_LIBRE_PROVIDER = new InjectionToken<MercadoLibreProvider>(
   'MERCADO_LIBRE_PROVIDER',

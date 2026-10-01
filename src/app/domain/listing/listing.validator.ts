@@ -1,12 +1,16 @@
 import type { TranslocoService } from '@jsverse/transloco';
-import { CATEGORIES } from '../category/category.model';
-import type { Category } from '../category/category.model';
 import { CONDITIONS } from '../condition/condition.model';
 import { CURRENCIES, getMaxPriceForCurrency } from '../currency/currency.model';
 import { validateLocationArea } from '../location/location.validator';
 import type { LocationArea } from '../location/location.model';
 import { LISTING_DESCRIPTION_MAX_LENGTH, LISTING_TITLE_MAX_LENGTH } from './listing-constraints';
 import type { Listing } from './listing.model';
+
+// Root categoryIds with no physical "condition" at all — keep in sync with
+// CATEGORY_ROOTS_WITHOUT_CONDITION in
+// src/app/application/category/category.service.ts and
+// categoryRequiresCondition in firestore.rules.
+const CATEGORY_ROOTS_WITHOUT_CONDITION = new Set<string>(['services']);
 
 // currency/category/condition are widened back to string: this is the
 // boundary validateNewListing exists to check, so it must accept values
@@ -19,13 +23,23 @@ export type NewListingInput = Omit<
   | 'updatedAt'
   | 'imageUrls'
   | 'currency'
-  | 'category'
+  | 'categoryId'
+  | 'categoryPath'
   | 'condition'
   | 'location'
 > & {
   currency: string;
-  category: string;
-  condition: string;
+  // Required (unlike Listing's own optional categoryId?/categoryPath?,
+  // which stay optional only for backward compatibility with listings that
+  // predate the category tree) — every listing created or edited through
+  // this form always has a leaf picked via ul-category-picker.
+  categoryId: string;
+  categoryPath: string[];
+  // Optional, unlike currency/category/categoryId above: some categories
+  // have no physical "condition" at all (CategoryService.requiresCondition)
+  // — omitted entirely for those rather than sent as a meaningless value,
+  // mirrored by firestore.rules' isValidNewListing accepting its absence.
+  condition?: string;
   location: LocationArea;
 };
 
@@ -61,11 +75,24 @@ export function validateNewListing(
   if (data.price > maxPrice)
     return transloco.translate('newListing.errors.priceTooHigh', { maxPrice });
 
-  if (!CATEGORIES.includes(data.category as Category))
+  // Mirrors the shape check in firestore.rules: a non-empty leaf id whose
+  // path ends with itself.
+  if (!data.categoryId || data.categoryPath.at(-1) !== data.categoryId) {
     return transloco.translate('newListing.errors.categoryInvalid');
+  }
 
-  if (!CONDITIONS.some((condition) => condition.value === data.condition))
+  // The real rule (mirrored from firestore.rules): required+valid for a
+  // category that has one, absent for a category that doesn't — never
+  // "anything goes when present, ignored when absent".
+  const categoryRequiresCondition = !CATEGORY_ROOTS_WITHOUT_CONDITION.has(data.categoryPath[0]);
+  if (categoryRequiresCondition) {
+    if (!data.condition) return transloco.translate('newListing.errors.conditionRequired');
+    if (!CONDITIONS.some((condition) => condition.value === data.condition)) {
+      return transloco.translate('newListing.errors.conditionInvalid');
+    }
+  } else if (data.condition) {
     return transloco.translate('newListing.errors.conditionInvalid');
+  }
 
   if (data.status !== 'active') return transloco.translate('newListing.errors.statusInvalid');
 

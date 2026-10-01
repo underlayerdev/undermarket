@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { ListingGridComponent } from './listing-grid';
 import type { Listing } from '../../../domain/listing/listing.model';
+import { getTranslocoTestingModule } from '../../../../testing/transloco-testing';
 
 function listing(overrides: Partial<Listing> = {}): Listing {
   return {
@@ -11,7 +12,6 @@ function listing(overrides: Partial<Listing> = {}): Listing {
     description: 'A nice chair, barely used.',
     price: 1000,
     currency: 'USD',
-    category: 'Furniture',
     imageUrls: [],
     status: 'active',
     createdAt: new Date('2026-01-01'),
@@ -23,7 +23,7 @@ function listing(overrides: Partial<Listing> = {}): Listing {
 describe('ListingGridComponent', () => {
   function setup() {
     TestBed.configureTestingModule({
-      imports: [ListingGridComponent],
+      imports: [ListingGridComponent, getTranslocoTestingModule()],
       providers: [provideRouter([])],
     });
     return TestBed.createComponent(ListingGridComponent);

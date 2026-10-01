@@ -1,4 +1,3 @@
-import type { Category } from '../category/category.model';
 import type { Condition } from '../condition/condition.model';
 import type { CurrencyCode } from '../currency/currency.model';
 import type { ListingLocation } from '../location/location.model';
@@ -17,7 +16,16 @@ export interface Listing {
   description: string;
   price: number;
   currency: CurrencyCode;
-  category: Category;
+  /**
+   * Leaf id in the `categories/{categoryId}` tree (see docs/categories-plan.md).
+   * Absent on listings created before the tree existed and on any created
+   * since that haven't been through the backfill (functions/src/categories/
+   * backfill-listings.ts) — the old flat `category` field this replaced is
+   * fully retired, so there's no fallback for a listing missing this.
+   */
+  categoryId?: string;
+  /** Root→leaf ancestor ids for `categoryId`, denormalized at write time for `array-contains` filtering. */
+  categoryPath?: string[];
   imageUrls: string[];
   status: ListingStatus;
   createdAt: Date;

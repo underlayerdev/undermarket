@@ -13,18 +13,16 @@ import {
   ToastService,
   ButtonComponent,
   IconComponent,
-  PillComponent,
   SearchInputComponent,
-  SelectComponent,
 } from '@underlayerdev/ui';
-import type { SearchSuggestion, SelectOption } from '@underlayerdev/ui';
+import type { CategoryPickerNode, SearchSuggestion, SelectOption } from '@underlayerdev/ui';
+import { CategoryService } from '../../application/category/category.service';
 import { ListingService } from '../../application/services/listing.service';
 import { LocationService } from '../../application/services/location.service';
 import { toLocationErrorMessage } from '../../application/services/location-error.util';
 import { SearchLocationService } from '../../application/services/search-location.service';
 import { NavigationService } from '../../core/navigation/navigation.service';
 import { SeoService } from '../../core/seo/seo.service';
-import { CATEGORIES } from '../../domain/category/category.model';
 import { SEARCH_RADIUS_OPTIONS_KM } from '../../domain/location/geohash.util';
 import type {
   LocationArea,
@@ -32,6 +30,7 @@ import type {
   SearchLocation,
 } from '../../domain/location/location.model';
 import { LISTING_SORT_OPTIONS, sortListings } from '../../domain/listing/listing-query.util';
+import { CategoryFilterChipsComponent } from '../../shared/category/category-filter-chips/category-filter-chips';
 import { ListingGridComponent } from '../../shared/listing/listing-grid/listing-grid';
 import { SearchLocationBarComponent } from '../../shared/location/search-location-bar/search-location-bar';
 import { SortComponent } from '../../shared/sort/sort';
@@ -41,9 +40,8 @@ import { addRecentSearch, getRecentSearches } from '../../shared/search/recent-s
   selector: 'um-search',
   imports: [
     ButtonComponent,
+    CategoryFilterChipsComponent,
     IconComponent,
-    PillComponent,
-    SelectComponent,
     SearchInputComponent,
     TranslocoDirective,
     ListingGridComponent,
@@ -61,23 +59,31 @@ export class SearchComponent implements OnInit {
 
   protected readonly listingService = inject(ListingService);
   protected readonly searchLocationService = inject(SearchLocationService);
+  private readonly categoryService = inject(CategoryService);
   private readonly locationService = inject(LocationService);
   private readonly seoService = inject(SeoService);
   private readonly transloco = inject(TranslocoService);
   private readonly toastService = inject(ToastService);
   private readonly navigationService = inject(NavigationService);
 
-  readonly categoryOptions: SelectOption[] = CATEGORIES.map((category) => ({
-    value: category,
-    label: category,
-  }));
-
   /** Bound to the `q` query param via withComponentInputBinding(). */
   readonly q = input<string>('');
 
   readonly query = signal('');
-  readonly selectedCategory = signal<string | null>(null);
+  readonly selectedCategoryId = signal<string | null>(null);
   readonly sortOption = signal<string | null>('nearest');
+
+  readonly categoryFilterNodes = computed<CategoryPickerNode[]>(() => {
+    this.transloco.activeLang();
+    return this.categoryService.orderedTree().map((node) => ({
+      id: node.categoryId,
+      parentId: node.parentId,
+      label: this.transloco.translate(`category.${node.categoryId}`),
+      // Root-only — see new-listing.ts's categoryPickerNodes for why.
+      icon: node.depth === 0 ? node.icon : undefined,
+      isLeaf: node.isLeaf,
+    }));
+  });
   private readonly recentSearches = signal(getRecentSearches(SearchComponent.HISTORY_KEY));
   readonly recentSearchSuggestions = computed<SearchSuggestion[]>(() =>
     this.recentSearches().map((recentQuery) => ({ value: recentQuery, label: recentQuery })),
@@ -117,6 +123,8 @@ export class SearchComponent implements OnInit {
   );
 
   constructor() {
+    void this.categoryService.ensureLoaded();
+
     effect(() => {
       const incoming = this.q();
       if (incoming && incoming !== this.query()) {
@@ -125,13 +133,15 @@ export class SearchComponent implements OnInit {
       }
     });
 
-    // Only the search location/radius re-runs the search reactively — query
-    // and category stay explicit (submit/suggestion/button), matching how
-    // this page worked before location existed: picking a category alone
-    // doesn't search until the query or a category is (re-)submitted.
+    // Location and category re-run the search reactively (a chip click is
+    // already a single, immediate action — no separate "confirm" step like
+    // the old dropdown had); the text query stays explicit
+    // (submit/suggestion/button), matching how this page worked before
+    // location existed.
     effect(() => {
       const location = this.searchLocationService.searchLocation();
-      void this.runSearch(location, untracked(this.selectedCategory), untracked(this.query));
+      const categoryId = this.selectedCategoryId();
+      void this.runSearch(location, categoryId, untracked(this.query));
     });
   }
 
@@ -145,7 +155,7 @@ export class SearchComponent implements OnInit {
   onSearch(): void {
     void this.runSearch(
       this.searchLocationService.searchLocation(),
-      this.selectedCategory(),
+      this.selectedCategoryId(),
       this.query(),
     );
   }
@@ -165,11 +175,6 @@ export class SearchComponent implements OnInit {
     if (!trimmed) return;
     addRecentSearch(SearchComponent.HISTORY_KEY, trimmed);
     this.recentSearches.set(getRecentSearches(SearchComponent.HISTORY_KEY));
-  }
-
-  clearCategory(): void {
-    this.selectedCategory.set(null);
-    this.onSearch();
   }
 
   goBack(): void {
@@ -209,20 +214,20 @@ export class SearchComponent implements OnInit {
 
   private async runSearch(
     location: SearchLocation | null,
-    category: string | null,
+    categoryId: string | null,
     query: string,
   ): Promise<void> {
     if (location) {
       await this.listingService.searchNearby({
         center: location,
         radiusKm: location.radiusKm,
-        category: category ?? undefined,
+        categoryId: categoryId ?? undefined,
         query: query || undefined,
       });
     } else {
       await this.listingService.search({
         query: query || undefined,
-        category: category ?? undefined,
+        categoryId: categoryId ?? undefined,
       });
     }
   }

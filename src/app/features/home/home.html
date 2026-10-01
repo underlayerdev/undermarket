@@ -29,7 +29,7 @@
                 <ul-card
                   [cardTitle]="listing.title"
                   [cardSubtitle]="listing.price | listingPrice: listing.currency"
-                  [cardCaption]="listing.category"
+                  [cardCaption]="listing.categoryId ? t('category.' + listing.categoryId) : ''"
                   cardDirection="vertical"
                   mediaAspectRatio="portrait"
                 >

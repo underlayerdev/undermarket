@@ -1,4 +1,4 @@
-<div class="ul-container-gallery">
+<div class="um-discover ul-container-gallery">
   <div class="ul-content ul-pt-8">
     <ng-container *transloco="let t">
       <h1 class="ul-typography-headline-xl-extrablack ul-mb-6">{{ t('discover.title') }}</h1>
@@ -20,25 +20,13 @@
         (useCurrentLocationRequested)="onUseCurrentLocationRequested()"
       />
 
-      <div class="ul-gap-4 ul-mb-6" style="display: flex; align-items: center; flex-wrap: wrap">
-        <div class="ul-gap-2" style="display: flex; flex-wrap: wrap; flex: 1">
-          <ul-pill
-            variant="interactive"
-            [theme]="selectedCategory() === null ? 'fill-purple' : 'transparent-white'"
-            (click)="selectCategory(null)"
-          >
-            {{ t('discover.allCategories') }}
-          </ul-pill>
-          @for (category of categories; track category) {
-            <ul-pill
-              variant="interactive"
-              [theme]="selectedCategory() === category ? 'fill-purple' : 'transparent-white'"
-              (click)="selectCategory(category)"
-            >
-              {{ category }}
-            </ul-pill>
-          }
-        </div>
+      <div class="um-discover__filters">
+        <um-category-filter-chips
+          [nodes]="categoryFilterNodes()"
+          [allLabel]="t('discover.allCategories')"
+          [showMoreLabel]="t('common.showMore')"
+          [(selectedId)]="selectedCategoryId"
+        />
         <um-sort
           [placeholder]="t('listing.sortPlaceholder')"
           [sortOptions]="sortOptions()"

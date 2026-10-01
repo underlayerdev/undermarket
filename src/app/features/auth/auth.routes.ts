@@ -19,12 +19,14 @@ export const authRoutes: Routes = [
       },
       {
         path: 'forgot-password',
-        loadComponent: () => import('./forgot-password/forgot-password').then((m) => m.ForgotPasswordComponent),
+        loadComponent: () =>
+          import('./forgot-password/forgot-password').then((m) => m.ForgotPasswordComponent),
         canActivate: [guestGuard],
       },
       {
         path: 'reset-password',
-        loadComponent: () => import('./reset-password/reset-password').then((m) => m.ResetPasswordComponent),
+        loadComponent: () =>
+          import('./reset-password/reset-password').then((m) => m.ResetPasswordComponent),
       },
     ],
   },

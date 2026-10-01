@@ -27,7 +27,6 @@ function listing(overrides: Partial<Listing> = {}): Listing {
     description: 'A nice chair, barely used.',
     price: 1000,
     currency: 'USD',
-    category: 'Furniture',
     imageUrls: [],
     status: 'active',
     createdAt: new Date('2026-01-01'),

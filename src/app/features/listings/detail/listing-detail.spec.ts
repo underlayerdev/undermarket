@@ -9,6 +9,7 @@ import { getTranslocoTestingModule } from '../../../../testing/transloco-testing
 import { stubMatchMedia } from '../../../../testing/match-media';
 import {
   AUTH_PROVIDER,
+  CATEGORY_NODE_REPOSITORY,
   IMAGE_STORAGE,
   LISTING_REPOSITORY,
   USER_REPOSITORY,
@@ -38,7 +39,6 @@ function listing(overrides: Partial<Listing> = {}): Listing {
     description: 'A nice lamp, barely used.',
     price: 42,
     currency: 'USD',
-    category: 'Furniture',
     imageUrls: [],
     status: 'active',
     createdAt: new Date('2026-01-01'),
@@ -78,6 +78,7 @@ async function setup(
     getOwnerById?: ReturnType<typeof vi.fn>;
     slug?: string;
     currentUser?: User | null;
+    categoryNodes?: unknown[];
   } = {},
 ): Promise<{
   fixture: ReturnType<typeof TestBed.createComponent<ListingDetailComponent>>;
@@ -98,6 +99,10 @@ async function setup(
     providers: [
       provideRouter([]),
       { provide: AUTH_PROVIDER, useValue: authProviderMock },
+      {
+        provide: CATEGORY_NODE_REPOSITORY,
+        useValue: { getAll: vi.fn(async () => options.categoryNodes ?? []) },
+      },
       { provide: LISTING_REPOSITORY, useValue: listingRepositoryMock },
       {
         provide: USER_REPOSITORY,
@@ -190,6 +195,49 @@ describe('ListingDetailComponent', () => {
 
       expect(TestBed.inject(Title).getTitle()).toContain('Vintage lamp');
       expect(fixture.componentInstance.breadcrumbItems()[1].label).toBe('Vintage lamp');
+    });
+
+    it('should insert the translated category breadcrumb between home and the title', async () => {
+      const categoryNodes = [
+        { categoryId: 'electronics', parentId: null, path: ['electronics'] },
+        {
+          categoryId: 'electronics-cameras',
+          parentId: 'electronics',
+          path: ['electronics', 'electronics-cameras'],
+        },
+        {
+          categoryId: 'electronics-cameras-drones',
+          parentId: 'electronics-cameras',
+          path: ['electronics', 'electronics-cameras', 'electronics-cameras-drones'],
+        },
+      ].map((node) => ({
+        ...node,
+        depth: node.path.length - 1,
+        order: 0,
+        icon: 'computer',
+        isActive: true,
+        isLeaf: node.categoryId === 'electronics-cameras-drones',
+        featured: false,
+        featuredOrder: 0,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        updatedBy: 'seed-script',
+      }));
+      const { fixture } = await setup({
+        getById: vi.fn(async () => listing({ categoryId: 'electronics-cameras-drones' })),
+        categoryNodes,
+      });
+      fixture.detectChanges();
+      await flushAsync();
+      fixture.detectChanges();
+
+      expect(fixture.componentInstance.breadcrumbItems().map((item) => item.label)).toEqual([
+        'Home',
+        'Electronics',
+        'Cameras & Accessories',
+        'Drones & Accessories',
+        'Vintage lamp',
+      ]);
     });
 
     it('should format the location label with neighborhood when present', async () => {

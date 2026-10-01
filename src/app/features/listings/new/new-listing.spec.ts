@@ -1,7 +1,9 @@
+import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { NewListingComponent } from './new-listing';
 import { AuthService } from '../../../application/services/auth.service';
+import { CategoryService } from '../../../application/category/category.service';
 import { ListingService } from '../../../application/services/listing.service';
 import { NavigationService } from '../../../core/navigation/navigation.service';
 import {
@@ -10,11 +12,86 @@ import {
   LISTING_REPOSITORY,
   SEARCH_LOCATION_REPOSITORY,
 } from '../../../core/configuration/tokens';
+import type { CategoryNode } from '../../../domain/category-node/category-node.model';
 import type { Listing } from '../../../domain/listing/listing.model';
 import { GeolocationError } from '../../../domain/location/geolocation.provider';
 import type { LocationArea } from '../../../domain/location/location.model';
 import { getTranslocoTestingModule } from '../../../../testing/transloco-testing';
 import { installFakeLocalStorage } from '../../../../testing/fake-local-storage';
+
+const CATEGORY_NODES: CategoryNode[] = [
+  {
+    categoryId: 'electronics',
+    parentId: null,
+    path: ['electronics'],
+    depth: 0,
+    order: 0,
+    icon: 'computer',
+    isActive: true,
+    isLeaf: false,
+    featured: false,
+    featuredOrder: 0,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    updatedBy: 'seed-script',
+  },
+  {
+    categoryId: 'electronics-leaf',
+    parentId: 'electronics',
+    path: ['electronics', 'electronics-leaf'],
+    depth: 1,
+    order: 0,
+    icon: 'computer',
+    isActive: true,
+    isLeaf: true,
+    featured: false,
+    featuredOrder: 0,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    updatedBy: 'seed-script',
+  },
+  {
+    categoryId: 'services',
+    parentId: null,
+    path: ['services'],
+    depth: 0,
+    order: 15,
+    icon: 'compass',
+    isActive: true,
+    isLeaf: false,
+    featured: false,
+    featuredOrder: 0,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    updatedBy: 'seed-script',
+  },
+  {
+    categoryId: 'services-leaf',
+    parentId: 'services',
+    path: ['services', 'services-leaf'],
+    depth: 1,
+    order: 0,
+    icon: 'compass',
+    isActive: true,
+    isLeaf: true,
+    featured: false,
+    featuredOrder: 0,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    updatedBy: 'seed-script',
+  },
+];
+
+function fakeCategoryService(nodes: CategoryNode[] = CATEGORY_NODES) {
+  const getById = (id: string) => nodes.find((node) => node.categoryId === id);
+  return {
+    tree: signal<CategoryNode[] | null>(nodes),
+    orderedTree: () => nodes,
+    ensureLoaded: vi.fn().mockResolvedValue(nodes),
+    getById,
+    requiresCondition: (id: string) => getById(id)?.path[0] !== 'services',
+  };
+}
 
 const TEST_LOCATION: LocationArea = {
   displayName: 'Palermo, Buenos Aires',
@@ -41,7 +118,8 @@ const EXISTING_LISTING: Listing = {
   description: 'A perfectly valid description for this listing.',
   price: 10,
   currency: 'USD',
-  category: 'Electronics',
+  categoryId: 'electronics-leaf',
+  categoryPath: ['electronics', 'electronics-leaf'],
   condition: 'New',
   imageUrls: ['https://example.com/a.jpg'],
   status: 'draft',
@@ -59,11 +137,13 @@ describe('NewListingComponent', () => {
     geocodingProvider?: object;
     geolocationProvider?: object;
     searchLocationRepository?: object;
+    categoryService?: object;
   }) {
     TestBed.configureTestingModule({
       imports: [NewListingComponent, getTranslocoTestingModule()],
       providers: [
         { provide: AuthService, useValue: overrides?.authService ?? { currentUser: () => null } },
+        { provide: CategoryService, useValue: overrides?.categoryService ?? fakeCategoryService() },
         { provide: ListingService, useValue: overrides?.listingService ?? { create: vi.fn() } },
         {
           provide: LISTING_REPOSITORY,
@@ -108,7 +188,7 @@ describe('NewListingComponent', () => {
     expect(listing.title().errors()).toEqual([]);
     expect(listing.description().errors()).toEqual([]);
     expect(listing.price().errors()).toEqual([]);
-    expect(listing.category().errors()).toEqual([]);
+    expect(listing.categoryId().errors()).toEqual([]);
     expect(listing.condition().errors()).toEqual([]);
   });
 
@@ -135,6 +215,73 @@ describe('NewListingComponent', () => {
     expect(listing.title().errors().length).toBeGreaterThan(0);
   });
 
+  describe('condition visibility', () => {
+    it('should require a condition by default, before any category is picked', () => {
+      const fixture = setup();
+
+      // Currency + condition, both ul-select — one fewer once condition hides.
+      expect(fixture.componentInstance.conditionRequired()).toBe(true);
+      expect(fixture.nativeElement.querySelectorAll('ul-select').length).toBe(2);
+    });
+
+    it('should hide the condition field once a services category is picked', () => {
+      const fixture = setup();
+
+      fixture.componentInstance.listingModel.update((model) => ({
+        ...model,
+        categoryId: 'services-leaf',
+      }));
+      fixture.detectChanges();
+
+      expect(fixture.componentInstance.conditionRequired()).toBe(false);
+      expect(fixture.nativeElement.querySelectorAll('ul-select').length).toBe(1);
+    });
+
+    it('should clear a previously-picked condition when switching into a services category', () => {
+      const fixture = setup();
+      fixture.componentInstance.listingModel.update((model) => ({ ...model, condition: 'New' }));
+      fixture.detectChanges();
+
+      fixture.componentInstance.listingModel.update((model) => ({
+        ...model,
+        categoryId: 'services-leaf',
+      }));
+      fixture.detectChanges();
+
+      expect(fixture.componentInstance.listingModel().condition).toBeNull();
+    });
+
+    it('should create a services listing without a condition field at all', async () => {
+      const createSpy = vi.fn().mockResolvedValue({
+        id: 'svc-1',
+        title: 'House cleaning',
+        ownerId: 'user-1',
+      });
+      const fixture = setup({
+        authService: { currentUser: () => ({ id: 'user-1' }) },
+        listingService: { create: createSpy },
+        router: { navigate: vi.fn().mockResolvedValue(true) },
+      });
+
+      fixture.componentInstance.listingModel.set({
+        title: 'House cleaning',
+        description: 'Deep cleaning for your home.',
+        price: '20',
+        currency: 'USD',
+        categoryId: 'services-leaf',
+        condition: null,
+        location: TEST_LOCATION,
+      });
+      fixture.detectChanges();
+
+      await fixture.componentInstance.onSubmit();
+
+      expect(createSpy).toHaveBeenCalled();
+      const [input] = createSpy.mock.calls[0];
+      expect('condition' in input).toBe(false);
+    });
+  });
+
   it('should replace the current history entry when navigating to the newly created listing', async () => {
     const navigateSpy = vi.fn().mockResolvedValue(true);
     const createdListing = {
@@ -144,7 +291,6 @@ describe('NewListingComponent', () => {
       description: 'A perfectly valid description for this listing.',
       price: 10,
       currency: 'USD',
-      category: 'Electronics',
       condition: 'New',
       imageUrls: [],
       status: 'active' as const,
@@ -162,7 +308,7 @@ describe('NewListingComponent', () => {
       description: createdListing.description,
       price: String(createdListing.price),
       currency: createdListing.currency,
-      category: createdListing.category,
+      categoryId: 'electronics-leaf',
       condition: createdListing.condition,
       location: TEST_LOCATION,
     });
@@ -192,7 +338,7 @@ describe('NewListingComponent', () => {
         description: EXISTING_LISTING.description,
         price: '10',
         currency: 'USD',
-        category: 'Electronics',
+        categoryId: 'electronics-leaf',
         condition: 'New',
         location: null,
       });
@@ -299,7 +445,7 @@ describe('NewListingComponent', () => {
         description: 'A perfectly valid description for this listing.',
         price: '10',
         currency: value.currency,
-        category: 'Electronics',
+        categoryId: 'electronics-leaf',
         condition: 'New',
         location: null,
       }));

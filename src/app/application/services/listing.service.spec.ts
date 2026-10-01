@@ -20,7 +20,8 @@ function validInput(overrides: Partial<NewListingInput> = {}): NewListingInput {
     description: 'A nice lamp in good condition.',
     price: 25,
     currency: 'ARS',
-    category: 'Furniture',
+    categoryId: 'home-furniture-furniture',
+    categoryPath: ['home-furniture', 'home-furniture-furniture'],
     condition: 'Used',
     status: 'active',
     location: {
@@ -169,7 +170,6 @@ describe('ListingService', () => {
       {
         ...validInput(),
         currency: 'ARS' as const,
-        category: 'Furniture' as const,
         condition: 'Used' as const,
         id: 'nearby-1',
         imageUrls: [],

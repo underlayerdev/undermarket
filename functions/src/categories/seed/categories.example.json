@@ -1,0 +1,65 @@
+[
+  {
+    "categoryId": "electronics",
+    "parentId": null,
+    "path": ["electronics"],
+    "depth": 0,
+    "order": 0,
+    "icon": "shopping_bag",
+    "isActive": true,
+    "isLeaf": false,
+    "updatedBy": "seed-script",
+    "featured": true,
+    "featuredOrder": 1
+  },
+  {
+    "categoryId": "mobile-phones",
+    "parentId": "electronics",
+    "path": ["electronics", "mobile-phones"],
+    "depth": 1,
+    "order": 0,
+    "isActive": true,
+    "isLeaf": true,
+    "updatedBy": "seed-script",
+    "featured": false,
+    "featuredOrder": 0
+  },
+  {
+    "categoryId": "services",
+    "parentId": null,
+    "path": ["services"],
+    "depth": 0,
+    "order": 1,
+    "icon": "compass",
+    "isActive": true,
+    "isLeaf": false,
+    "updatedBy": "seed-script",
+    "featured": true,
+    "featuredOrder": 4
+  },
+  {
+    "categoryId": "home-services",
+    "parentId": "services",
+    "path": ["services", "home-services"],
+    "depth": 1,
+    "order": 0,
+    "isActive": true,
+    "isLeaf": true,
+    "updatedBy": "seed-script",
+    "featured": false,
+    "featuredOrder": 0
+  },
+  {
+    "categoryId": "other",
+    "parentId": null,
+    "path": ["other"],
+    "depth": 0,
+    "order": 99,
+    "icon": "external_link",
+    "isActive": true,
+    "isLeaf": true,
+    "updatedBy": "seed-script",
+    "featured": false,
+    "featuredOrder": 0
+  }
+]

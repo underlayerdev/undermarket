@@ -1,13 +1,13 @@
 import { Component, computed, effect, inject, OnInit, signal } from '@angular/core';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
-import { ToastService, PillComponent } from '@underlayerdev/ui';
-import type { SelectOption } from '@underlayerdev/ui';
+import { ToastService } from '@underlayerdev/ui';
+import type { CategoryPickerNode, SelectOption } from '@underlayerdev/ui';
+import { CategoryService } from '../../application/category/category.service';
 import { ListingService } from '../../application/services/listing.service';
 import { LocationService } from '../../application/services/location.service';
 import { toLocationErrorMessage } from '../../application/services/location-error.util';
 import { SearchLocationService } from '../../application/services/search-location.service';
 import { SeoService } from '../../core/seo/seo.service';
-import { CATEGORIES } from '../../domain/category/category.model';
 import { SEARCH_RADIUS_OPTIONS_KM } from '../../domain/location/geohash.util';
 import type {
   LocationArea,
@@ -15,6 +15,7 @@ import type {
   SearchLocation,
 } from '../../domain/location/location.model';
 import { LISTING_SORT_OPTIONS, sortListings } from '../../domain/listing/listing-query.util';
+import { CategoryFilterChipsComponent } from '../../shared/category/category-filter-chips/category-filter-chips';
 import { ListingGridComponent } from '../../shared/listing/listing-grid/listing-grid';
 import { SearchLocationBarComponent } from '../../shared/location/search-location-bar/search-location-bar';
 import { SortComponent } from '../../shared/sort/sort';
@@ -22,7 +23,7 @@ import { SortComponent } from '../../shared/sort/sort';
 @Component({
   selector: 'um-discover',
   imports: [
-    PillComponent,
+    CategoryFilterChipsComponent,
     TranslocoDirective,
     ListingGridComponent,
     SearchLocationBarComponent,
@@ -30,28 +31,43 @@ import { SortComponent } from '../../shared/sort/sort';
   ],
   providers: [ToastService],
   templateUrl: './discover.html',
+  styleUrl: 'discover.scss',
 })
 export class DiscoverComponent implements OnInit {
   protected readonly listingService = inject(ListingService);
   protected readonly searchLocationService = inject(SearchLocationService);
+  private readonly categoryService = inject(CategoryService);
   private readonly locationService = inject(LocationService);
   private readonly seoService = inject(SeoService);
   private readonly transloco = inject(TranslocoService);
   private readonly toastService = inject(ToastService);
 
-  readonly categories = CATEGORIES;
-  readonly selectedCategory = signal<string | null>(null);
+  readonly selectedCategoryId = signal<string | null>(null);
   readonly sortOption = signal<string | null>('nearest');
+
+  readonly categoryFilterNodes = computed<CategoryPickerNode[]>(() => {
+    this.transloco.activeLang();
+    return this.categoryService.orderedTree().map((node) => ({
+      id: node.categoryId,
+      parentId: node.parentId,
+      label: this.transloco.translate(`category.${node.categoryId}`),
+      // Root-only — see new-listing.ts's categoryPickerNodes for why.
+      icon: node.depth === 0 ? node.icon : undefined,
+      isLeaf: node.isLeaf,
+    }));
+  });
 
   readonly locationSuggestions = signal<LocationSuggestion[]>([]);
   readonly isResolvingCurrentLocation = signal(false);
 
   readonly sortOptions = computed<SelectOption[]>(() => {
     this.transloco.activeLang();
-    return LISTING_SORT_OPTIONS.map(({ value, labelKey }) => ({
-      value,
-      label: this.transloco.translate(labelKey),
-    }));
+    return LISTING_SORT_OPTIONS.filter(({ value }) => ['newest', 'nearest'].includes(value)).map(
+      ({ value, labelKey }) => ({
+        value,
+        label: this.transloco.translate(labelKey),
+      }),
+    );
   });
 
   readonly radiusOptions = computed<SelectOption[]>(() => {
@@ -77,10 +93,12 @@ export class DiscoverComponent implements OnInit {
   );
 
   constructor() {
+    void this.categoryService.ensureLoaded();
+
     effect(() => {
       const location = this.searchLocationService.searchLocation();
-      const category = this.selectedCategory();
-      void this.runSearch(location, category);
+      const categoryId = this.selectedCategoryId();
+      void this.runSearch(location, categoryId);
     });
   }
 
@@ -89,10 +107,6 @@ export class DiscoverComponent implements OnInit {
       this.transloco.translate('discover.pageTitle'),
       this.transloco.translate('discover.seoDescription'),
     );
-  }
-
-  selectCategory(category: string | null): void {
-    this.selectedCategory.set(category);
   }
 
   async onLocationQueryChanged(query: string): Promise<void> {
@@ -126,15 +140,18 @@ export class DiscoverComponent implements OnInit {
     }
   }
 
-  private async runSearch(location: SearchLocation | null, category: string | null): Promise<void> {
+  private async runSearch(
+    location: SearchLocation | null,
+    categoryId: string | null,
+  ): Promise<void> {
     if (location) {
       await this.listingService.searchNearby({
         center: location,
         radiusKm: location.radiusKm,
-        category: category ?? undefined,
+        categoryId: categoryId ?? undefined,
       });
-    } else if (category) {
-      await this.listingService.search({ category });
+    } else if (categoryId) {
+      await this.listingService.search({ categoryId });
     } else {
       await this.listingService.loadLatest();
     }

@@ -26,7 +26,8 @@ function validInput(overrides: Partial<NewListingInput> = {}): NewListingInput {
     description: 'A nice lamp in good condition.',
     price: 25,
     currency: 'ARS',
-    category: 'Furniture',
+    categoryId: 'home-furniture-furniture',
+    categoryPath: ['home-furniture', 'home-furniture-furniture'],
     condition: 'Used',
     status: 'active',
     location: validLocation(),
@@ -98,16 +99,53 @@ describe('validateNewListing', () => {
     ).toBeNull();
   });
 
-  it('should reject an unknown category', () => {
-    expect(validateNewListing(validInput({ category: 'Not-A-Category' }), transloco)).toBe(
+  it('should reject a missing categoryId', () => {
+    expect(validateNewListing(validInput({ categoryId: '' }), transloco)).toBe(
       'Please select a valid category.',
     );
+  });
+
+  it('should reject a categoryPath whose last id does not match categoryId', () => {
+    expect(
+      validateNewListing(
+        validInput({ categoryPath: ['home-furniture', 'something-else'] }),
+        transloco,
+      ),
+    ).toBe('Please select a valid category.');
   });
 
   it('should reject an unknown condition', () => {
     expect(validateNewListing(validInput({ condition: 'Not-A-Condition' }), transloco)).toBe(
       'Please select a valid condition.',
     );
+  });
+
+  it('should require a condition for a category that has one', () => {
+    expect(validateNewListing(validInput({ condition: undefined }), transloco)).toBe(
+      'Please select a condition.',
+    );
+  });
+
+  it('should accept a services listing with no condition at all', () => {
+    expect(
+      validateNewListing(
+        validInput({
+          categoryId: 'services-leaf',
+          categoryPath: ['services', 'services-leaf'],
+          condition: undefined,
+        }),
+        transloco,
+      ),
+    ).toBeNull();
+  });
+
+  it('should reject a services listing that sends a condition anyway', () => {
+    expect(
+      validateNewListing(
+        validInput({ categoryId: 'services-leaf', categoryPath: ['services', 'services-leaf'] }),
+        transloco,
+      ),
+    ).toBe('Please select a valid condition.');
   });
 
   it('should reject a status other than active', () => {

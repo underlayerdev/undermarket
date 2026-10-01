@@ -2,6 +2,7 @@ import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { AuthService } from '../../../application/services/auth.service';
+import { CategoryService } from '../../../application/category/category.service';
 import { ErrorService } from '../../../application/services/error.service';
 import { SeoService } from '../../../core/seo/seo.service';
 import { getCondition } from '../../../domain/condition/condition.model';
@@ -68,6 +69,7 @@ export class ListingDetailComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   protected readonly authService = inject(AuthService);
+  private readonly categoryService = inject(CategoryService);
   private readonly errorService = inject(ErrorService);
   private readonly seoService = inject(SeoService);
   private readonly transloco = inject(TranslocoService);
@@ -100,8 +102,18 @@ export class ListingDetailComponent implements OnInit {
   readonly breadcrumbItems = computed<BreadcrumbItem[]>(() => {
     this.transloco.activeLang();
     const listing = this.store.listing();
+    const categoryId = listing?.categoryId;
+    // Plain labels, not links — there's no category-filtered route to link
+    // to yet (discover/search filter by categoryId but aren't addressable
+    // by it in the URL), so these are informational only for now.
+    const categoryCrumbs: BreadcrumbItem[] = categoryId
+      ? this.categoryService
+          .breadcrumbFor(categoryId)
+          .map((node) => ({ label: this.transloco.translate(`category.${node.categoryId}`) }))
+      : [];
     return [
       { label: this.transloco.translate('common.home'), routerLink: '/home' },
+      ...categoryCrumbs,
       {
         label: listing
           ? listing.title
@@ -131,6 +143,7 @@ export class ListingDetailComponent implements OnInit {
   });
 
   async ngOnInit(): Promise<void> {
+    void this.categoryService.ensureLoaded();
     await this.loadListing();
   }
 

@@ -3,14 +3,14 @@
     {{ emptyStateText() }}
   </p>
 } @else {
-  <div class="ul-row">
+  <div class="ul-row" *transloco="let t">
     @for (listing of listings(); track listing.id) {
       <div class="ul-col-6 ul-col-sm-4 ul-col-md-3 ul-col-lg-2 ul-col-xl-2">
         <a [routerLink]="['/listings', createListingSlug(listing.title, listing.id)]">
           <ul-card
             [cardTitle]="listing.title"
             [cardSubtitle]="listing.price | listingPrice: listing.currency"
-            [cardCaption]="listing.category"
+            [cardCaption]="listing.categoryId ? t('category.' + listing.categoryId) : ''"
             cardDirection="vertical"
             mediaAspectRatio="portrait"
           />

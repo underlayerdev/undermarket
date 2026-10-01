@@ -1,6 +1,7 @@
 <div class="ul-gap-3 ul-mb-4" style="display: flex; align-items: center">
-  <button
+  <ul-button
     type="button"
+    theme="outline-white"
     class="ul-gap-2"
     style="display: flex; align-items: center"
     (click)="open.set(true)"
@@ -13,7 +14,7 @@
     } @else {
       <span class="ul-typography-body-m-regular">{{ changeLocationLabel() }}</span>
     }
-  </button>
+  </ul-button>
   <ul-button
     [iconOnly]="true"
     theme="transparent-white"

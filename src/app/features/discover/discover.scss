@@ -1,0 +1,17 @@
+@use 'pkg:@underlayerdev/ui/design-tokens' as tokens;
+@use 'pkg:@underlayerdev/ui/breakpoints' as bp;
+
+.um-discover {
+  &__filters {
+    display: flex;
+    flex-direction: column;
+    gap: tokens.$spacing-spacing-4;
+    width: 100%;
+		flex-wrap: wrap;
+		margin-bottom: tokens.$spacing-spacing-4;
+
+    @include bp.up('md') {
+      flex-direction: row;
+    }
+  }
+}

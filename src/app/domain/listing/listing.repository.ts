@@ -4,13 +4,15 @@ import type { UserId } from '../user/user.model';
 
 export interface ListingSearchFilters {
   query?: string;
-  category?: string;
+  // Matches this node or any of its descendants (categoryPath array-contains) —
+  // works uniformly whether it's a root, a mid-tree group, or an exact leaf.
+  categoryId?: string;
 }
 
 export interface NearbySearchParams {
   center: GeoPoint;
   radiusKm: number;
-  category?: string;
+  categoryId?: string;
   query?: string;
 }
 

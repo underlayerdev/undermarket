@@ -1,0 +1,44 @@
+<div class="um-category-filter-chips">
+  <div class="um-category-filter-chips__row ul-gap-2">
+    <ul-pill
+      variant="interactive"
+      [theme]="!selectedId() ? 'fill-purple' : 'transparent-white'"
+      (click)="selectRoot(null)"
+    >
+      {{ allLabel() }}
+    </ul-pill>
+    @for (root of visibleRoots(); track root.id) {
+      <ul-pill
+        variant="interactive"
+        [theme]="selectedRootId() === root.id ? 'fill-purple' : 'outline-white'"
+        (click)="selectRoot(root.id)"
+      >
+        {{ root.label }}
+      </ul-pill>
+    }
+    @if (hasMoreRoots()) {
+      <ul-pill variant="interactive" theme="transparent-white" (click)="showMoreRoots()">
+        {{ showMoreLabel() }}
+      </ul-pill>
+    }
+  </div>
+
+  <!-- @if (children().length) {
+    <div class="um-category-filter-chips__row ul-gap-2 ul-mt-2">
+      @for (child of visibleChildren(); track child.id) {
+        <ul-pill
+          variant="interactive"
+          [theme]="selectedId() === child.id ? 'fill-purple' : 'transparent-white'"
+          (click)="selectChild(child.id)"
+        >
+          {{ child.label }}
+        </ul-pill>
+      }
+      @if (hasMoreChildren()) {
+        <ul-pill variant="interactive" theme="transparent-white" (click)="showMoreChildren()">
+          {{ showMoreLabel() }}
+        </ul-pill>
+      }
+    </div>
+  } -->
+</div>

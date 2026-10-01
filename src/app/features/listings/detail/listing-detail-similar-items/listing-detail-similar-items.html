@@ -13,7 +13,7 @@
           <ul-card
             [cardTitle]="similar.title"
             [cardSubtitle]="similar.price | listingPrice: similar.currency"
-            [cardCaption]="similar.category"
+            [cardCaption]="similar.categoryId ? t('category.' + similar.categoryId) : ''"
             [cardTitleSingleLine]="true"
             cardDirection="vertical"
             mediaAspectRatio="square"

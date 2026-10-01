@@ -2,6 +2,7 @@ import { Component, computed, effect, inject, input, signal } from '@angular/cor
 import { Router } from '@angular/router';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { AuthService } from '../../../application/services/auth.service';
+import { CategoryService } from '../../../application/category/category.service';
 import { ErrorService } from '../../../application/services/error.service';
 import { ListingService } from '../../../application/services/listing.service';
 import { LocationService } from '../../../application/services/location.service';
@@ -11,8 +12,7 @@ import { NavigationService } from '../../../core/navigation/navigation.service';
 import { SeoService } from '../../../core/seo/seo.service';
 import { LISTING_REPOSITORY } from '../../../core/configuration/tokens';
 import { ImageUploadComponent } from '../../../shared/image-upload/image-upload';
-import { CATEGORIES } from '../../../domain/category/category.model';
-import type { Category } from '../../../domain/category/category.model';
+import type { CategoryNode } from '../../../domain/category-node/category-node.model';
 import { CONDITIONS } from '../../../domain/condition/condition.model';
 import {
   CURRENCIES,
@@ -30,6 +30,7 @@ import {
 import { createListingSlug, extractIdFromSlug } from '../../../shared/utils/slugify';
 import {
   ButtonComponent,
+  CategoryPickerComponent,
   IconComponent,
   InputComponent,
   ModalComponent,
@@ -38,7 +39,7 @@ import {
   TextareaComponent,
   ToastService,
 } from '@underlayerdev/ui';
-import type { SelectOption } from '@underlayerdev/ui';
+import type { CategoryPickerNode, SelectOption } from '@underlayerdev/ui';
 import type { LogicFn } from '@angular/forms/signals';
 import {
   form,
@@ -61,7 +62,7 @@ interface NewListingFormModel {
   description: string;
   price: string;
   currency: string | null;
-  category: string | null;
+  categoryId: string | null;
   condition: string | null;
   // Not part of the ul-input/ul-select signal-forms graph below, and never
   // set by the seller directly — see resolveDefaultLocation(). Matches how
@@ -70,16 +71,22 @@ interface NewListingFormModel {
   location: LocationArea | null;
 }
 
-function toNewListingInput(value: NewListingFormModel, ownerId: string): NewListingInput {
+function toNewListingInput(
+  value: NewListingFormModel,
+  ownerId: string,
+  category: CategoryNode,
+): NewListingInput {
   return {
     title: value.title.trim(),
     description: value.description.trim(),
     price: parseFloat(value.price),
-    // required() + validate() on currency/category/condition guarantee
-    // non-null here.
+    // required() + validate() on currency guarantees non-null here.
     currency: value.currency!,
-    category: value.category!,
-    condition: value.condition!,
+    categoryId: category.categoryId,
+    categoryPath: category.path,
+    // Omitted (not set to undefined) when the category has no condition —
+    // Firestore rejects a literal undefined field value.
+    ...(value.condition ? { condition: value.condition } : {}),
     status: 'active',
     ownerId,
     // Guaranteed non-null by the onSubmit() guard below.
@@ -92,6 +99,7 @@ function toNewListingInput(value: NewListingFormModel, ownerId: string): NewList
   imports: [
     FormField,
     ButtonComponent,
+    CategoryPickerComponent,
     IconComponent,
     ImageUploadComponent,
     InputComponent,
@@ -117,6 +125,7 @@ export class NewListingComponent {
   private readonly transloco = inject(TranslocoService);
   private readonly searchLocationService = inject(SearchLocationService);
   private readonly locationService = inject(LocationService);
+  private readonly categoryService = inject(CategoryService);
 
   // Presence of the :slug param is what distinguishes /listings/new from
   // /listings/:slug/edit — both route to this same component. Bound via
@@ -129,16 +138,32 @@ export class NewListingComponent {
   readonly editingListing = signal<Listing | null>(null);
   readonly isLoadingListing = signal(false);
 
-  readonly categoryOptions: SelectOption[] = CATEGORIES.map((category) => ({
-    value: category,
-    label: category,
-  }));
+  readonly categoryPickerNodes = computed<CategoryPickerNode[]>(() => {
+    this.transloco.activeLang();
+    return this.categoryService.orderedTree().map((node) => ({
+      id: node.categoryId,
+      parentId: node.parentId,
+      label: this.transloco.translate(`category.${node.categoryId}`),
+      // Root-only: every descendant just inherits its root's icon (see
+      // category-node.model.ts), so showing it again at deeper levels would
+      // just repeat the same glyph without adding information. ul-category-picker
+      // itself has no opinion on this — it renders whatever icon a node is given.
+      icon: node.depth === 0 ? node.icon : undefined,
+      isLeaf: node.isLeaf,
+    }));
+  });
   readonly conditionOptions = computed<SelectOption[]>(() => {
     this.transloco.activeLang();
     return CONDITIONS.map((condition) => ({
       value: condition.value,
       label: this.transloco.translate(condition.labelKey),
     }));
+  });
+  // False for categories with no physical condition (e.g. services) — the
+  // template hides the field entirely rather than showing it disabled/empty.
+  readonly conditionRequired = computed(() => {
+    const categoryId = this.listingModel().categoryId;
+    return categoryId ? this.categoryService.requiresCondition(categoryId) : true;
   });
   readonly currencyOptions = computed<SelectOption[]>(() => {
     this.transloco.activeLang();
@@ -160,7 +185,7 @@ export class NewListingComponent {
     description: '',
     price: '',
     currency: DEFAULT_CURRENCY,
-    category: null,
+    categoryId: null,
     condition: null,
     location: null,
   });
@@ -240,12 +265,12 @@ export class NewListingComponent {
       return undefined;
     });
 
-    required(listing.category, {
+    required(listing.categoryId, {
       message: this.transloco.translate('newListing.errors.categoryRequired'),
       when: whenTouched,
     });
-    validate(listing.category, ({ value, state }) =>
-      state.touched() && value() && !CATEGORIES.includes(value() as Category)
+    validate(listing.categoryId, ({ value, state }) =>
+      state.touched() && value() && !this.categoryService.getById(value()!)?.isLeaf
         ? {
             kind: 'invalid',
             message: this.transloco.translate('newListing.errors.categoryInvalid'),
@@ -255,7 +280,7 @@ export class NewListingComponent {
 
     required(listing.condition, {
       message: this.transloco.translate('newListing.errors.conditionRequired'),
-      when: whenTouched,
+      when: ({ state }) => state.touched() && this.conditionRequired(),
     });
     validate(listing.condition, ({ value, state }) =>
       state.touched() && value() && !CONDITIONS.some((condition) => condition.value === value())
@@ -293,13 +318,27 @@ export class NewListingComponent {
       !!value.title.trim() ||
       !!value.description.trim() ||
       !!value.price.trim() ||
-      !!value.category ||
+      !!value.categoryId ||
       !!value.condition ||
       !!this.imageFiles().length
     );
   });
 
   constructor() {
+    // Needed in both new and edit mode (edit mode resolves the listing's
+    // existing categoryId back to a tree node for the picker's closed-field
+    // breadcrumb) — unlike location, not gated on which mode this is.
+    void this.categoryService.ensureLoaded();
+
+    // Switching into a no-condition category (e.g. services) drops any
+    // condition already picked, rather than silently keeping it around
+    // unset-but-present in the form model.
+    effect(() => {
+      if (!this.conditionRequired() && this.listingModel().condition) {
+        this.listingModel.update((model) => ({ ...model, condition: null }));
+      }
+    });
+
     effect(() => {
       const slug = this.slug();
       if (slug) {
@@ -367,7 +406,10 @@ export class NewListingComponent {
         description: listing.description,
         price: String(listing.price),
         currency: listing.currency,
-        category: listing.category,
+        // Every existing listing has categoryId by now (docs/categories-plan.md
+        // phase 4 backfill) — the fallback only guards a doc that somehow
+        // slipped through.
+        categoryId: listing.categoryId ?? null,
         // Older listings predate this field too — unlike location there's no
         // sensible default to backfill automatically, so it's just left
         // unset and the seller picks one before the edit can be saved.
@@ -416,14 +458,19 @@ export class NewListingComponent {
 
     if (!this.listingModel().location) return;
 
+    // Guaranteed to resolve to a real leaf by required()+validate() on
+    // categoryId already having passed before submit() runs.
+    const category = this.categoryService.getById(this.listingModel().categoryId ?? '');
+    if (!category) return;
+
     await submit(this.listingForm, async () => {
       this.isLoading.set(true);
       try {
         const editing = this.editingListing();
         const listing = editing
-          ? await this.updateExisting(editing, currentUser.id)
+          ? await this.updateExisting(editing, currentUser.id, category)
           : await this.listingService.create(
-              toNewListingInput(this.listingModel(), currentUser.id),
+              toNewListingInput(this.listingModel(), currentUser.id, category),
               this.imageFiles(),
             );
         // replaceUrl: back from the new/edited listing should skip the
@@ -443,14 +490,26 @@ export class NewListingComponent {
 
   // Editing never touches status (publishing a draft is a separate, explicit
   // action elsewhere) or imageUrls (photo editing isn't supported yet).
-  private async updateExisting(editing: Listing, ownerId: string): Promise<Listing> {
-    const input = toNewListingInput(this.listingModel(), ownerId);
+  private async updateExisting(
+    editing: Listing,
+    ownerId: string,
+    category: CategoryNode,
+  ): Promise<Listing> {
+    const input = toNewListingInput(this.listingModel(), ownerId, category);
+    // Excluded from the spread below (rather than cast in place) because a
+    // conditionally-spread optional property doesn't narrow cleanly against
+    // Listing['condition'] — TS keeps widening it back to `string`.
+    const { condition: newCondition, ...restInput } = input;
     const updated: Listing = {
       ...editing,
-      ...input,
+      ...restInput,
       currency: input.currency as Listing['currency'],
-      category: input.category as Listing['category'],
-      condition: input.condition as Listing['condition'],
+      // Omitted (not set to undefined) when absent — see toNewListingInput.
+      // NOTE: this only stops a *new* condition from being written; if the
+      // listing already had one and switches into a no-condition category,
+      // the stale value stays in Firestore (updateDoc merges, it doesn't
+      // clear fields a payload simply omits) until it's next overwritten.
+      ...(newCondition ? { condition: newCondition as Listing['condition'] } : {}),
       status: editing.status,
       imageUrls: editing.imageUrls,
     };

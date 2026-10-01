@@ -14,9 +14,12 @@
     "start": "npm run shell",
     "test": "vitest run",
     "deploy": "firebase deploy --only functions",
-    "logs": "firebase functions:log"
+    "logs": "firebase functions:log",
+    "seed:categories": "npm run build && node lib/categories/seed-categories.js",
+    "backfill:listing-categories": "npm run build && node lib/categories/backfill-listings.js"
   },
   "dependencies": {
+    "@google/genai": "^2.24.0",
     "cloudinary": "^2.11.0",
     "firebase-admin": "^14.3.0",
     "firebase-functions": "^7.3.2"

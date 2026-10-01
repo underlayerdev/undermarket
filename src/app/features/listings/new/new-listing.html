@@ -83,19 +83,25 @@
               [formField]="listingForm.price"
             />
 
-            <ul-select
+            <ul-category-picker
               [label]="t('newListing.categoryLabel')"
               [placeholder]="t('newListing.categoryPlaceholder')"
-              [options]="categoryOptions"
-              [formField]="listingForm.category"
+              [searchPlaceholder]="t('newListing.categorySearchPlaceholder')"
+              [modalTitle]="t('newListing.categoryModalTitle')"
+              [rootLabel]="t('newListing.categoryRootLabel')"
+              [noResultsText]="t('newListing.categoryNoResults')"
+              [nodes]="categoryPickerNodes()"
+              [formField]="listingForm.categoryId"
             />
 
-            <ul-select
-              [label]="t('newListing.conditionLabel')"
-              [placeholder]="t('newListing.conditionPlaceholder')"
-              [options]="conditionOptions()"
-              [formField]="listingForm.condition"
-            />
+            @if (conditionRequired()) {
+              <ul-select
+                [label]="t('newListing.conditionLabel')"
+                [placeholder]="t('newListing.conditionPlaceholder')"
+                [options]="conditionOptions()"
+                [formField]="listingForm.condition"
+              />
+            }
 
             @if (isResolvingLocation()) {
               <p class="ul-typography-caption-l-regular ul-text-secondary">

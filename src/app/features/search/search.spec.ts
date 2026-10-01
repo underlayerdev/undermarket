@@ -1,5 +1,7 @@
+import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { SearchComponent } from './search';
+import { CategoryService } from '../../application/category/category.service';
 import { ListingService } from '../../application/services/listing.service';
 import { NavigationService } from '../../core/navigation/navigation.service';
 import {
@@ -11,7 +13,18 @@ import {
 import { getTranslocoTestingModule } from '../../../testing/transloco-testing';
 import { installFakeLocalStorage } from '../../../testing/fake-local-storage';
 import { getRecentSearches } from '../../shared/search/recent-searches.util';
+import type { CategoryNode } from '../../domain/category-node/category-node.model';
 import type { SearchLocation } from '../../domain/location/location.model';
+
+function fakeCategoryService() {
+  const nodes: CategoryNode[] = [];
+  return {
+    tree: signal<CategoryNode[] | null>(nodes),
+    orderedTree: () => nodes,
+    ensureLoaded: vi.fn().mockResolvedValue(nodes),
+    getById: (id: string) => nodes.find((node) => node.categoryId === id),
+  };
+}
 
 const testSearchLocation: SearchLocation = {
   displayName: 'Palermo, Buenos Aires',
@@ -42,6 +55,7 @@ describe('SearchComponent', () => {
     TestBed.configureTestingModule({
       imports: [SearchComponent, getTranslocoTestingModule()],
       providers: [
+        { provide: CategoryService, useValue: fakeCategoryService() },
         {
           provide: ListingService,
           useValue: { search: searchSpy, searchNearby: searchNearbySpy, listings: () => [] },
@@ -82,7 +96,7 @@ describe('SearchComponent', () => {
     fixture.detectChanges();
 
     expect(fixture.componentInstance.query()).toBe('foo');
-    expect(searchSpy).toHaveBeenCalledWith({ query: 'foo', category: undefined });
+    expect(searchSpy).toHaveBeenCalledWith({ query: 'foo', categoryId: undefined });
   });
 
   it('should not trigger a duplicate search when q is set to the same value already applied', () => {
@@ -125,7 +139,7 @@ describe('SearchComponent', () => {
     expect(fixture.componentInstance.recentSearchSuggestions()).toEqual([
       { value: 'lamp', label: 'lamp' },
     ]);
-    expect(searchSpy).toHaveBeenCalledWith({ query: 'lamp', category: undefined });
+    expect(searchSpy).toHaveBeenCalledWith({ query: 'lamp', categoryId: undefined });
   });
 
   it('should record a picked suggestion into recent searches and trigger the search', () => {
@@ -154,7 +168,7 @@ describe('SearchComponent', () => {
     expect(searchNearbySpy).toHaveBeenCalledWith({
       center: testSearchLocation,
       radiusKm: 10,
-      category: undefined,
+      categoryId: undefined,
       query: undefined,
     });
   });
@@ -164,7 +178,7 @@ describe('SearchComponent', () => {
     const fixture = TestBed.createComponent(SearchComponent);
     fixture.detectChanges();
     fixture.componentInstance.query.set('lamp');
-    fixture.componentInstance.selectedCategory.set('Furniture');
+    fixture.componentInstance.selectedCategoryId.set('home-furniture-furniture');
     searchNearbySpy.mockClear();
 
     fixture.componentInstance.onSearch();
@@ -172,7 +186,7 @@ describe('SearchComponent', () => {
     expect(searchNearbySpy).toHaveBeenCalledWith({
       center: testSearchLocation,
       radiusKm: 10,
-      category: 'Furniture',
+      categoryId: 'home-furniture-furniture',
       query: 'lamp',
     });
   });

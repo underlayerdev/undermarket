@@ -1,6 +1,8 @@
+import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { DiscoverComponent } from './discover';
+import { CategoryService } from '../../application/category/category.service';
 import { ListingService } from '../../application/services/listing.service';
 import {
   AUTH_PROVIDER,
@@ -10,7 +12,34 @@ import {
 } from '../../core/configuration/tokens';
 import { getTranslocoTestingModule } from '../../../testing/transloco-testing';
 import { installFakeLocalStorage } from '../../../testing/fake-local-storage';
+import type { CategoryNode } from '../../domain/category-node/category-node.model';
 import type { SearchLocation } from '../../domain/location/location.model';
+
+function fakeCategoryService() {
+  const nodes: CategoryNode[] = [
+    {
+      categoryId: 'books-media',
+      parentId: null,
+      path: ['books-media'],
+      depth: 0,
+      order: 0,
+      icon: 'book',
+      isActive: true,
+      isLeaf: true,
+      featured: false,
+      featuredOrder: 0,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      updatedBy: 'seed-script',
+    },
+  ];
+  return {
+    tree: signal<CategoryNode[] | null>(nodes),
+    orderedTree: () => nodes,
+    ensureLoaded: vi.fn().mockResolvedValue(nodes),
+    getById: (id: string) => nodes.find((node) => node.categoryId === id),
+  };
+}
 
 const testSearchLocation: SearchLocation = {
   displayName: 'Palermo, Buenos Aires',
@@ -41,6 +70,7 @@ describe('DiscoverComponent', () => {
     TestBed.configureTestingModule({
       imports: [DiscoverComponent, getTranslocoTestingModule()],
       providers: [
+        { provide: CategoryService, useValue: fakeCategoryService() },
         {
           provide: ListingService,
           useValue: {
@@ -94,11 +124,11 @@ describe('DiscoverComponent', () => {
     const fixture = TestBed.createComponent(DiscoverComponent);
     fixture.detectChanges();
 
-    fixture.componentInstance.selectCategory('Books');
+    fixture.componentInstance.selectedCategoryId.set('books-media');
     fixture.detectChanges();
 
-    expect(fixture.componentInstance.selectedCategory()).toBe('Books');
-    expect(searchSpy).toHaveBeenCalledWith({ category: 'Books' });
+    expect(fixture.componentInstance.selectedCategoryId()).toBe('books-media');
+    expect(searchSpy).toHaveBeenCalledWith({ categoryId: 'books-media' });
   });
 
   it('should reload the latest listings when the category is cleared', () => {
@@ -106,12 +136,12 @@ describe('DiscoverComponent', () => {
     fixture.detectChanges();
     loadLatestSpy.mockClear();
 
-    fixture.componentInstance.selectCategory('Books');
+    fixture.componentInstance.selectedCategoryId.set('books-media');
     fixture.detectChanges();
-    fixture.componentInstance.selectCategory(null);
+    fixture.componentInstance.selectedCategoryId.set(null);
     fixture.detectChanges();
 
-    expect(fixture.componentInstance.selectedCategory()).toBeNull();
+    expect(fixture.componentInstance.selectedCategoryId()).toBeNull();
     expect(loadLatestSpy).toHaveBeenCalled();
   });
 
@@ -123,7 +153,7 @@ describe('DiscoverComponent', () => {
     expect(searchNearbySpy).toHaveBeenCalledWith({
       center: testSearchLocation,
       radiusKm: 10,
-      category: undefined,
+      categoryId: undefined,
     });
   });
 
@@ -133,13 +163,13 @@ describe('DiscoverComponent', () => {
     fixture.detectChanges();
     searchNearbySpy.mockClear();
 
-    fixture.componentInstance.selectCategory('Books');
+    fixture.componentInstance.selectedCategoryId.set('books-media');
     fixture.detectChanges();
 
     expect(searchNearbySpy).toHaveBeenCalledWith({
       center: testSearchLocation,
       radiusKm: 10,
-      category: 'Books',
+      categoryId: 'books-media',
     });
   });
 });

@@ -44,7 +44,7 @@
               "
             >
               <p class="ul-typography-caption-l-regular ul-text-secondary">
-                {{ listing.category }}
+                {{ listing.categoryId ? t('category.' + listing.categoryId) : '' }}
               </p>
               <p class="ul-typography-body-m-extrabold ul-text-primary ul-line-clamp-1">
                 {{ listing.title }}

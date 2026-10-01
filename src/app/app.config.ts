@@ -22,6 +22,7 @@ import { environment } from '../environments/environment';
 import { routes } from './app.routes';
 import {
   AUTH_PROVIDER,
+  CATEGORY_NODE_REPOSITORY,
   FIREBASE_APP,
   FIREBASE_AUTH,
   FIREBASE_FIRESTORE,
@@ -38,6 +39,7 @@ import {
 import { FirebaseAuthProvider } from './infrastructure/firebase/auth/firebase-auth.provider';
 import { FirestoreUserRepository } from './infrastructure/firebase/firestore/firestore-user.repository';
 import { FirestoreListingRepository } from './infrastructure/firebase/firestore/firestore-listing.repository';
+import { FirestoreCategoryNodeRepository } from './infrastructure/firebase/firestore/firestore-category-node.repository';
 import { FirestoreSearchLocationRepository } from './infrastructure/firebase/firestore/firestore-search-location.repository';
 import { FirebaseMercadoLibreProvider } from './infrastructure/firebase/functions/firebase-mercado-libre.provider';
 import { CloudinaryImageStorage } from './infrastructure/cloudinary/cloudinary-image-storage';
@@ -94,6 +96,7 @@ export const appConfig: ApplicationConfig = {
     { provide: AUTH_PROVIDER, useClass: FirebaseAuthProvider },
     { provide: USER_REPOSITORY, useClass: FirestoreUserRepository },
     { provide: LISTING_REPOSITORY, useClass: FirestoreListingRepository },
+    { provide: CATEGORY_NODE_REPOSITORY, useClass: FirestoreCategoryNodeRepository },
     { provide: IMAGE_STORAGE, useClass: CloudinaryImageStorage },
     { provide: MERCADO_LIBRE_PROVIDER, useClass: FirebaseMercadoLibreProvider },
     { provide: GEOCODING_PROVIDER, useClass: MapboxGeocodingProvider },

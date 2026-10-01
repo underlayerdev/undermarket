@@ -20,7 +20,7 @@
       "collectionGroup": "listings",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "category", "order": "ASCENDING" },
+        { "fieldPath": "categoryPath", "arrayConfig": "CONTAINS" },
         { "fieldPath": "createdAt", "order": "DESCENDING" },
         { "fieldPath": "status", "order": "DESCENDING" }
       ]

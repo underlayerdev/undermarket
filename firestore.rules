@@ -1,7 +1,7 @@
 rules_version = '2';
 
 // Keep these in sync with src/app/domain/listing/listing-constraints.ts,
-// src/app/domain/category/category.model.ts,
+// src/app/domain/category-node/category-node.model.ts,
 // src/app/domain/condition/condition.model.ts,
 // src/app/domain/currency/currency.model.ts,
 // src/app/domain/location/location.model.ts, and
@@ -13,14 +13,20 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    function isValidCategory(category) {
-      return category in [
-        'Electronics', 'Clothing', 'Furniture', 'Vehicles', 'Books', 'Sports', 'Other'
-      ];
-    }
-
     function isValidCondition(condition) {
       return condition in ['New', 'Used'];
+    }
+
+    // A leaf id in the `categories/{categoryId}` tree, plus its root->leaf
+    // ancestor path ending with that same id — mirrors the shape check in
+    // validateNewListing (listing.validator.ts). Doesn't check the id
+    // actually exists/is a leaf in the categories collection — that tree is
+    // populated by an offline seed script, not something a security rule can
+    // cheaply cross-reference per write.
+    function isValidCategoryRef(categoryId, categoryPath) {
+      return categoryId is string && categoryId.size() > 0
+        && categoryPath is list && categoryPath.size() > 0
+        && categoryPath[categoryPath.size() - 1] == categoryId;
     }
 
     // Max price is per-currency (ARS runs much higher than USD due to
@@ -50,13 +56,13 @@ service cloud.firestore {
 
     function isValidNewListing(data) {
       return data.keys().hasAll(
-        ['ownerId', 'title', 'description', 'price', 'currency', 'category', 'condition', 'status', 'imageUrls', 'createdAt', 'updatedAt', 'location', 'geohash']
+        ['ownerId', 'title', 'description', 'price', 'currency', 'categoryId', 'categoryPath', 'condition', 'status', 'imageUrls', 'createdAt', 'updatedAt', 'location', 'geohash']
       )
         && data.ownerId is string
         && data.title is string && data.title.size() > 0 && data.title.size() <= 100
         && data.description is string && data.description.size() > 0 && data.description.size() <= 2000
         && isValidPrice(data.price, data.currency)
-        && isValidCategory(data.category)
+        && isValidCategoryRef(data.categoryId, data.categoryPath)
         && isValidCondition(data.condition)
         && data.status == 'active'
         && data.imageUrls is list && data.imageUrls.size() == 0
@@ -67,15 +73,18 @@ service cloud.firestore {
     }
 
     function isValidListingUpdate(data) {
-      // location/geohash/condition are validated when present, but not
-      // required here — unlike a brand-new listing, an update to a listing
-      // that predates one of these fields (e.g. a status-only change) must
-      // not be blocked just because it has none. New listings always get
-      // both going forward, per isValidNewListing above.
+      // location/geohash/condition/categoryId/categoryPath are validated when
+      // present, but not required here — unlike a brand-new listing, an
+      // update to a listing that predates one of these fields (e.g. a
+      // status-only change) must not be blocked just because it has none.
+      // New listings always get all of them going forward, per
+      // isValidNewListing above.
       return data.title is string && data.title.size() > 0 && data.title.size() <= 100
         && data.description is string && data.description.size() > 0 && data.description.size() <= 2000
         && isValidPrice(data.price, data.currency)
-        && isValidCategory(data.category)
+        && (!data.keys().hasAny(['categoryId', 'categoryPath'])
+          || (data.keys().hasAll(['categoryId', 'categoryPath'])
+            && isValidCategoryRef(data.categoryId, data.categoryPath)))
         && (!data.keys().hasAny(['condition']) || isValidCondition(data.condition))
         && (data.status == 'active' || data.status == 'sold' || data.status == 'draft')
         && data.imageUrls is list
@@ -104,6 +113,18 @@ service cloud.firestore {
         && isValidListingUpdate(request.resource.data);
 
       allow delete: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+    }
+
+    // Hierarchical category tree (see docs/categories-plan.md and
+    // src/app/domain/category-node/category-node.model.ts) — browseable by
+    // everyone, but written only by the offline seed script
+    // (functions/src/categories/seed-categories.ts) via the Admin SDK, which
+    // bypasses these rules entirely. No client writes here — listing
+    // create/update above only ever reference a node by id/path
+    // (isValidCategoryRef), never write to this collection.
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow write: if false;
     }
 
     // City/region/country only — no coordinates, unlike isValidLocation
@@ -187,6 +208,13 @@ service cloud.firestore {
     }
 
     match /mercadoLibreConnections/{userId} {
+      allow read, write: if false;
+    }
+
+    // Cache of AI category-classification results for imported listings
+    // (functions/src/categories/category-map.ts), keyed by "{provider}:{externalCategoryId}" —
+    // Admin SDK / Cloud Functions only, same reasoning.
+    match /categoryClassifications/{id} {
       allow read, write: if false;
     }
 

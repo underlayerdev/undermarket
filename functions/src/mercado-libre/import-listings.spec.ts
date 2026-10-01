@@ -29,8 +29,10 @@ const { fetchUserItemIdsMock, fetchItemsMock, fetchItemDescriptionMock, fetchCat
 
 const { getValidAccessTokenMock } = vi.hoisted(() => ({ getValidAccessTokenMock: vi.fn() }));
 const { uploadRemoteImageMock } = vi.hoisted(() => ({ uploadRemoteImageMock: vi.fn() }));
+const { classifyCategoryMock } = vi.hoisted(() => ({ classifyCategoryMock: vi.fn() }));
 
 vi.mock('../admin', () => ({ firestore: { collection: collectionMock } }));
+vi.mock('../categories/category-map', () => ({ classifyCategory: classifyCategoryMock }));
 vi.mock('./api', () => ({
   fetchUserItemIds: fetchUserItemIdsMock,
   fetchItems: fetchItemsMock,
@@ -60,6 +62,10 @@ describe('importOne', () => {
     fetchCategoryNameMock.mockResolvedValue('Muebles');
     fetchItemDescriptionMock.mockResolvedValue('A detailed description.');
     uploadRemoteImageMock.mockResolvedValue('https://res.cloudinary.com/rehosted.jpg');
+    classifyCategoryMock.mockResolvedValue({
+      categoryId: 'home-furniture-furniture',
+      categoryPath: ['home-furniture', 'home-furniture-furniture'],
+    });
   });
 
   it('should skip an item with an unsupported currency', async () => {
@@ -94,10 +100,16 @@ describe('importOne', () => {
     expect(addMock).not.toHaveBeenCalled();
   });
 
-  it('should re-host pictures, map the category, and write a draft listing', async () => {
+  it('should re-host pictures, classify the category, and write a draft listing', async () => {
     const result = await importOne(item(), 'uid-1', 'token');
 
     expect(result).toBe(true);
+    expect(classifyCategoryMock).toHaveBeenCalledWith(
+      'mercadolibre',
+      'CAT1',
+      'Muebles',
+      'A nice chair',
+    );
     expect(uploadRemoteImageMock).toHaveBeenCalledWith('https://ml-cdn.com/a-secure.jpg');
     expect(addMock).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -106,7 +118,8 @@ describe('importOne', () => {
         description: 'A detailed description.',
         price: 1000,
         currency: 'ARS',
-        category: 'Furniture',
+        categoryId: 'home-furniture-furniture',
+        categoryPath: ['home-furniture', 'home-furniture-furniture'],
         imageUrls: ['https://res.cloudinary.com/rehosted.jpg'],
         status: 'draft',
         sourceProvider: 'mercadolibre',
@@ -133,6 +146,10 @@ describe('handleImportMercadoLibreListings', () => {
     fetchCategoryNameMock.mockResolvedValue('');
     fetchItemDescriptionMock.mockResolvedValue('A description.');
     uploadRemoteImageMock.mockResolvedValue('https://res.cloudinary.com/rehosted.jpg');
+    classifyCategoryMock.mockResolvedValue({
+      categoryId: 'other-miscellaneous',
+      categoryPath: ['other', 'other-miscellaneous'],
+    });
   });
 
   function request(auth: { uid: string } | undefined): CallableRequest {

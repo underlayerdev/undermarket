@@ -75,7 +75,9 @@ export class FirestoreListingRepository implements ListingRepository {
 
   async search(filters: ListingSearchFilters): Promise<Listing[]> {
     const constraints: QueryConstraint[] = [where('status', '!=', 'draft')];
-    if (filters.category) constraints.push(where('category', '==', filters.category));
+    if (filters.categoryId) {
+      constraints.push(where('categoryPath', 'array-contains', filters.categoryId));
+    }
     constraints.push(orderBy('createdAt', 'desc'));
     const listingsQuery = query(this.col(), ...constraints);
     const snapshot = await getDocs(listingsQuery);
@@ -125,7 +127,7 @@ export class FirestoreListingRepository implements ListingRepository {
     );
     const matchingQuery = filterListingsByQuery(withinRadius, params.query);
     return matchingQuery.filter(
-      (listing) => !params.category || listing.category === params.category,
+      (listing) => !params.categoryId || listing.categoryPath?.includes(params.categoryId),
     );
   }
 
@@ -163,7 +165,10 @@ export class FirestoreListingRepository implements ListingRepository {
       description: data['description'] as string,
       price: data['price'] as number,
       currency: data['currency'] as Listing['currency'],
-      category: data['category'] as Listing['category'],
+      ...(data['categoryId'] ? { categoryId: data['categoryId'] as Listing['categoryId'] } : {}),
+      ...(data['categoryPath']
+        ? { categoryPath: data['categoryPath'] as Listing['categoryPath'] }
+        : {}),
       imageUrls: data['imageUrls'] as string[],
       status: data['status'] as Listing['status'],
       createdAt: (data['createdAt'] as Timestamp).toDate(),

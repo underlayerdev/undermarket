@@ -1,9 +1,9 @@
 import type { CallableRequest } from 'firebase-functions/v2/https';
 import { HttpsError, onCall } from 'firebase-functions/v2/https';
 import { firestore } from '../admin';
+import { classifyCategory } from '../categories/category-map';
 import { fetchCategoryName, fetchItemDescription, fetchItems, fetchUserItemIds } from './api';
 import type { MercadoLibreItem } from './api';
-import { mapCategoryName } from './category-map';
 import { uploadRemoteImage } from './cloudinary';
 import { CONNECTIONS_COLLECTION } from './constants';
 import { getValidAccessToken } from './refresh-token';
@@ -45,7 +45,12 @@ export async function importOne(
   if (!title) return false;
 
   const categoryName = await fetchCategoryName(item.category_id);
-  const category = mapCategoryName(categoryName);
+  const { categoryId, categoryPath } = await classifyCategory(
+    'mercadolibre',
+    item.category_id,
+    categoryName,
+    title,
+  );
 
   const fetchedDescription = await fetchItemDescription(accessToken, item.id);
   const description = fetchedDescription || `Imported from MercadoLibre: ${title}`;
@@ -63,7 +68,8 @@ export async function importOne(
     description: description.slice(0, DESCRIPTION_MAX_LENGTH),
     price: item.price,
     currency: item.currency_id,
-    category,
+    categoryId,
+    categoryPath,
     imageUrls,
     status: 'draft',
     sourceProvider: 'mercadolibre',
