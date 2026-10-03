@@ -16,10 +16,8 @@
         <um-location-picker
           [label]="t('settings.cityLabel')"
           [placeholder]="t('location.searchPlaceholder')"
-          [initialQuery]="selectedCity()?.displayName ?? ''"
           [suggestions]="citySuggestions()"
           [isResolvingCurrentLocation]="isResolvingCurrentCity()"
-          [useCurrentLocationLabel]="t('location.useCurrentLocationLabel')"
           (queryChanged)="onCityQueryChanged($event)"
           (suggestionSelected)="onCityPicked($event)"
           (useCurrentLocationRequested)="onUseCurrentCity()"

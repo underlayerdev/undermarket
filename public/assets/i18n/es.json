@@ -80,6 +80,7 @@
   "location.searchRadiusLabel": "Radio de búsqueda",
   "location.searchPlaceholder": "Busca ciudad, barrio o zona",
   "location.useCurrentLocationLabel": "Usar mi ubicación actual",
+  "location.setLocation": "Aplicar ubicación",
   "discover.title": "Descubrir",
   "discover.allCategories": "Todas",
   "discover.emptyState": "Aún no hay publicaciones en esta categoría.",

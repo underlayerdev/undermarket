@@ -1,11 +1,30 @@
 @use 'pkg:@underlayerdev/ui/design-tokens' as tokens;
+@use 'pkg:@underlayerdev/ui/breakpoints' as bp;
 
 .um-location-picker {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: tokens.$spacing-spacing-4;
 
-  &__pin-button {
-    margin-top: tokens.$spacing-spacing-4;
+  &__bar {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: tokens.$spacing-spacing-4;
+    width: 100%;
+  }
+
+  // Full-width on mobile for an easy tap target; back to an inline-sized
+  // call to action once there's room next to it, matching how most other
+  // confirm actions on this app behave at the sm breakpoint and up.
+  &__confirm-button {
+    display: block;
+    width: 100%;
+
+    @include bp.up('sm') {
+      display: inline-block;
+      width: auto;
+      align-self: flex-start;
+    }
   }
 }

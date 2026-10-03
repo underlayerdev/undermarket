@@ -80,6 +80,7 @@
   "location.searchRadiusLabel": "Search radius",
   "location.searchPlaceholder": "Search city, neighborhood or area",
   "location.useCurrentLocationLabel": "Use my current location",
+  "location.setLocation": "Set location",
   "discover.title": "Discover",
   "discover.allCategories": "All",
   "discover.emptyState": "No listings found in this category yet.",

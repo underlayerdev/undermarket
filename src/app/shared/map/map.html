@@ -1,0 +1,8 @@
+<div class="um-map">
+  <div class="um-map__frame ul-rounded-3">
+    <img [src]="mapUrl()" [alt]="alt()" class="um-map__image" (click)="openDirections()" />
+    @if (radiusDiameterPx(); as diameter) {
+      <div class="um-map__radius" [style.width.px]="diameter" [style.height.px]="diameter"></div>
+    }
+  </div>
+</div>

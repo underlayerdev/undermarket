@@ -1,6 +1,9 @@
 import { TestBed } from '@angular/core/testing';
 import { LocationPickerComponent } from './location-picker';
-import type { LocationSuggestion } from '../../../domain/location/location.model';
+import type { LocationPickerConfirmedEvent } from './location-picker';
+import { LocationService } from '../../../application/services/location.service';
+import { getTranslocoTestingModule } from '../../../../testing/transloco-testing';
+import type { LocationSuggestion, SearchLocation } from '../../../domain/location/location.model';
 
 function suggestion(overrides: Partial<LocationSuggestion> = {}): LocationSuggestion {
   return {
@@ -16,9 +19,39 @@ function suggestion(overrides: Partial<LocationSuggestion> = {}): LocationSugges
   };
 }
 
+function searchLocation(overrides: Partial<SearchLocation> = {}): SearchLocation {
+  return {
+    displayName: 'Recoleta, Buenos Aires',
+    countryCode: 'AR',
+    region: 'Buenos Aires',
+    city: 'Buenos Aires',
+    neighborhood: 'Recoleta',
+    latitude: -34.5885,
+    longitude: -58.4123,
+    geohash: '6ex2ug0d1',
+    radiusKm: 10,
+    source: 'saved',
+    updatedAt: new Date('2026-01-01'),
+    ...overrides,
+  };
+}
+
+const RADIUS_OPTIONS = [
+  { value: '5', label: '5 km' },
+  { value: '10', label: '10 km' },
+];
+
 describe('LocationPickerComponent', () => {
   function setup() {
-    TestBed.configureTestingModule({ imports: [LocationPickerComponent] });
+    TestBed.configureTestingModule({
+      imports: [LocationPickerComponent, getTranslocoTestingModule()],
+      providers: [
+        {
+          provide: LocationService,
+          useValue: { staticMapUrl: vi.fn().mockReturnValue('https://api.mapbox.com/preview.png') },
+        },
+      ],
+    });
     const fixture = TestBed.createComponent(LocationPickerComponent);
     fixture.detectChanges();
     return fixture;
@@ -29,17 +62,17 @@ describe('LocationPickerComponent', () => {
     expect(fixture.componentInstance).toBeTruthy();
   });
 
-  it('should adopt initialQuery even when it arrives after creation (e.g. an async profile load)', () => {
+  it('should seed the query from searchLocation even when it arrives after creation', () => {
     const fixture = setup();
     expect(fixture.componentInstance.query()).toBe('');
 
-    fixture.componentRef.setInput('initialQuery', 'Palermo, Buenos Aires');
+    fixture.componentRef.setInput('searchLocation', searchLocation());
     fixture.detectChanges();
 
-    expect(fixture.componentInstance.query()).toBe('Palermo, Buenos Aires');
+    expect(fixture.componentInstance.query()).toBe('Recoleta, Buenos Aires');
   });
 
-  it('should keep a value the user typed even if initialQuery does not change', () => {
+  it('should keep a value the user typed even if searchLocation does not change', () => {
     const fixture = setup();
 
     fixture.componentInstance.onQueryChange('la lucila');
@@ -62,21 +95,6 @@ describe('LocationPickerComponent', () => {
     vi.useRealTimers();
   });
 
-  it('should resolve the full suggestion object from a picked result value', () => {
-    const fixture = setup();
-    fixture.componentRef.setInput('suggestions', [suggestion()]);
-    fixture.detectChanges();
-    const emitted: LocationSuggestion[] = [];
-    fixture.componentInstance.suggestionSelected.subscribe((value) => emitted.push(value));
-
-    fixture.componentInstance.onResultSelected({
-      value: 'place.1',
-      label: 'Palermo, Buenos Aires',
-    });
-
-    expect(emitted).toEqual([suggestion()]);
-  });
-
   it('should ignore a result value with no matching suggestion', () => {
     const fixture = setup();
     const emitted: LocationSuggestion[] = [];
@@ -87,23 +105,173 @@ describe('LocationPickerComponent', () => {
     expect(emitted).toEqual([]);
   });
 
-  it('should emit useCurrentLocationRequested when the button is clicked', () => {
-    const fixture = setup();
-    const emitted: void[] = [];
-    fixture.componentInstance.useCurrentLocationRequested.subscribe(() => emitted.push(undefined));
-
-    const button: HTMLButtonElement = fixture.nativeElement.querySelector('ul-button button');
-    button.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-
-    expect(emitted.length).toBe(1);
-  });
-
   it('should disable the current-location button while resolving', () => {
     const fixture = setup();
     fixture.componentRef.setInput('isResolvingCurrentLocation', true);
     fixture.detectChanges();
 
-    const button: HTMLButtonElement = fixture.nativeElement.querySelector('ul-button button');
+    const button: HTMLButtonElement = fixture.nativeElement.querySelector(
+      '.um-location-picker__pin-button button',
+    );
     expect(button.disabled).toBe(true);
+  });
+
+  describe('without radiusOptions (legacy immediate mode)', () => {
+    it('should resolve and emit the full suggestion object from a picked result value', () => {
+      const fixture = setup();
+      fixture.componentRef.setInput('suggestions', [suggestion()]);
+      fixture.detectChanges();
+      const emitted: LocationSuggestion[] = [];
+      fixture.componentInstance.suggestionSelected.subscribe((value) => emitted.push(value));
+
+      fixture.componentInstance.onResultSelected({
+        value: 'place.1',
+        label: 'Palermo, Buenos Aires',
+      });
+
+      expect(emitted).toEqual([suggestion()]);
+    });
+
+    it('should emit useCurrentLocationRequested when the button is clicked', () => {
+      const fixture = setup();
+      const emitted: unknown[] = [];
+      fixture.componentInstance.useCurrentLocationRequested.subscribe((value) =>
+        emitted.push(value),
+      );
+
+      const button: HTMLButtonElement = fixture.nativeElement.querySelector(
+        '.um-location-picker__pin-button button',
+      );
+      button.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
+      expect(emitted.length).toBe(1);
+    });
+
+    it('should render no map and no confirm button', () => {
+      const fixture = setup();
+      fixture.componentRef.setInput('searchLocation', searchLocation());
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.querySelector('um-map')).toBeNull();
+      expect(fixture.nativeElement.querySelector('.um-location-picker__confirm-button')).toBeNull();
+    });
+
+    it('should never emit confirmed', () => {
+      const fixture = setup();
+      fixture.componentRef.setInput('suggestions', [suggestion()]);
+      fixture.detectChanges();
+      const emitted: LocationPickerConfirmedEvent[] = [];
+      fixture.componentInstance.confirmed.subscribe((value) => emitted.push(value));
+
+      fixture.componentInstance.onResultSelected({
+        value: 'place.1',
+        label: suggestion().displayName,
+      });
+
+      expect(emitted).toEqual([]);
+    });
+  });
+
+  describe('with radiusOptions (confirm mode)', () => {
+    function setupConfirmMode() {
+      const fixture = setup();
+      fixture.componentRef.setInput('radiusOptions', RADIUS_OPTIONS);
+      fixture.componentRef.setInput('suggestions', [suggestion()]);
+      fixture.detectChanges();
+      return fixture;
+    }
+
+    it('should render the radius select and a disabled confirm button, but no map, until a point is pending', () => {
+      const fixture = setupConfirmMode();
+
+      expect(fixture.nativeElement.querySelector('ul-select')).toBeTruthy();
+      expect(fixture.nativeElement.querySelector('um-map')).toBeNull();
+      const confirmButton: HTMLButtonElement = fixture.nativeElement.querySelector(
+        '.um-location-picker__confirm-button button',
+      );
+      expect(confirmButton.disabled).toBe(true);
+    });
+
+    it('should only stage a pending pick, not emit suggestionSelected, when a suggestion is picked', () => {
+      const fixture = setupConfirmMode();
+      const emitted: LocationSuggestion[] = [];
+      fixture.componentInstance.suggestionSelected.subscribe((value) => emitted.push(value));
+
+      fixture.componentInstance.onResultSelected({
+        value: 'place.1',
+        label: suggestion().displayName,
+      });
+      fixture.detectChanges();
+
+      expect(emitted).toEqual([]);
+      expect(fixture.componentInstance.pendingArea()?.displayName).toBe('Palermo, Buenos Aires');
+      expect(fixture.nativeElement.querySelector('um-map')).toBeTruthy();
+    });
+
+    it('should emit confirmed with the pending area/radius/source once "Set location" is clicked', () => {
+      const fixture = setupConfirmMode();
+      fixture.componentInstance.onResultSelected({
+        value: 'place.1',
+        label: suggestion().displayName,
+      });
+      fixture.componentInstance.onRadiusChange('5');
+      fixture.detectChanges();
+      const emitted: LocationPickerConfirmedEvent[] = [];
+      fixture.componentInstance.confirmed.subscribe((value) => emitted.push(value));
+
+      fixture.componentInstance.onConfirm();
+
+      expect(emitted).toEqual([
+        expect.objectContaining({
+          area: expect.objectContaining({ displayName: 'Palermo, Buenos Aires' }),
+          radiusKm: 5,
+          source: 'saved',
+        }),
+      ]);
+    });
+
+    it('should not emit confirmed when nothing is pending', () => {
+      const fixture = setupConfirmMode();
+      const emitted: LocationPickerConfirmedEvent[] = [];
+      fixture.componentInstance.confirmed.subscribe((value) => emitted.push(value));
+
+      fixture.componentInstance.onConfirm();
+
+      expect(emitted).toEqual([]);
+    });
+
+    it('should ignore an unparsable radius change', () => {
+      const fixture = setupConfirmMode();
+
+      fixture.componentInstance.onRadiusChange(null);
+
+      expect(fixture.componentInstance.pendingRadiusKm()).toBeNull();
+    });
+
+    it('should preview a freshly resolved current location, with source browser-geolocation on confirm', () => {
+      const fixture = setupConfirmMode();
+      const resolved = suggestion({ displayName: 'Current spot' });
+      const resolvedArea = { ...resolved, geohash: 'abc123' };
+      const emitted: LocationPickerConfirmedEvent[] = [];
+      fixture.componentInstance.confirmed.subscribe((value) => emitted.push(value));
+
+      fixture.componentRef.setInput('resolvedCurrentArea', resolvedArea);
+      fixture.detectChanges();
+      fixture.componentInstance.onConfirm();
+
+      expect(emitted).toEqual([
+        expect.objectContaining({ area: resolvedArea, source: 'browser-geolocation' }),
+      ]);
+    });
+
+    it('should re-seed the pending pick/radius whenever searchLocation changes', () => {
+      const fixture = setupConfirmMode();
+
+      fixture.componentRef.setInput('searchLocation', searchLocation());
+      fixture.detectChanges();
+
+      expect(fixture.componentInstance.pendingArea()?.displayName).toBe('Recoleta, Buenos Aires');
+      expect(fixture.componentInstance.pendingRadiusKm()).toBe(10);
+    });
   });
 });

@@ -1,23 +1,51 @@
-<div class="um-location-picker">
-  <ul-search-input
-    [label]="label()"
-    [placeholder]="placeholder()"
-    [results]="searchResults()"
-    [value]="query()"
-    (valueChange)="onQueryChange($event)"
-    (suggestionSelected)="onResultSelected($event)"
-  />
-  @if (showUseCurrentLocation()) {
+<div class="um-location-picker" *transloco="let t">
+  <div class="um-location-picker__bar">
+    <ul-search-input
+      [label]="label()"
+      [placeholder]="placeholder()"
+      [results]="searchResults()"
+      [value]="query()"
+      (valueChange)="onQueryChange($event)"
+      (suggestionSelected)="onResultSelected($event)"
+    />
+    @if (showUseCurrentLocation()) {
+      <ul-button
+        class="um-location-picker__pin-button"
+        [iconOnly]="true"
+        theme="ghost-white"
+        type="button"
+        [disabled]="isResolvingCurrentLocation()"
+        [ariaLabel]="t('location.useCurrentLocationLabel')"
+        (buttonClick)="onUseCurrentLocationRequested()"
+      >
+        <ul-icon icon="navigation" size="6" />
+      </ul-button>
+    }
+  </div>
+
+  @if (confirmMode()) {
+    @if (pendingArea(); as area) {
+      <um-map [locationGeoPoints]="area" [alt]="area.displayName" [radiusKm]="pendingRadiusKm()" />
+    }
+
+    @if (radiusOptions().length) {
+      <ul-select
+        [label]="t('location.searchRadiusLabel')"
+        [options]="radiusOptions()"
+        [value]="radiusValue()"
+        (valueChange)="onRadiusChange($event)"
+      />
+    }
+
     <ul-button
-      class="um-location-picker__pin-button"
-      [iconOnly]="true"
-      theme="transparent-white"
+      class="um-location-picker__confirm-button"
       type="button"
-      [disabled]="isResolvingCurrentLocation()"
-      [ariaLabel]="useCurrentLocationLabel()"
-      (buttonClick)="useCurrentLocationRequested.emit()"
+      theme="fill-purple"
+      [disabled]="!canConfirm()"
+      [ariaLabel]="t('location.setLocation')"
+      (buttonClick)="onConfirm()"
     >
-      <ul-icon icon="map_pin" size="6" />
+      {{ t('location.setLocation') }}
     </ul-button>
   }
 </div>

@@ -1,0 +1,33 @@
+@use 'pkg:@underlayerdev/ui/design-tokens' as tokens;
+@use 'pkg:@underlayerdev/ui/breakpoints' as bp;
+
+.um-search-location-bar {
+  display: flex;
+  gap: tokens.$spacing-spacing-3;
+  margin-bottom: tokens.$spacing-spacing-4;
+  flex-direction: column;
+
+  @include bp.up('sm') {
+    flex-direction: row;
+  }
+  &__selected-location {
+    display: flex;
+    align-items: center;
+    gap: tokens.$spacing-spacing-1;
+    flex-wrap: wrap;
+
+    &__display {
+      display: flex;
+      align-items: center;
+      gap: tokens.$spacing-spacing-1;
+    }
+
+    &__separator {
+      display: none;
+
+      @include bp.up('sm') {
+        display: inline;
+      }
+    }
+  }
+}

@@ -1,0 +1,30 @@
+@use 'pkg:@underlayerdev/ui/design-tokens' as tokens;
+
+.um-map {
+  display: flex;
+  flex-direction: column;
+  gap: tokens.$spacing-spacing-2;
+
+  &__frame {
+    position: relative;
+    overflow: hidden;
+  }
+
+  &__image {
+    display: block;
+    width: 100%;
+  }
+
+  &__radius {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    background-color: tokens.$primitive-color-purple-transparent-8-20;
+    border: 2px solid tokens.$primitive-color-purple-solid-6;
+    // Purely a visual overlay — clicking through to the map image
+    // underneath (openDirections()) must keep working.
+    pointer-events: none;
+  }
+}
