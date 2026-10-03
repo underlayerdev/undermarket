@@ -2,6 +2,6 @@
 
 // Sized by .ul-card__media's own `> :first-child { width/height: 100% }`
 // rule — this only needs the fill color for a listing with no photo.
-.home__placeholder {
+.um-listing-grid__placeholder {
   background-color: tokens.$color-background-grey-lvl-1;
 }

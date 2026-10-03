@@ -67,7 +67,6 @@ describe('ListingService', () => {
   let authProviderMock: ReturnType<typeof createAuthProviderMock>;
   let createSpy: ReturnType<typeof vi.fn<ListingRepository['create']>>;
   let updateSpy: ReturnType<typeof vi.fn<ListingRepository['update']>>;
-  let searchNearbySpy: ReturnType<typeof vi.fn<ListingRepository['searchNearby']>>;
   let uploadSpy: ReturnType<typeof vi.fn<ImageStorage['upload']>>;
 
   async function setup(): Promise<{ service: ListingService; authService: AuthService }> {
@@ -79,13 +78,11 @@ describe('ListingService', () => {
       updatedAt: new Date(),
     }));
     updateSpy = vi.fn<ListingRepository['update']>(async () => undefined);
-    searchNearbySpy = vi.fn<ListingRepository['searchNearby']>(async () => []);
     uploadSpy = vi.fn<ImageStorage['upload']>(async (file) => `https://cdn.test/${file.name}`);
 
     const listingRepositoryMock: Partial<ListingRepository> = {
       create: createSpy,
       update: updateSpy,
-      searchNearby: searchNearbySpy,
     };
     const imageStorageMock: ImageStorage = { upload: uploadSpy };
 
@@ -162,27 +159,5 @@ describe('ListingService', () => {
       expect.objectContaining({ id: 'listing-1', imageUrls: ['https://cdn.test/lamp.jpg'] }),
     );
     expect(listing.imageUrls).toEqual(['https://cdn.test/lamp.jpg']);
-  });
-
-  it('should delegate searchNearby to the repository and set the resulting listings', async () => {
-    const { service } = await setup();
-    const nearby: Listing[] = [
-      {
-        ...validInput(),
-        currency: 'ARS' as const,
-        condition: 'Used' as const,
-        id: 'nearby-1',
-        imageUrls: [],
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-    ];
-    searchNearbySpy.mockResolvedValue(nearby);
-
-    const params = { center: { latitude: -34.6, longitude: -58.4 }, radiusKm: 10 };
-    await service.searchNearby(params);
-
-    expect(searchNearbySpy).toHaveBeenCalledWith(params);
-    expect(service.listings()).toEqual(nearby);
   });
 });

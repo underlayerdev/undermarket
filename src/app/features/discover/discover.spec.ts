@@ -1,13 +1,15 @@
-import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
+import { signal } from '@angular/core';
 import { DiscoverComponent } from './discover';
 import { CategoryService } from '../../application/category/category.service';
-import { ListingService } from '../../application/services/listing.service';
+import { ListingResultsStore } from '../../application/listing/listing-results.store';
 import {
   AUTH_PROVIDER,
   GEOCODING_PROVIDER,
   GEOLOCATION_PROVIDER,
+  LISTING_REPOSITORY,
   SEARCH_LOCATION_REPOSITORY,
 } from '../../core/configuration/tokens';
 import { getTranslocoTestingModule } from '../../../testing/transloco-testing';
@@ -55,30 +57,32 @@ const testSearchLocation: SearchLocation = {
   updatedAt: new Date('2026-01-01'),
 };
 
+// DiscoverComponent provides its own ListingResultsStore instance (not
+// app-wide), so a test must resolve it through this component's own element
+// injector — TestBed.inject() would only ever see a root-level instance.
+function storeFor(fixture: ComponentFixture<DiscoverComponent>): ListingResultsStore {
+  return fixture.debugElement.injector.get(ListingResultsStore);
+}
+
 describe('DiscoverComponent', () => {
-  let loadLatestSpy: ReturnType<typeof vi.fn>;
+  let getLatestSpy: ReturnType<typeof vi.fn>;
   let searchSpy: ReturnType<typeof vi.fn>;
   let searchNearbySpy: ReturnType<typeof vi.fn>;
   let restoreLocalStorage: () => void;
 
   beforeEach(() => {
     restoreLocalStorage = installFakeLocalStorage();
-    loadLatestSpy = vi.fn().mockResolvedValue(undefined);
-    searchSpy = vi.fn().mockResolvedValue(undefined);
-    searchNearbySpy = vi.fn().mockResolvedValue(undefined);
+    getLatestSpy = vi.fn().mockResolvedValue([]);
+    searchSpy = vi.fn().mockResolvedValue([]);
+    searchNearbySpy = vi.fn().mockResolvedValue([]);
 
     TestBed.configureTestingModule({
       imports: [DiscoverComponent, getTranslocoTestingModule()],
       providers: [
         { provide: CategoryService, useValue: fakeCategoryService() },
         {
-          provide: ListingService,
-          useValue: {
-            loadLatest: loadLatestSpy,
-            search: searchSpy,
-            searchNearby: searchNearbySpy,
-            listings: () => [],
-          },
+          provide: LISTING_REPOSITORY,
+          useValue: { getLatest: getLatestSpy, search: searchSpy, searchNearby: searchNearbySpy },
         },
         {
           provide: AUTH_PROVIDER,
@@ -90,7 +94,14 @@ describe('DiscoverComponent', () => {
             },
           },
         },
-        { provide: GEOCODING_PROVIDER, useValue: { search: vi.fn(), reverseGeocode: vi.fn() } },
+        {
+          provide: GEOCODING_PROVIDER,
+          useValue: {
+            search: vi.fn(),
+            reverseGeocode: vi.fn(),
+            staticMapUrl: vi.fn().mockReturnValue('https://api.mapbox.com/preview.png'),
+          },
+        },
         { provide: GEOLOCATION_PROVIDER, useValue: { getCurrentPosition: vi.fn() } },
         {
           provide: SEARCH_LOCATION_REPOSITORY,
@@ -109,7 +120,7 @@ describe('DiscoverComponent', () => {
     fixture.detectChanges();
 
     expect(fixture.componentInstance).toBeTruthy();
-    expect(loadLatestSpy).toHaveBeenCalled();
+    expect(getLatestSpy).toHaveBeenCalled();
   });
 
   it('should show the first-run location prompt when no search location is set', () => {
@@ -124,25 +135,25 @@ describe('DiscoverComponent', () => {
     const fixture = TestBed.createComponent(DiscoverComponent);
     fixture.detectChanges();
 
-    fixture.componentInstance.selectedCategoryId.set('books-media');
+    storeFor(fixture).setCategoryId('books-media');
     fixture.detectChanges();
 
-    expect(fixture.componentInstance.selectedCategoryId()).toBe('books-media');
-    expect(searchSpy).toHaveBeenCalledWith({ categoryId: 'books-media' });
+    expect(storeFor(fixture).categoryId()).toBe('books-media');
+    expect(searchSpy).toHaveBeenCalledWith({ categoryId: 'books-media', query: undefined });
   });
 
   it('should reload the latest listings when the category is cleared', () => {
     const fixture = TestBed.createComponent(DiscoverComponent);
     fixture.detectChanges();
-    loadLatestSpy.mockClear();
+    getLatestSpy.mockClear();
 
-    fixture.componentInstance.selectedCategoryId.set('books-media');
+    storeFor(fixture).setCategoryId('books-media');
     fixture.detectChanges();
-    fixture.componentInstance.selectedCategoryId.set(null);
+    storeFor(fixture).setCategoryId(null);
     fixture.detectChanges();
 
-    expect(fixture.componentInstance.selectedCategoryId()).toBeNull();
-    expect(loadLatestSpy).toHaveBeenCalled();
+    expect(storeFor(fixture).categoryId()).toBeNull();
+    expect(getLatestSpy).toHaveBeenCalled();
   });
 
   it('should search nearby with the persisted location and radius once one is set', async () => {
@@ -154,6 +165,7 @@ describe('DiscoverComponent', () => {
       center: testSearchLocation,
       radiusKm: 10,
       categoryId: undefined,
+      query: undefined,
     });
   });
 
@@ -163,13 +175,14 @@ describe('DiscoverComponent', () => {
     fixture.detectChanges();
     searchNearbySpy.mockClear();
 
-    fixture.componentInstance.selectedCategoryId.set('books-media');
+    storeFor(fixture).setCategoryId('books-media');
     fixture.detectChanges();
 
     expect(searchNearbySpy).toHaveBeenCalledWith({
       center: testSearchLocation,
       radiusKm: 10,
       categoryId: 'books-media',
+      query: undefined,
     });
   });
 });

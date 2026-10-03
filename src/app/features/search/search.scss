@@ -46,6 +46,21 @@
   }
 }
 
+.search__desktop-search-button-col {
+  display: flex;
+  align-items: flex-end;
+}
+
+.search__filters-row {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.search__category-filter {
+  flex: 1;
+}
+
 // Below $breakpoint-md (see the same pattern in new-listing.scss) the search
 // page takes over the full screen — its own header replaces the navbar/dock
 // so results aren't squeezed under navigation chrome.

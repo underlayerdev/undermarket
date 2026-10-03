@@ -1,13 +1,15 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
 import { SearchComponent } from './search';
 import { CategoryService } from '../../application/category/category.service';
-import { ListingService } from '../../application/services/listing.service';
+import { ListingResultsStore } from '../../application/listing/listing-results.store';
 import { NavigationService } from '../../core/navigation/navigation.service';
 import {
   AUTH_PROVIDER,
   GEOCODING_PROVIDER,
   GEOLOCATION_PROVIDER,
+  LISTING_REPOSITORY,
   SEARCH_LOCATION_REPOSITORY,
 } from '../../core/configuration/tokens';
 import { getTranslocoTestingModule } from '../../../testing/transloco-testing';
@@ -40,7 +42,15 @@ const testSearchLocation: SearchLocation = {
   updatedAt: new Date('2026-01-01'),
 };
 
+// SearchComponent provides its own ListingResultsStore instance (not
+// app-wide), so a test must resolve it through this component's own element
+// injector — TestBed.inject() would only ever see a root-level instance.
+function storeFor(fixture: ComponentFixture<SearchComponent>): ListingResultsStore {
+  return fixture.debugElement.injector.get(ListingResultsStore);
+}
+
 describe('SearchComponent', () => {
+  let getLatestSpy: ReturnType<typeof vi.fn>;
   let searchSpy: ReturnType<typeof vi.fn>;
   let searchNearbySpy: ReturnType<typeof vi.fn>;
   let goBackOrSpy: ReturnType<typeof vi.fn>;
@@ -48,8 +58,9 @@ describe('SearchComponent', () => {
 
   beforeEach(() => {
     restoreLocalStorage = installFakeLocalStorage();
-    searchSpy = vi.fn().mockResolvedValue(undefined);
-    searchNearbySpy = vi.fn().mockResolvedValue(undefined);
+    getLatestSpy = vi.fn().mockResolvedValue([]);
+    searchSpy = vi.fn().mockResolvedValue([]);
+    searchNearbySpy = vi.fn().mockResolvedValue([]);
     goBackOrSpy = vi.fn();
 
     TestBed.configureTestingModule({
@@ -57,8 +68,8 @@ describe('SearchComponent', () => {
       providers: [
         { provide: CategoryService, useValue: fakeCategoryService() },
         {
-          provide: ListingService,
-          useValue: { search: searchSpy, searchNearby: searchNearbySpy, listings: () => [] },
+          provide: LISTING_REPOSITORY,
+          useValue: { getLatest: getLatestSpy, search: searchSpy, searchNearby: searchNearbySpy },
         },
         { provide: NavigationService, useValue: { goBackOr: goBackOrSpy } },
         {
@@ -71,7 +82,14 @@ describe('SearchComponent', () => {
             },
           },
         },
-        { provide: GEOCODING_PROVIDER, useValue: { search: vi.fn(), reverseGeocode: vi.fn() } },
+        {
+          provide: GEOCODING_PROVIDER,
+          useValue: {
+            search: vi.fn(),
+            reverseGeocode: vi.fn(),
+            staticMapUrl: vi.fn().mockReturnValue('https://api.mapbox.com/preview.png'),
+          },
+        },
         { provide: GEOLOCATION_PROVIDER, useValue: { getCurrentPosition: vi.fn() } },
         {
           provide: SEARCH_LOCATION_REPOSITORY,
@@ -87,6 +105,7 @@ describe('SearchComponent', () => {
 
   it('should create', () => {
     const fixture = TestBed.createComponent(SearchComponent);
+    fixture.detectChanges();
     expect(fixture.componentInstance).toBeTruthy();
   });
 
@@ -96,7 +115,7 @@ describe('SearchComponent', () => {
     fixture.detectChanges();
 
     expect(fixture.componentInstance.query()).toBe('foo');
-    expect(searchSpy).toHaveBeenCalledWith({ query: 'foo', categoryId: undefined });
+    expect(searchSpy).toHaveBeenCalledWith({ categoryId: undefined, query: 'foo' });
   });
 
   it('should not trigger a duplicate search when q is set to the same value already applied', () => {
@@ -134,12 +153,13 @@ describe('SearchComponent', () => {
     fixture.componentInstance.query.set('lamp');
 
     fixture.componentInstance.onSearchSubmit('lamp');
+    fixture.detectChanges();
 
     expect(getRecentSearches('listings')).toEqual(['lamp']);
     expect(fixture.componentInstance.recentSearchSuggestions()).toEqual([
       { value: 'lamp', label: 'lamp' },
     ]);
-    expect(searchSpy).toHaveBeenCalledWith({ query: 'lamp', categoryId: undefined });
+    expect(searchSpy).toHaveBeenCalledWith({ categoryId: undefined, query: 'lamp' });
   });
 
   it('should record a picked suggestion into recent searches and trigger the search', () => {
@@ -147,6 +167,7 @@ describe('SearchComponent', () => {
     fixture.componentInstance.query.set('lamp');
 
     fixture.componentInstance.onSuggestionSelected({ value: 'lamp', label: 'lamp' });
+    fixture.detectChanges();
 
     expect(getRecentSearches('listings')).toEqual(['lamp']);
     expect(searchSpy).toHaveBeenCalled();
@@ -178,10 +199,11 @@ describe('SearchComponent', () => {
     const fixture = TestBed.createComponent(SearchComponent);
     fixture.detectChanges();
     fixture.componentInstance.query.set('lamp');
-    fixture.componentInstance.selectedCategoryId.set('home-furniture-furniture');
+    storeFor(fixture).setCategoryId('home-furniture-furniture');
     searchNearbySpy.mockClear();
 
     fixture.componentInstance.onSearch();
+    fixture.detectChanges();
 
     expect(searchNearbySpy).toHaveBeenCalledWith({
       center: testSearchLocation,

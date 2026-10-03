@@ -1,20 +1,17 @@
-import { Component, computed, effect, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit } from '@angular/core';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { ToastService } from '@underlayerdev/ui';
-import type { CategoryPickerNode, SelectOption } from '@underlayerdev/ui';
-import { CategoryService } from '../../application/category/category.service';
-import { ListingService } from '../../application/services/listing.service';
-import { LocationService } from '../../application/services/location.service';
-import { toLocationErrorMessage } from '../../application/services/location-error.util';
-import { SearchLocationService } from '../../application/services/search-location.service';
+import type { SelectOption } from '@underlayerdev/ui';
+import { createSearchQueryStrategy } from '../../application/listing/listing-query-strategies';
+import {
+  LISTING_QUERY_FN,
+  ListingResultsStore,
+} from '../../application/listing/listing-results.store';
+import { LISTING_REPOSITORY } from '../../core/configuration/tokens';
 import { SeoService } from '../../core/seo/seo.service';
-import { SEARCH_RADIUS_OPTIONS_KM } from '../../domain/location/geohash.util';
-import type {
-  LocationArea,
-  LocationSuggestion,
-  SearchLocation,
-} from '../../domain/location/location.model';
-import { LISTING_SORT_OPTIONS, sortListings } from '../../domain/listing/listing-query.util';
+import { LISTING_SORT_OPTIONS } from '../../domain/listing/listing-query.util';
+import type { ListingSortOption } from '../../domain/listing/listing-query.util';
+import type { ListingRepository } from '../../domain/listing/listing.repository';
 import { CategoryFilterChipsComponent } from '../../shared/category/category-filter-chips/category-filter-chips';
 import { ListingGridComponent } from '../../shared/listing/listing-grid/listing-grid';
 import { SearchLocationBarComponent } from '../../shared/location/search-location-bar/search-location-bar';
@@ -29,38 +26,27 @@ import { SortComponent } from '../../shared/sort/sort';
     SearchLocationBarComponent,
     SortComponent,
   ],
-  providers: [ToastService],
+  providers: [
+    ToastService,
+    ListingResultsStore,
+    {
+      provide: LISTING_QUERY_FN,
+      useFactory: (repository: ListingRepository) => createSearchQueryStrategy(repository),
+      deps: [LISTING_REPOSITORY],
+    },
+  ],
   templateUrl: './discover.html',
   styleUrl: 'discover.scss',
 })
 export class DiscoverComponent implements OnInit {
-  protected readonly listingService = inject(ListingService);
-  protected readonly searchLocationService = inject(SearchLocationService);
-  private readonly categoryService = inject(CategoryService);
-  private readonly locationService = inject(LocationService);
+  protected readonly store = inject(ListingResultsStore);
   private readonly seoService = inject(SeoService);
   private readonly transloco = inject(TranslocoService);
   private readonly toastService = inject(ToastService);
 
-  readonly selectedCategoryId = signal<string | null>(null);
-  readonly sortOption = signal<string | null>('nearest');
-
-  readonly categoryFilterNodes = computed<CategoryPickerNode[]>(() => {
-    this.transloco.activeLang();
-    return this.categoryService.orderedTree().map((node) => ({
-      id: node.categoryId,
-      parentId: node.parentId,
-      label: this.transloco.translate(`category.${node.categoryId}`),
-      // Root-only — see new-listing.ts's categoryPickerNodes for why.
-      icon: node.depth === 0 ? node.icon : undefined,
-      isLeaf: node.isLeaf,
-    }));
-  });
-
-  readonly locationSuggestions = signal<LocationSuggestion[]>([]);
-  readonly isResolvingCurrentLocation = signal(false);
-
-  readonly sortOptions = computed<SelectOption[]>(() => {
+  // Discover intentionally offers fewer sort choices than Search — "oldest"
+  // and "title-asc" don't make sense for a browse-the-latest page.
+  protected readonly sortOptions = computed<SelectOption[]>(() => {
     this.transloco.activeLang();
     return LISTING_SORT_OPTIONS.filter(({ value }) => ['newest', 'nearest'].includes(value)).map(
       ({ value, labelKey }) => ({
@@ -70,38 +56,6 @@ export class DiscoverComponent implements OnInit {
     );
   });
 
-  readonly radiusOptions = computed<SelectOption[]>(() => {
-    this.transloco.activeLang();
-    return SEARCH_RADIUS_OPTIONS_KM.map((km) => ({
-      value: String(km),
-      label: this.transloco.translate('location.radiusOptionLabel', { value: km }),
-    }));
-  });
-
-  readonly withinRadiusLabel = computed(() =>
-    this.transloco.translate('location.withinRadius', {
-      value: this.searchLocationService.radiusKm(),
-    }),
-  );
-
-  readonly sortedListings = computed(() =>
-    sortListings(
-      this.listingService.listings(),
-      this.sortOption(),
-      this.searchLocationService.searchLocation() ?? undefined,
-    ),
-  );
-
-  constructor() {
-    void this.categoryService.ensureLoaded();
-
-    effect(() => {
-      const location = this.searchLocationService.searchLocation();
-      const categoryId = this.selectedCategoryId();
-      void this.runSearch(location, categoryId);
-    });
-  }
-
   ngOnInit(): void {
     this.seoService.setPage(
       this.transloco.translate('discover.pageTitle'),
@@ -109,51 +63,11 @@ export class DiscoverComponent implements OnInit {
     );
   }
 
-  async onLocationQueryChanged(query: string): Promise<void> {
-    if (!query.trim()) {
-      this.locationSuggestions.set([]);
-      return;
-    }
-    try {
-      this.locationSuggestions.set(await this.locationService.searchAreas(query));
-    } catch {
-      this.locationSuggestions.set([]);
-    }
+  onLocationError(message: string): void {
+    this.toastService.error(message);
   }
 
-  async onAreaSelected(area: LocationArea): Promise<void> {
-    await this.searchLocationService.setSearchLocation(area, 'saved');
-  }
-
-  async onRadiusChanged(radiusKm: number): Promise<void> {
-    await this.searchLocationService.setRadius(radiusKm);
-  }
-
-  async onUseCurrentLocationRequested(): Promise<void> {
-    this.isResolvingCurrentLocation.set(true);
-    try {
-      await this.searchLocationService.useCurrentLocation();
-    } catch (err) {
-      this.toastService.error(toLocationErrorMessage(err, this.transloco));
-    } finally {
-      this.isResolvingCurrentLocation.set(false);
-    }
-  }
-
-  private async runSearch(
-    location: SearchLocation | null,
-    categoryId: string | null,
-  ): Promise<void> {
-    if (location) {
-      await this.listingService.searchNearby({
-        center: location,
-        radiusKm: location.radiusKm,
-        categoryId: categoryId ?? undefined,
-      });
-    } else if (categoryId) {
-      await this.listingService.search({ categoryId });
-    } else {
-      await this.listingService.loadLatest();
-    }
+  onSortChange(sort: string | null): void {
+    this.store.setSort(sort as ListingSortOption | null);
   }
 }

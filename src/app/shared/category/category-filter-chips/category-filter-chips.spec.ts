@@ -1,40 +1,94 @@
 import { Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import type { CategoryPickerNode } from '@underlayerdev/ui';
 import { CategoryFilterChipsComponent } from './category-filter-chips';
+import { CategoryService } from '../../../application/category/category.service';
+import {
+  LISTING_QUERY_FN,
+  ListingResultsStore,
+} from '../../../application/listing/listing-results.store';
+import { SearchLocationService } from '../../../application/services/search-location.service';
+import { getTranslocoTestingModule } from '../../../../testing/transloco-testing';
+import type { CategoryNode } from '../../../domain/category-node/category-node.model';
 
-const nodes: CategoryPickerNode[] = [
-  { id: 'electronics', parentId: null, label: 'Electronics', isLeaf: false },
-  { id: 'electronics-computing', parentId: 'electronics', label: 'Computing', isLeaf: true },
-  { id: 'electronics-phones', parentId: 'electronics', label: 'Phones', isLeaf: true },
-  { id: 'other', parentId: null, label: 'Other', isLeaf: true },
+function node(overrides: Partial<CategoryNode> = {}): CategoryNode {
+  return {
+    categoryId: 'electronics',
+    parentId: null,
+    path: ['electronics'],
+    depth: 0,
+    order: 0,
+    icon: 'computer',
+    isActive: true,
+    isLeaf: false,
+    featured: false,
+    featuredOrder: 0,
+    createdAt: new Date('2026-01-01'),
+    updatedAt: new Date('2026-01-01'),
+    updatedBy: 'seed-script',
+    ...overrides,
+  };
+}
+
+// Real categoryIds (seed/categories.v1.json) with their real en.json labels
+// below — the component translates `category.${id}` itself now, so the
+// test fixture must use ids that actually resolve to something, rather than
+// arbitrary labels passed straight through an input.
+const DEFAULT_NODES: CategoryNode[] = [
+  node({ categoryId: 'electronics', path: ['electronics'] }), // "Electronics"
+  node({
+    categoryId: 'electronics-computing', // "Computers"
+    parentId: 'electronics',
+    depth: 1,
+    isLeaf: true,
+    path: ['electronics', 'electronics-computing'],
+  }),
+  node({
+    categoryId: 'electronics-phones', // "Cell Phones & Telephones"
+    parentId: 'electronics',
+    depth: 1,
+    order: 1,
+    isLeaf: true,
+    path: ['electronics', 'electronics-phones'],
+  }),
+  node({ categoryId: 'other', order: 1, isLeaf: true, path: ['other'] }), // "Other"
 ];
+
+function fakeCategoryService(nodes: CategoryNode[]) {
+  return { orderedTree: () => nodes };
+}
 
 @Component({
   imports: [CategoryFilterChipsComponent],
   template: `
     <um-category-filter-chips
-      [nodes]="nodes"
       allLabel="All categories"
       showMoreLabel="Show more"
       [visibleCount]="visibleCount"
-      [(selectedId)]="selectedId"
     />
   `,
 })
 class HostComponent {
-  nodes = nodes;
   visibleCount = 5;
-  selectedId: string | null = null;
 }
 
-function setup(options: { visibleCount?: number; nodes?: CategoryPickerNode[] } = {}) {
-  TestBed.configureTestingModule({ imports: [HostComponent] });
+function setup(options: { visibleCount?: number; nodes?: CategoryNode[] } = {}) {
+  TestBed.configureTestingModule({
+    imports: [HostComponent, getTranslocoTestingModule()],
+    providers: [
+      { provide: CategoryService, useValue: fakeCategoryService(options.nodes ?? DEFAULT_NODES) },
+      { provide: LISTING_QUERY_FN, useValue: vi.fn().mockResolvedValue([]) },
+      { provide: SearchLocationService, useValue: { searchLocation: () => null } },
+      ListingResultsStore,
+    ],
+  });
   const fixture: ComponentFixture<HostComponent> = TestBed.createComponent(HostComponent);
   fixture.componentInstance.visibleCount = options.visibleCount ?? 5;
-  if (options.nodes) fixture.componentInstance.nodes = options.nodes;
   fixture.detectChanges();
   return fixture;
+}
+
+function categoryId(): string | null {
+  return TestBed.inject(ListingResultsStore).categoryId();
 }
 
 function pillByText(fixture: ComponentFixture<HostComponent>, text: string): HTMLElement {
@@ -72,9 +126,9 @@ describe('CategoryFilterChipsComponent', () => {
     pillByText(fixture, 'Electronics').click();
     fixture.detectChanges();
 
-    expect(fixture.componentInstance.selectedId).toBe('electronics');
-    expect(pillByText(fixture, 'Computing')).toBeTruthy();
-    expect(pillByText(fixture, 'Phones')).toBeTruthy();
+    expect(categoryId()).toBe('electronics');
+    expect(pillByText(fixture, 'Computers')).toBeTruthy();
+    expect(pillByText(fixture, 'Cell Phones & Telephones')).toBeTruthy();
   });
 
   it('selects a child, narrowing the filter to that child id', () => {
@@ -82,23 +136,23 @@ describe('CategoryFilterChipsComponent', () => {
     pillByText(fixture, 'Electronics').click();
     fixture.detectChanges();
 
-    pillByText(fixture, 'Computing').click();
+    pillByText(fixture, 'Computers').click();
     fixture.detectChanges();
 
-    expect(fixture.componentInstance.selectedId).toBe('electronics-computing');
+    expect(categoryId()).toBe('electronics-computing');
   });
 
   it('toggles a selected child back up to its root on a second click', () => {
     const fixture = setup();
     pillByText(fixture, 'Electronics').click();
     fixture.detectChanges();
-    pillByText(fixture, 'Computing').click();
+    pillByText(fixture, 'Computers').click();
     fixture.detectChanges();
 
-    pillByText(fixture, 'Computing').click();
+    pillByText(fixture, 'Computers').click();
     fixture.detectChanges();
 
-    expect(fixture.componentInstance.selectedId).toBe('electronics');
+    expect(categoryId()).toBe('electronics');
   });
 
   it('resets to no selection when "All categories" is clicked', () => {
@@ -109,7 +163,7 @@ describe('CategoryFilterChipsComponent', () => {
     pillByText(fixture, 'All categories').click();
     fixture.detectChanges();
 
-    expect(fixture.componentInstance.selectedId).toBeNull();
+    expect(categoryId()).toBeNull();
     expect(fixture.nativeElement.querySelectorAll('ul-pill').length).toBe(3);
   });
 
@@ -121,7 +175,7 @@ describe('CategoryFilterChipsComponent', () => {
     pillByText(fixture, 'Other').click();
     fixture.detectChanges();
 
-    expect(fixture.componentInstance.selectedId).toBe('other');
+    expect(categoryId()).toBe('other');
     expect(fixture.nativeElement.querySelectorAll('ul-pill').length).toBe(3);
   });
 
@@ -150,28 +204,32 @@ describe('CategoryFilterChipsComponent', () => {
       pillByText(fixture, 'Electronics').click();
       fixture.detectChanges();
 
-      expect(pillByText(fixture, 'Computing')).toBeTruthy();
-      expect(() => pillByText(fixture, 'Phones')).toThrow();
+      expect(pillByText(fixture, 'Computers')).toBeTruthy();
+      expect(() => pillByText(fixture, 'Cell Phones & Telephones')).toThrow();
       // Two rows truncated independently: root row (Electronics + its own
-      // show-more, "All" always shown) and children row (Computing + its
+      // show-more, "All" always shown) and children row (Computers + its
       // own show-more) — 5 pills total.
       expect(fixture.nativeElement.querySelectorAll('ul-pill').length).toBe(5);
     });
 
     it('resets a previously-expanded children row back to collapsed on a new root', () => {
-      const richNodes: CategoryPickerNode[] = [
-        { id: 'electronics', parentId: null, label: 'Electronics', isLeaf: false },
-        { id: 'electronics-computing', parentId: 'electronics', label: 'Computing', isLeaf: true },
-        { id: 'electronics-phones', parentId: 'electronics', label: 'Phones', isLeaf: true },
-        { id: 'fashion', parentId: null, label: 'Fashion', isLeaf: false },
-        { id: 'fashion-shoes', parentId: 'fashion', label: 'Shoes', isLeaf: true },
+      const richNodes: CategoryNode[] = [
+        ...DEFAULT_NODES,
+        node({ categoryId: 'fashion', order: 2, path: ['fashion'] }), // "Fashion"
+        node({
+          categoryId: 'fashion-clothing-accessories', // "Clothing & Accessories"
+          parentId: 'fashion',
+          depth: 1,
+          isLeaf: true,
+          path: ['fashion', 'fashion-clothing-accessories'],
+        }),
       ];
       const fixture = setup({ visibleCount: 1, nodes: richNodes });
       pillByText(fixture, 'Electronics').click();
       fixture.detectChanges();
       showMoreInRow(fixture, 1).click(); // expands the children row
       fixture.detectChanges();
-      expect(pillByText(fixture, 'Phones')).toBeTruthy();
+      expect(pillByText(fixture, 'Cell Phones & Telephones')).toBeTruthy();
 
       showMoreInRow(fixture, 0).click(); // expands the roots row
       fixture.detectChanges();
@@ -180,12 +238,12 @@ describe('CategoryFilterChipsComponent', () => {
 
       // Fashion's own (single) child shows with no "show more" needed, and
       // switching back to Electronics proves its children row re-collapsed.
-      expect(pillByText(fixture, 'Shoes')).toBeTruthy();
+      expect(pillByText(fixture, 'Clothing & Accessories')).toBeTruthy();
       pillByText(fixture, 'Electronics').click();
       fixture.detectChanges();
 
-      expect(pillByText(fixture, 'Computing')).toBeTruthy();
-      expect(() => pillByText(fixture, 'Phones')).toThrow();
+      expect(pillByText(fixture, 'Computers')).toBeTruthy();
+      expect(() => pillByText(fixture, 'Cell Phones & Telephones')).toThrow();
     });
   });
 });

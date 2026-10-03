@@ -1,38 +1,21 @@
-import { inject, Injectable, signal } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { TranslocoService } from '@jsverse/transloco';
 import { IMAGE_STORAGE, LISTING_REPOSITORY } from '../../core/configuration/tokens';
 import type { Listing, ListingId } from '../../domain/listing/listing.model';
-import type {
-  ListingSearchFilters,
-  NearbySearchParams,
-} from '../../domain/listing/listing.repository';
 import { validateNewListing } from '../../domain/listing/listing.validator';
 import type { NewListingInput } from '../../domain/listing/listing.validator';
 import { AuthService } from './auth.service';
 
+// Listing results/filters/sorting (what used to live here as `listings` +
+// loadLatest()/search()/searchNearby()) moved to ListingResultsStore
+// (application/listing/listing-results.store.ts) — this service now only
+// owns the create/update/delete lifecycle, unrelated to browsing results.
 @Injectable({ providedIn: 'root' })
 export class ListingService {
   private readonly listingRepository = inject(LISTING_REPOSITORY);
   private readonly imageStorage = inject(IMAGE_STORAGE);
   private readonly authService = inject(AuthService);
   private readonly transloco = inject(TranslocoService);
-
-  readonly listings = signal<Listing[]>([]);
-
-  async loadLatest(): Promise<void> {
-    const result = await this.listingRepository.getLatest();
-    this.listings.set(result);
-  }
-
-  async search(filters: ListingSearchFilters): Promise<void> {
-    const result = await this.listingRepository.search(filters);
-    this.listings.set(result);
-  }
-
-  async searchNearby(params: NearbySearchParams): Promise<void> {
-    const result = await this.listingRepository.searchNearby(params);
-    this.listings.set(result);
-  }
 
   // firestore.rules requires a new listing's imageUrls to start empty, so
   // images are uploaded and attached in a follow-up update after create().

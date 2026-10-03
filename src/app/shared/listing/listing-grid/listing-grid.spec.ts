@@ -56,4 +56,24 @@ describe('ListingGridComponent', () => {
     expect(links[0].getAttribute('href')).toContain('vintage-lamp-a');
     expect(links[1].getAttribute('href')).toContain('mountain-bike-b');
   });
+
+  it('should show 8 loading skeleton cards instead of the empty state or real listings', () => {
+    const fixture = setup();
+    fixture.componentRef.setInput('isLoading', true);
+    fixture.componentRef.setInput('emptyStateText', 'No listings found');
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelectorAll('ul-card').length).toBe(8);
+    expect(fixture.nativeElement.textContent).not.toContain('No listings found');
+  });
+
+  it('should prefer the loading skeleton over real listings while isLoading is true', () => {
+    const fixture = setup();
+    fixture.componentRef.setInput('isLoading', true);
+    fixture.componentRef.setInput('listings', [listing({ id: 'a', title: 'Vintage lamp' })]);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelectorAll('a').length).toBe(0);
+    expect(fixture.nativeElement.querySelectorAll('ul-card').length).toBe(8);
+  });
 });

@@ -1,43 +1,37 @@
-import { NgOptimizedImage } from '@angular/common';
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Component, computed, inject, OnInit } from '@angular/core';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
-import { ErrorService } from '../../application/services/error.service';
-import { ListingService } from '../../application/services/listing.service';
+import {
+  LISTING_QUERY_FN,
+  ListingResultsStore,
+} from '../../application/listing/listing-results.store';
+import { LISTING_REPOSITORY } from '../../core/configuration/tokens';
 import { SeoService } from '../../core/seo/seo.service';
-import { ListingPricePipe } from '../../shared/listing/listing-price/listing-price.pipe';
-import { createListingSlug } from '../../shared/utils/slugify';
-import { CardComponent, HeroComponent, ToastService } from '@underlayerdev/ui';
+import type { ListingRepository } from '../../domain/listing/listing.repository';
+import { ListingGridComponent } from '../../shared/listing/listing-grid/listing-grid';
+import { HeroComponent } from '@underlayerdev/ui';
 import type { HeroAction } from '@underlayerdev/ui';
 
 @Component({
   selector: 'um-home',
-  imports: [
-    RouterLink,
-    CardComponent,
-    HeroComponent,
-    NgOptimizedImage,
-    ListingPricePipe,
-    TranslocoDirective,
+  imports: [HeroComponent, ListingGridComponent, TranslocoDirective],
+  providers: [
+    ListingResultsStore,
+    // Home has no category/sort/location UI at all — its own query function
+    // just always shows the latest feed, ignoring location entirely, rather
+    // than inheriting Discover/Search's nearby-search behavior by virtue of
+    // sharing the same store class.
+    {
+      provide: LISTING_QUERY_FN,
+      useFactory: (repository: ListingRepository) => () => repository.getLatest(),
+      deps: [LISTING_REPOSITORY],
+    },
   ],
-  providers: [ToastService],
   templateUrl: './home.html',
-  styleUrl: './home.scss',
 })
 export class HomeComponent implements OnInit {
-  protected readonly listingService = inject(ListingService);
+  protected readonly store = inject(ListingResultsStore);
   private readonly seoService = inject(SeoService);
   private readonly transloco = inject(TranslocoService);
-  private readonly errorService = inject(ErrorService);
-  private readonly toastService = inject(ToastService);
-
-  readonly isLoading = signal(true);
-
-  // Fixed placeholder count while loading, rendered in the same grid the
-  // real cards use, so the layout doesn't resize once they swap in.
-  readonly skeletonRows = computed(() => Array.from({ length: 8 }));
-
-  readonly createListingSlug = createListingSlug;
 
   readonly heroPrimaryAction = computed<HeroAction>(() => {
     this.transloco.activeLang();
@@ -47,15 +41,7 @@ export class HomeComponent implements OnInit {
     };
   });
 
-  async ngOnInit(): Promise<void> {
+  ngOnInit(): void {
     this.seoService.setPage('', this.transloco.translate('home.seoDescription'));
-    this.isLoading.set(true);
-    try {
-      await this.listingService.loadLatest();
-    } catch (err) {
-      this.toastService.error(this.errorService.toUserMessage(err));
-    } finally {
-      this.isLoading.set(false);
-    }
   }
 }
