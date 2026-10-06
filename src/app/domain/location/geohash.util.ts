@@ -8,6 +8,21 @@ function toTuple(point: GeoPoint): [number, number] {
   return [point.latitude, point.longitude];
 }
 
+/** Whether a point's lat/lng are actual finite coordinates within range, not just present. */
+export function hasValidCoordinates(point: Partial<GeoPoint>): point is GeoPoint {
+  const { latitude, longitude } = point;
+  return (
+    typeof latitude === 'number' &&
+    Number.isFinite(latitude) &&
+    latitude >= -90 &&
+    latitude <= 90 &&
+    typeof longitude === 'number' &&
+    Number.isFinite(longitude) &&
+    longitude >= -180 &&
+    longitude <= 180
+  );
+}
+
 export function computeGeohash(point: GeoPoint): string {
   return geohashForLocation(toTuple(point));
 }

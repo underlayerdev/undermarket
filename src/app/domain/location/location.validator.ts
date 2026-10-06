@@ -1,5 +1,6 @@
 import type { TranslocoService } from '@jsverse/transloco';
 import type { LocationArea } from './location.model';
+import { hasValidCoordinates } from './geohash.util';
 import { LOCATION_DISPLAY_NAME_MAX_LENGTH } from '../listing/listing-constraints';
 
 // Mirrors the constraints enforced server-side in firestore.rules — this is
@@ -26,10 +27,7 @@ export function validateLocationArea(
 
   if (!area.geohash.trim()) return transloco.translate('newListing.errors.locationInvalid');
 
-  if (!Number.isFinite(area.latitude) || area.latitude < -90 || area.latitude > 90) {
-    return transloco.translate('newListing.errors.locationInvalid');
-  }
-  if (!Number.isFinite(area.longitude) || area.longitude < -180 || area.longitude > 180) {
+  if (!hasValidCoordinates(area)) {
     return transloco.translate('newListing.errors.locationInvalid');
   }
 
