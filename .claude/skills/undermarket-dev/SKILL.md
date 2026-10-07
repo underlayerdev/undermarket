@@ -26,6 +26,30 @@ This skill applies to **all** code written in this project (Angular + Firebase +
   - Constants and static configuration never go in a signal.
 - If unsure between a signal and a plain variable, ask: "does this need to trigger a re-render or be read reactively in a `computed`/template?" If not, it isn't a signal.
 
+## 2b. Stores — NgRx SignalStore, one-way data flow
+
+Shared/feature state lives in `@ngrx/signals` stores. Never hand-roll a `_x = signal()` / `x = _x.asReadonly()` service. References: `features/listings/detail/listing-detail.store.ts`, `application/listing/listing-results.store.ts`, `features/settings/account/settings-account.store.ts`.
+
+```ts
+export const XStore = signalStore(
+  withState(initialState),                       // plain, serializable state only
+  withProps(() => ({ _repo: inject(X_REPO) })),  // dependencies; `_` prefix = private to the store
+  withPendingOperations<'save' | 'delete'>(),    // shared/state — in-flight async commands
+  withComputed((store) => ({ ... })),            // derived, read-only
+  withMethods((store) => ({ ... })),             // the ONLY place patchState is called
+  withHooks({ onInit(store) { ... } }),          // replaces constructor effects
+);
+export type XStore = InstanceType<typeof XStore>; // so `XStore` also works as a type
+```
+
+- **One-way flow**: state is protected (the default). Components read signals and call named intent methods (`openDeleteModal()`, `setCategoryId()`). They never write store state, and never `[(x)]`-bind to it: use `[x]="store.x()" (xChange)="store.setX($event)"`.
+- **Scope**: provide the store on the page component that owns the concern (`providers: [XStore]`), so it's created and destroyed with that page and shared by its descendants. Use `{ providedIn: 'root' }` only for truly app-wide state. Scope a store per concern, not one big store per feature.
+- **State shape**: one `XState` interface plus a `const initialState`. Reset with `patchState(store, initialState)`.
+- **Async commands** (save/publish/delete) are `async` methods wrapped in `store.track('op', ...)`. They **throw on failure**; the calling component decides how to present it. Expose the pending flag as a named computed (`isSaving = computed(() => store.isPending('save'))`).
+- **Async queries driven by state** use `rxMethod` + `switchMap` so stale responses are dropped.
+- **Server state lives in the store; form drafts live in the component** as `linkedSignal(() => store.x())`. No "seed once" `effect` + `initialized` flag.
+- **Tests**: use the real store with mocked repositories/services (`TestBed.inject(XStore)`). Use `unprotected(store)` from `@ngrx/signals/testing` only when a test must seed state directly.
+
 ## 3. `@underlayerdev/ui` — ALWAYS, zero hardcoded values
 
 This is the most important rule and has no silent exceptions.

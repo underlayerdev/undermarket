@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { UserService } from '../../../application/services/user.service';
@@ -7,10 +7,10 @@ import { ErrorService } from '../../../application/services/error.service';
 import { validateConfirmPassword, validatePassword } from '../../../shared/utils/auth-validation';
 import { LocaleDatePipe } from '../../../shared/pipes';
 import { ButtonComponent, InputComponent, ModalComponent, ToastService } from '@underlayerdev/ui';
-import { validateDisplayName } from '../../../domain/user/user-display.validator';
 import { SettingsLayoutComponent } from '../shared/settings-layout/settings-layout';
 import { SettingsAccountProfileComponent } from './settings-account-profile/settings-account-profile';
-import { SettingsProfileStore } from './settings-profile.store';
+import { SettingsAccountStore } from './settings-account.store';
+import { SettingsAccountDisplayNameComponent } from './settings-account-display-name/settings-account-display-name';
 
 @Component({
   selector: 'um-settings-account',
@@ -22,15 +22,16 @@ import { SettingsProfileStore } from './settings-profile.store';
     SettingsAccountProfileComponent,
     SettingsLayoutComponent,
     TranslocoDirective,
+    SettingsAccountDisplayNameComponent,
   ],
-  providers: [SettingsProfileStore],
+  // Shared by every Account panel below (display name, public profile).
+  providers: [SettingsAccountStore],
   templateUrl: './settings-account.html',
   styleUrl: './settings-account.scss',
 })
 export class SettingsAccountComponent implements OnInit {
   protected readonly userService = inject(UserService);
   protected readonly authService = inject(AuthService);
-  protected readonly profileStore = inject(SettingsProfileStore);
   private readonly errorService = inject(ErrorService);
   private readonly transloco = inject(TranslocoService);
   private readonly toastService = inject(ToastService);
@@ -85,57 +86,12 @@ export class SettingsAccountComponent implements OnInit {
   readonly deleteAccountPasswordValue = signal('');
   readonly isDeletingAccount = signal(false);
 
-  // Seeded once from the loaded profile — waits for an explicit Save rather
-  // than persisting per keystroke.
-  readonly displayNameValue = signal('');
-  readonly displayNameTouched = signal(false);
-  private profileFieldsInitialized = false;
-
-  readonly displayNameError = computed(() => {
-    if (!this.displayNameTouched()) return null;
-    return validateDisplayName(this.displayNameValue(), this.transloco);
-  });
-
-  readonly saveDisplayNameButtonLabel = computed(() => {
-    this.transloco.activeLang();
-    return this.profileStore.isSavingDisplayName()
-      ? this.transloco.translate('settings.saving')
-      : this.transloco.translate('settings.saveButton');
-  });
-
-  constructor() {
-    effect(() => {
-      const profile = this.userService.profile();
-      if (!profile || this.profileFieldsInitialized) return;
-      this.profileFieldsInitialized = true;
-      this.displayNameValue.set(profile.displayName);
-    });
-  }
-
   ngOnInit(): void {
     const user = this.authService.currentUser();
     if (user) {
       // The onboarding-required guard already guarantees a doc exists by
       // the time this page is reachable — this is just a normal read.
       void this.userService.loadProfile(user.id);
-    }
-  }
-
-  async onSaveDisplayName(): Promise<void> {
-    this.displayNameTouched.set(true);
-    if (this.displayNameError()) return;
-
-    const profile = this.userService.profile();
-    if (!profile) return;
-
-    const trimmed = this.displayNameValue().trim();
-    try {
-      await this.profileStore.saveDisplayName(trimmed);
-      this.displayNameValue.set(trimmed);
-      this.displayNameTouched.set(false);
-      this.toastService.success(this.transloco.translate('settings.displayNameUpdated'));
-    } catch (err) {
-      this.toastService.error(this.errorService.toUserMessage(err));
     }
   }
 

@@ -1,6 +1,6 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { SettingsProfileStore } from './settings-profile.store';
+import { SettingsAccountStore } from './settings-account.store';
 import { AuthService } from '../../../application/services/auth.service';
 import { UserService } from '../../../application/services/user.service';
 import { mockUser } from '../../../domain/user/user.mock';
@@ -14,7 +14,7 @@ function deferred<T>() {
   return { promise, resolve };
 }
 
-describe('SettingsProfileStore', () => {
+describe('SettingsAccountStore', () => {
   function setup(initialProfile: User | null = mockUser()) {
     const profile = signal<User | null>(initialProfile);
     const updateProfileSpy = vi.fn(async (user: User) => {
@@ -24,14 +24,14 @@ describe('SettingsProfileStore', () => {
 
     TestBed.configureTestingModule({
       providers: [
-        SettingsProfileStore,
+        SettingsAccountStore,
         { provide: UserService, useValue: { profile, updateProfile: updateProfileSpy } },
         { provide: AuthService, useValue: { updateDisplayName: updateDisplayNameSpy } },
       ],
     });
 
     return {
-      store: TestBed.inject(SettingsProfileStore),
+      store: TestBed.inject(SettingsAccountStore),
       profile,
       updateProfileSpy,
       updateDisplayNameSpy,

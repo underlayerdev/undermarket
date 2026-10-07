@@ -29,11 +29,11 @@ export class ListingDetailHeaderComponent {
   protected readonly store = inject(ListingDetailStore);
 
   protected openDeleteModal(): void {
-    this.store.showDeleteModal.set(true);
+    this.store.openDeleteModal();
   }
 
   protected onActionResult(result: ListingActionResult): void {
-    this.store.resultModal.set(result);
+    this.store.showResult(result);
   }
 
   goBack(): void {

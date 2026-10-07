@@ -9,7 +9,7 @@ import { LocationService } from '../../../../application/services/location.servi
 import type { LocationArea, SearchLocation } from '../../../../domain/location/location.model';
 import { mockUser } from '../../../../domain/user/user.mock';
 import type { User } from '../../../../domain/user/user.model';
-import { SettingsProfileStore } from '../settings-profile.store';
+import { SettingsAccountStore } from '../settings-account.store';
 
 const PALERMO_SEARCH_LOCATION: SearchLocation = {
   displayName: 'Palermo, Buenos Aires',
@@ -53,7 +53,7 @@ describe('SettingsAccountProfileComponent', () => {
     TestBed.configureTestingModule({
       imports: [SettingsAccountProfileComponent, getTranslocoTestingModule()],
       providers: [
-        SettingsProfileStore,
+        SettingsAccountStore,
         {
           provide: UserService,
           useValue: {

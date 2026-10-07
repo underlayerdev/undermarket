@@ -361,10 +361,10 @@ describe('ListingDetailComponent', () => {
       await flushAsync();
       fixture.detectChanges();
 
-      fixture.componentInstance.showDeleteModal.set(true);
+      fixture.debugElement.injector.get(ListingDetailStore).openDeleteModal();
       fixture.detectChanges();
 
-      expect(fixture.componentInstance.showDeleteModal()).toBe(true);
+      expect(fixture.debugElement.injector.get(ListingDetailStore).deleteModalOpen()).toBe(true);
     });
 
     it('should delete via the store, close the modal, and navigate away on confirm', async () => {
@@ -372,12 +372,12 @@ describe('ListingDetailComponent', () => {
       fixture.detectChanges();
       await flushAsync();
       fixture.detectChanges();
-      fixture.componentInstance.showDeleteModal.set(true);
+      fixture.debugElement.injector.get(ListingDetailStore).openDeleteModal();
       const navigateSpy = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
 
       await fixture.componentInstance.confirmDelete();
 
-      expect(fixture.componentInstance.showDeleteModal()).toBe(false);
+      expect(fixture.debugElement.injector.get(ListingDetailStore).deleteModalOpen()).toBe(false);
       expect(fixture.debugElement.injector.get(ListingDetailStore).listing()).toBeNull();
       // store.delete() clears `listing`, leaving nothing for the @if/@else if
       // chain to match — without navigating away the page would render
@@ -399,7 +399,9 @@ describe('ListingDetailComponent', () => {
       await fixture.componentInstance.confirmDelete();
       fixture.detectChanges();
 
-      expect(fixture.componentInstance.resultModal()?.variant).toBe('error');
+      expect(fixture.debugElement.injector.get(ListingDetailStore).resultModal()?.variant).toBe(
+        'error',
+      );
       expect(navigateSpy).not.toHaveBeenCalled();
     });
   });
@@ -411,7 +413,9 @@ describe('ListingDetailComponent', () => {
       await flushAsync();
       fixture.detectChanges();
 
-      fixture.componentInstance.resultModal.set({ variant: 'success', message: 'Published!' });
+      fixture.debugElement.injector
+        .get(ListingDetailStore)
+        .showResult({ variant: 'success', message: 'Published!' });
       fixture.detectChanges();
 
       // Both um-listing-detail-actions instances' target <ul-modal> and the
@@ -421,10 +425,10 @@ describe('ListingDetailComponent', () => {
       // querySelector happens to find first.
       expect(fixture.nativeElement.textContent).toContain('Published!');
 
-      fixture.componentInstance.resultModal.set(null);
+      fixture.debugElement.injector.get(ListingDetailStore).dismissResult();
       fixture.detectChanges();
 
-      expect(fixture.componentInstance.resultModal()).toBeNull();
+      expect(fixture.debugElement.injector.get(ListingDetailStore).resultModal()).toBeNull();
     });
   });
 

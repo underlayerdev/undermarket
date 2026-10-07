@@ -43,9 +43,9 @@ describe('ListingResultsStore', () => {
   let queryFnSpy: ReturnType<typeof vi.fn<ListingQueryFn>>;
   let fakeSearchLocation: ReturnType<typeof signal<SearchLocation | null>>;
 
-  // Flushes the store's constructor effect (TestBed.tick(), matching this
-  // repo's own SearchLocationService spec) and lets the resulting async
-  // runSearch() settle.
+  // Flushes the effect behind the store's rxMethod (TestBed.tick(), matching
+  // this repo's own SearchLocationService spec) and lets the resulting async
+  // query settle.
   async function flush(): Promise<void> {
     TestBed.tick();
     await Promise.resolve();
@@ -131,6 +131,25 @@ describe('ListingResultsStore', () => {
     await flush();
 
     expect(store.hasError()).toBe(false);
+  });
+
+  it('should ignore a slow earlier query that resolves after a newer one', async () => {
+    const store = await createStore();
+    let resolveSlow!: (listings: Listing[]) => void;
+    queryFnSpy.mockImplementationOnce(
+      () => new Promise<Listing[]>((resolve) => (resolveSlow = resolve)),
+    );
+    queryFnSpy.mockResolvedValueOnce([listing({ id: 'fashion-result' })]);
+
+    store.setCategoryId('electronics');
+    await flush();
+    store.setCategoryId('fashion');
+    await flush();
+    resolveSlow([listing({ id: 'stale-electronics-result' })]);
+    await flush();
+
+    expect(store.results().map((item) => item.id)).toEqual(['fashion-result']);
+    expect(store.isLoading()).toBe(false);
   });
 
   it('should expose results sorted by the current sort option', async () => {

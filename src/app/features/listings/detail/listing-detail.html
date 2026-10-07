@@ -70,8 +70,8 @@
             @if (store.isOwner()) {
               <um-listing-detail-actions
                 variant="list"
-                (deleteRequested)="showDeleteModal.set(true)"
-                (actionResult)="resultModal.set($event)"
+                (deleteRequested)="store.openDeleteModal()"
+                (actionResult)="store.showResult($event)"
               />
             } @else {
               <div class="listing-detail__contact-actions ul-gap-3">
@@ -122,13 +122,14 @@
     }
 
     <ul-modal
-      [(open)]="showDeleteModal"
+      [open]="store.deleteModalOpen()"
+      (openChange)="$event ? store.openDeleteModal() : store.closeDeleteModal()"
       [title]="t('listingDetail.deleteModalTitle')"
       variant="confirmation"
       [confirmLabel]="t('common.delete')"
       [cancelLabel]="t('common.cancel')"
       (confirmed)="confirmDelete()"
-      (cancelled)="showDeleteModal.set(false)"
+      (cancelled)="store.closeDeleteModal()"
     >
       <p class="ul-typography-body-m-regular">
         {{ t('listingDetail.deleteModalBody', { value: item.title }) }}
@@ -139,16 +140,16 @@
       This page's only feedback surface for publish/mark-as-sold/delete —
       no toasts here by design. One modal shared by both
       um-listing-detail-actions instances (menu + list variants both emit
-      actionResult into the same resultModal signal) rather than either
+      actionResult into the same store.resultModal state) rather than either
       instance showing its own: a modal is a singleton, unlike a toast
       queue, so there can only sensibly be one.
     -->
     <ul-modal
-      [open]="resultModal() !== null"
-      [variant]="resultModal()?.variant ?? 'success'"
-      (closed)="resultModal.set(null)"
+      [open]="store.resultModal() !== null"
+      [variant]="store.resultModal()?.variant ?? 'success'"
+      (closed)="store.dismissResult()"
     >
-      <p class="ul-typography-body-m-regular">{{ resultModal()?.message }}</p>
+      <p class="ul-typography-body-m-regular">{{ store.resultModal()?.message }}</p>
     </ul-modal>
   }
 </ng-container>

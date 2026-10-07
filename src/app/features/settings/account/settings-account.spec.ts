@@ -17,8 +17,6 @@ describe('SettingsAccountComponent', () => {
   let logoutSpy: ReturnType<typeof vi.fn>;
   let navigateByUrlSpy: ReturnType<typeof vi.fn>;
   let userServiceDeleteAccountSpy: ReturnType<typeof vi.fn>;
-  let updateProfileSpy: ReturnType<typeof vi.fn>;
-  let updateDisplayNameSpy: ReturnType<typeof vi.fn>;
 
   function setup() {
     changePasswordSpy = vi.fn().mockResolvedValue(undefined);
@@ -26,8 +24,6 @@ describe('SettingsAccountComponent', () => {
     logoutSpy = vi.fn().mockResolvedValue(undefined);
     navigateByUrlSpy = vi.fn().mockResolvedValue(true);
     userServiceDeleteAccountSpy = vi.fn().mockResolvedValue(undefined);
-    updateProfileSpy = vi.fn().mockResolvedValue(undefined);
-    updateDisplayNameSpy = vi.fn().mockResolvedValue(undefined);
 
     TestBed.configureTestingModule({
       imports: [SettingsAccountComponent, getTranslocoTestingModule()],
@@ -37,7 +33,7 @@ describe('SettingsAccountComponent', () => {
           useValue: {
             currentUser: () => currentUser,
             changePassword: changePasswordSpy,
-            updateDisplayName: updateDisplayNameSpy,
+            updateDisplayName: vi.fn().mockResolvedValue(undefined),
             deleteAccount: deleteAccountSpy,
             logout: logoutSpy,
           },
@@ -48,7 +44,7 @@ describe('SettingsAccountComponent', () => {
             profile: () => currentUser,
             loadProfile: vi.fn().mockResolvedValue(undefined),
             ensureProfile: vi.fn().mockImplementation(async () => currentUser),
-            updateProfile: updateProfileSpy,
+            updateProfile: vi.fn().mockResolvedValue(undefined),
             updateSettings: vi.fn().mockResolvedValue(undefined),
             deleteAccount: userServiceDeleteAccountSpy,
           },
@@ -151,80 +147,5 @@ describe('SettingsAccountComponent', () => {
 
     expect(logoutSpy).toHaveBeenCalled();
     expect(navigateByUrlSpy).toHaveBeenCalledWith('/login');
-  });
-
-  describe('display name', () => {
-    it('should seed displayNameValue from the loaded profile', () => {
-      currentUser = mockUser({ displayName: 'Old Name' });
-      const fixture = setup();
-
-      expect(fixture.componentInstance.displayNameValue()).toBe('Old Name');
-    });
-
-    it('should reject an empty display name once touched', () => {
-      currentUser = mockUser();
-      const fixture = setup();
-      fixture.componentInstance.displayNameValue.set('   ');
-
-      fixture.componentInstance.onSaveDisplayName();
-
-      expect(fixture.componentInstance.displayNameError()).toBe('Display name is required.');
-      expect(updateProfileSpy).not.toHaveBeenCalled();
-      expect(updateDisplayNameSpy).not.toHaveBeenCalled();
-    });
-
-    it('should reject a display name under the min length', () => {
-      currentUser = mockUser();
-      const fixture = setup();
-      fixture.componentInstance.displayNameValue.set('a');
-
-      fixture.componentInstance.onSaveDisplayName();
-
-      expect(fixture.componentInstance.displayNameError()).toContain('at least');
-      expect(updateProfileSpy).not.toHaveBeenCalled();
-    });
-
-    it('should reject a display name over the max length', () => {
-      currentUser = mockUser();
-      const fixture = setup();
-      fixture.componentInstance.displayNameValue.set('a'.repeat(51));
-
-      fixture.componentInstance.onSaveDisplayName();
-
-      expect(fixture.componentInstance.displayNameError()).toContain('at most');
-      expect(updateProfileSpy).not.toHaveBeenCalled();
-    });
-
-    it('should save the trimmed display name to both Firestore and Firebase Auth', async () => {
-      currentUser = mockUser({ id: 'user-1', displayName: 'Old Name' });
-      const fixture = setup();
-      fixture.componentInstance.displayNameValue.set('  New Name  ');
-
-      await fixture.componentInstance.onSaveDisplayName();
-
-      expect(updateProfileSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ id: 'user-1', displayName: 'New Name' }),
-      );
-      expect(updateDisplayNameSpy).toHaveBeenCalledWith('New Name');
-      expect(fixture.componentInstance.displayNameValue()).toBe('New Name');
-      expect(fixture.componentInstance.displayNameTouched()).toBe(false);
-    });
-
-    it('should show an error toast and not clear touched state when saving fails', async () => {
-      currentUser = mockUser();
-      const fixture = setup();
-      updateProfileSpy.mockRejectedValue(new Error('network down'));
-      const toastService = TestBed.inject(ToastService);
-      const errorSpy = vi.spyOn(toastService, 'error');
-      fixture.componentInstance.displayNameValue.set('New Name');
-
-      await fixture.componentInstance.onSaveDisplayName();
-
-      expect(errorSpy).toHaveBeenCalled();
-      // isSavingDisplayName lives on SettingsProfileStore now (see
-      // settings-profile.store.ts), not a local signal — the button must
-      // not get stuck showing "Saving..." after a failed save.
-      expect(fixture.componentInstance.saveDisplayNameButtonLabel()).toBe('Save');
-    });
   });
 });

@@ -84,7 +84,6 @@ export class ListingDetailComponent implements OnInit {
   protected readonly store = inject(ListingDetailStore);
 
   readonly getInitials = getInitials;
-  readonly showDeleteModal = this.store.showDeleteModal;
 
   // Mobile-only: `.listing-detail` is only the scroll container itself below
   // `md` (see listing-detail.scss) — desktop replaces the floating back
@@ -92,12 +91,8 @@ export class ListingDetailComponent implements OnInit {
   // for it to matter there regardless of this signal's value.
   readonly isHeaderScrolled = signal(false);
 
-  // This page uses ul-modal, not toasts, for action feedback — a deliberate
-  // choice, not just "whatever ListingDetailActionsComponent happened to
-  // call." Aliased from the store (see its own class doc): both the `list`
-  // variant here and the `menu` variant nested inside
-  // ListingDetailHeaderComponent need to write to the exact same signal.
-  readonly resultModal = this.store.resultModal;
+  // This page uses ul-modal, not toasts, for action feedback — one shared
+  // delete/result modal in the store, opened by both actions variants.
 
   readonly breadcrumbItems = computed<BreadcrumbItem[]>(() => {
     this.transloco.activeLang();
@@ -179,7 +174,7 @@ export class ListingDetailComponent implements OnInit {
   // live at once (CSS just shows one per breakpoint), and there must be one
   // dialog, not two independently-toggleable ones.
   async confirmDelete(): Promise<void> {
-    this.store.showDeleteModal.set(false);
+    this.store.closeDeleteModal();
     try {
       await this.store.delete();
       // store.delete() clears `listing`, and the template's @if/@else if
@@ -189,7 +184,7 @@ export class ListingDetailComponent implements OnInit {
       // regardless, so this isn't a special case to route around.
       await this.router.navigate(['/profile']);
     } catch (err) {
-      this.resultModal.set({ variant: 'error', message: this.errorService.toUserMessage(err) });
+      this.store.showResult({ variant: 'error', message: this.errorService.toUserMessage(err) });
     }
   }
 }

@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, signal } from '@angular/core';
+import { Component, computed, inject, linkedSignal, signal } from '@angular/core';
 import {
   ButtonComponent,
   IconComponent,
@@ -14,9 +14,8 @@ import { toLocationErrorMessage } from '../../../../application/services/locatio
 import { LocationService } from '../../../../application/services/location.service';
 import { SearchLocationService } from '../../../../application/services/search-location.service';
 import { PublicCityInfo } from '../../../../domain/user/user.model';
-import { UserService } from '../../../../application/services/user.service';
 import { ErrorService } from '../../../../application/services/error.service';
-import { SettingsProfileStore } from '../settings-profile.store';
+import { SettingsAccountStore } from '../settings-account.store';
 
 /**
  * Narrows anything city-shaped down to exactly the four fields that go on the
@@ -47,19 +46,22 @@ function toPublicCityInfo({
   ],
 })
 export class SettingsAccountProfileComponent {
-  protected readonly userService = inject(UserService);
-  private readonly profileStore = inject(SettingsProfileStore);
+  private readonly store = inject(SettingsAccountStore);
   private readonly errorService = inject(ErrorService);
   private readonly locationService = inject(LocationService);
   private readonly searchLocationService = inject(SearchLocationService);
   private readonly toastService = inject(ToastService);
   private readonly transloco = inject(TranslocoService);
 
-  // Seeded once from the loaded profile, then a purely local UI toggle from
-  // that point on — checking/unchecking updates the persisted profile
-  // immediately, it doesn't wait for a separate save action.
-  readonly showCity = signal(false);
-  readonly selectedCity = signal<PublicCityInfo | null>(null);
+  // The saved city, by reference: other profile writes (e.g. the display
+  // name) spread the same profileCity object, so they don't re-seed the
+  // local state below — only an actual city change or a reload does.
+  private readonly savedCity = computed(() => this.store.profile()?.profileCity ?? null);
+
+  // Local UI state seeded from the saved city. Unchecking clears the saved
+  // city immediately; checking waits until a city is actually picked.
+  readonly showCity = linkedSignal(() => !!this.savedCity());
+  readonly selectedCity = linkedSignal<PublicCityInfo | null>(() => this.savedCity());
   readonly cityModalOpen = signal(false);
   readonly citySuggestions = signal<LocationSuggestion[]>([]);
   readonly isResolvingCurrentCity = signal(false);
@@ -67,7 +69,6 @@ export class SettingsAccountProfileComponent {
   // resolve succeeds — the picker only previews it; nothing is saved until
   // "Set location" is clicked (onCityConfirmed), same as search-location-bar.
   readonly cityResolvedCurrentArea = signal<LocationArea | null>(null);
-  private cityFieldsInitialized = false;
 
   /**
    * The search area the user already chose (during onboarding, or from the
@@ -87,16 +88,6 @@ export class SettingsAccountProfileComponent {
     const searchLocation = this.searchLocationService.searchLocation();
     return searchLocation ? toPublicCityInfo(searchLocation) : null;
   });
-
-  constructor() {
-    effect(() => {
-      const profile = this.userService.profile();
-      if (!profile || this.cityFieldsInitialized) return;
-      this.cityFieldsInitialized = true;
-      this.selectedCity.set(profile.profileCity ?? null);
-      this.showCity.set(!!profile.profileCity);
-    });
-  }
 
   onToggleShowCity(checked: boolean): void {
     this.showCity.set(checked);
@@ -147,10 +138,10 @@ export class SettingsAccountProfileComponent {
   }
 
   private async saveProfileCity(profileCity: PublicCityInfo | null): Promise<void> {
-    if (!this.userService.profile()) return;
+    if (!this.store.profile()) return;
 
     try {
-      await this.profileStore.saveProfileCity(profileCity);
+      await this.store.saveProfileCity(profileCity);
       this.toastService.success(this.transloco.translate('settings.profileCityUpdated'));
     } catch (err) {
       this.toastService.error(this.errorService.toUserMessage(err));

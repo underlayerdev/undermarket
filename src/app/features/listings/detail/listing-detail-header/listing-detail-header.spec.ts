@@ -127,7 +127,7 @@ describe('ListingDetailHeaderComponent', () => {
       .query(By.directive(ListingDetailActionsComponent))
       .componentInstance.deleteRequested.emit();
 
-    expect(store.showDeleteModal()).toBe(true);
+    expect(store.deleteModalOpen()).toBe(true);
   });
 
   it("should write the actions menu's result into the store's shared result modal", async () => {
