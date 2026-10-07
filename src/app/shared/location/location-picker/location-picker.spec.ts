@@ -116,7 +116,27 @@ describe('LocationPickerComponent', () => {
     expect(button.disabled).toBe(true);
   });
 
-  describe('without radiusOptions (legacy immediate mode)', () => {
+  it('should not render a map from a searchLocation with no coordinates, but should once a real pick is made', () => {
+    const fixture = setup();
+    fixture.componentRef.setInput('showConfirmButton', true);
+    // Shaped like settings-account-profile's PublicCityInfo: a real place
+    // name, but no latitude/longitude to plot.
+    fixture.componentRef.setInput('searchLocation', { displayName: 'La Lucila, Buenos Aires' });
+    fixture.componentRef.setInput('suggestions', [suggestion()]);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('um-map')).toBeNull();
+
+    fixture.componentInstance.onResultSelected({
+      value: 'place.1',
+      label: suggestion().displayName,
+    });
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('um-map')).toBeTruthy();
+  });
+
+  describe('without showConfirmButton (immediate mode)', () => {
     it('should resolve and emit the full suggestion object from a picked result value', () => {
       const fixture = setup();
       fixture.componentRef.setInput('suggestions', [suggestion()]);
@@ -147,13 +167,54 @@ describe('LocationPickerComponent', () => {
       expect(emitted.length).toBe(1);
     });
 
-    it('should render no map and no confirm button', () => {
+    it('should render the map (showMap defaults true) with no radius circle and no confirm button', () => {
       const fixture = setup();
       fixture.componentRef.setInput('searchLocation', searchLocation());
       fixture.detectChanges();
 
-      expect(fixture.nativeElement.querySelector('um-map')).toBeNull();
+      expect(fixture.nativeElement.querySelector('um-map')).toBeTruthy();
+      expect(fixture.nativeElement.querySelector('ul-select')).toBeNull();
       expect(fixture.nativeElement.querySelector('.um-location-picker__confirm-button')).toBeNull();
+    });
+
+    it('should render no map at all when showMap is false', () => {
+      const fixture = setup();
+      fixture.componentRef.setInput('searchLocation', searchLocation());
+      fixture.componentRef.setInput('showMap', false);
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.querySelector('um-map')).toBeNull();
+    });
+
+    it('should show the radius select but no confirm button when radiusOptions is set without showConfirmButton', () => {
+      const fixture = setup();
+      fixture.componentRef.setInput('radiusOptions', RADIUS_OPTIONS);
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.querySelector('ul-select')).toBeTruthy();
+      expect(fixture.nativeElement.querySelector('.um-location-picker__confirm-button')).toBeNull();
+    });
+
+    it('should show the confirm button but no radius select when showConfirmButton is set without radiusOptions', () => {
+      const fixture = setup();
+      fixture.componentRef.setInput('showConfirmButton', true);
+      fixture.componentRef.setInput('suggestions', [suggestion()]);
+      fixture.detectChanges();
+
+      expect(
+        fixture.nativeElement.querySelector('.um-location-picker__confirm-button'),
+      ).toBeTruthy();
+      expect(fixture.nativeElement.querySelector('ul-select')).toBeNull();
+
+      fixture.componentInstance.onResultSelected({
+        value: 'place.1',
+        label: suggestion().displayName,
+      });
+      fixture.detectChanges();
+
+      expect(fixture.componentInstance.pendingArea()?.displayName).toBe('Palermo, Buenos Aires');
+      expect(fixture.nativeElement.querySelector('um-map')).toBeTruthy();
+      expect(fixture.nativeElement.querySelector('.um-map__radius')).toBeNull();
     });
 
     it('should never emit confirmed', () => {
@@ -172,9 +233,10 @@ describe('LocationPickerComponent', () => {
     });
   });
 
-  describe('with radiusOptions (confirm mode)', () => {
+  describe('with showConfirmButton and radiusOptions (modal mode)', () => {
     function setupConfirmMode() {
       const fixture = setup();
+      fixture.componentRef.setInput('showConfirmButton', true);
       fixture.componentRef.setInput('radiusOptions', RADIUS_OPTIONS);
       fixture.componentRef.setInput('suggestions', [suggestion()]);
       fixture.detectChanges();
@@ -264,6 +326,17 @@ describe('LocationPickerComponent', () => {
       ]);
     });
 
+    it('should update the search box text to the resolved current location', () => {
+      const fixture = setupConfirmMode();
+      fixture.componentInstance.onQueryChange('something the user typed');
+      const resolvedArea = { ...suggestion({ displayName: 'Current spot' }), geohash: 'abc123' };
+
+      fixture.componentRef.setInput('resolvedCurrentArea', resolvedArea);
+      fixture.detectChanges();
+
+      expect(fixture.componentInstance.query()).toBe('Current spot');
+    });
+
     it('should re-seed the pending pick/radius whenever searchLocation changes', () => {
       const fixture = setupConfirmMode();
 
@@ -272,6 +345,40 @@ describe('LocationPickerComponent', () => {
 
       expect(fixture.componentInstance.pendingArea()?.displayName).toBe('Recoleta, Buenos Aires');
       expect(fixture.componentInstance.pendingRadiusKm()).toBe(10);
+    });
+
+    it('should draw the radius circle once a radius is pending', () => {
+      const fixture = setupConfirmMode();
+
+      fixture.componentRef.setInput('searchLocation', searchLocation());
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.querySelector('.um-map__radius')).toBeTruthy();
+    });
+
+    it('should show the map with no circle when a point is pending but no radius value is set yet', () => {
+      const fixture = setupConfirmMode();
+
+      fixture.componentInstance.onResultSelected({
+        value: 'place.1',
+        label: suggestion().displayName,
+      });
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.querySelector('um-map')).toBeTruthy();
+      expect(fixture.componentInstance.pendingRadiusKm()).toBeNull();
+      expect(fixture.nativeElement.querySelector('.um-map__radius')).toBeNull();
+    });
+
+    it('should hide the radius circle when showRadius is false, map and pick unaffected', () => {
+      const fixture = setupConfirmMode();
+
+      fixture.componentRef.setInput('searchLocation', searchLocation());
+      fixture.componentRef.setInput('showRadius', false);
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.querySelector('um-map')).toBeTruthy();
+      expect(fixture.nativeElement.querySelector('.um-map__radius')).toBeNull();
     });
   });
 });

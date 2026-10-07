@@ -12,17 +12,45 @@
     />
 
     @if (showCity()) {
-      <div class="ul-mt-4">
+      <div class="settings-account-profile__city-row ul-mt-4">
+        <div class="settings-account-profile__city-row__display">
+          @if (selectedCity(); as city) {
+            <ul-icon icon="map_pin" size="5" />
+            <span class="ul-typography-body-m-extrabold">{{ city.displayName }}</span>
+          } @else {
+            <span class="ul-typography-body-l-regular">{{ t('location.changeLocation') }}</span>
+          }
+        </div>
+        <ul-button
+          theme="outline-white"
+          type="button"
+          size="sm"
+          [disabled]="cityModalOpen()"
+          [ariaLabel]="t('location.changeLocation')"
+          (buttonClick)="cityModalOpen.set(true)"
+        >
+          {{ t('location.changeLocation') }}
+        </ul-button>
+      </div>
+
+      <ul-modal
+        [(open)]="cityModalOpen"
+        [title]="t('location.changeLocation')"
+        [fullScreenInMobile]="true"
+      >
         <um-location-picker
-          [label]="t('settings.cityLabel')"
+          [searchLocation]="selectedCity()"
+          [showMap]="true"
+          [showConfirmButton]="true"
+          [resolvedCurrentArea]="cityResolvedCurrentArea()"
           [placeholder]="t('location.searchPlaceholder')"
           [suggestions]="citySuggestions()"
           [isResolvingCurrentLocation]="isResolvingCurrentCity()"
           (queryChanged)="onCityQueryChanged($event)"
-          (suggestionSelected)="onCityPicked($event)"
+          (confirmed)="onCityConfirmed($event)"
           (useCurrentLocationRequested)="onUseCurrentCity()"
         />
-      </div>
+      </ul-modal>
 
       @if (suggestedCity(); as suggested) {
         <div class="ul-mt-3">

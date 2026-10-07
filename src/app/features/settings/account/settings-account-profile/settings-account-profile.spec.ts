@@ -1,13 +1,15 @@
 import { TestBed } from '@angular/core/testing';
 import { ToastService } from '@underlayerdev/ui';
 import { SettingsAccountProfileComponent } from './settings-account-profile';
+import { AuthService } from '../../../../application/services/auth.service';
 import { SearchLocationService } from '../../../../application/services/search-location.service';
 import { UserService } from '../../../../application/services/user.service';
-import { GEOCODING_PROVIDER, GEOLOCATION_PROVIDER } from '../../../../core/configuration/tokens';
 import { getTranslocoTestingModule } from '../../../../../testing/transloco-testing';
-import type { SearchLocation } from '../../../../domain/location/location.model';
+import { LocationService } from '../../../../application/services/location.service';
+import type { LocationArea, SearchLocation } from '../../../../domain/location/location.model';
 import { mockUser } from '../../../../domain/user/user.mock';
 import type { User } from '../../../../domain/user/user.model';
+import { SettingsProfileStore } from '../settings-profile.store';
 
 const PALERMO_SEARCH_LOCATION: SearchLocation = {
   displayName: 'Palermo, Buenos Aires',
@@ -23,10 +25,22 @@ const PALERMO_SEARCH_LOCATION: SearchLocation = {
   updatedAt: new Date('2026-09-20T10:00:00Z'),
 };
 
+const RECOLETA_AREA: LocationArea = {
+  displayName: 'Recoleta, Buenos Aires',
+  countryCode: 'AR',
+  region: 'Buenos Aires',
+  city: 'Buenos Aires',
+  neighborhood: 'Recoleta',
+  latitude: -34.5875,
+  longitude: -58.3974,
+  geohash: '6ex2tnvjd',
+};
+
 describe('SettingsAccountProfileComponent', () => {
   let currentUser: User | null;
   let searchLocation: SearchLocation | null;
   let updateProfileSpy: ReturnType<typeof vi.fn>;
+  let resolveCurrentAreaSpy: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     searchLocation = null;
@@ -34,10 +48,12 @@ describe('SettingsAccountProfileComponent', () => {
 
   function setup() {
     updateProfileSpy = vi.fn().mockResolvedValue(undefined);
+    resolveCurrentAreaSpy = vi.fn().mockRejectedValue(new Error('not mocked for this test'));
 
     TestBed.configureTestingModule({
       imports: [SettingsAccountProfileComponent, getTranslocoTestingModule()],
       providers: [
+        SettingsProfileStore,
         {
           provide: UserService,
           useValue: {
@@ -45,9 +61,15 @@ describe('SettingsAccountProfileComponent', () => {
             updateProfile: updateProfileSpy,
           },
         },
+        {
+          provide: AuthService,
+          useValue: { updateDisplayName: vi.fn().mockResolvedValue(undefined) },
+        },
         { provide: SearchLocationService, useValue: { searchLocation: () => searchLocation } },
-        { provide: GEOCODING_PROVIDER, useValue: { search: vi.fn(), reverseGeocode: vi.fn() } },
-        { provide: GEOLOCATION_PROVIDER, useValue: { getCurrentPosition: vi.fn() } },
+        {
+          provide: LocationService,
+          useValue: { searchAreas: vi.fn(), resolveCurrentArea: resolveCurrentAreaSpy },
+        },
       ],
     });
 
@@ -114,20 +136,11 @@ describe('SettingsAccountProfileComponent', () => {
     expect(updateProfileSpy).not.toHaveBeenCalled();
   });
 
-  it('should save the picked city and update selectedCity', async () => {
+  it('should save the confirmed city and update selectedCity', async () => {
     currentUser = mockUser({ profileCity: undefined });
     const fixture = setup();
 
-    await fixture.componentInstance.onCityPicked({
-      id: 'place.1',
-      displayName: 'Recoleta, Buenos Aires',
-      countryCode: 'AR',
-      region: 'Buenos Aires',
-      city: 'Buenos Aires',
-      neighborhood: 'Recoleta',
-      latitude: -34.5875,
-      longitude: -58.3974,
-    });
+    await fixture.componentInstance.onCityConfirmed({ area: RECOLETA_AREA, source: 'saved' });
 
     expect(fixture.componentInstance.selectedCity()).toEqual({
       displayName: 'Recoleta, Buenos Aires',
@@ -145,6 +158,56 @@ describe('SettingsAccountProfileComponent', () => {
         },
       }),
     );
+  });
+
+  it('should close the city modal once a city is confirmed', async () => {
+    currentUser = mockUser({ profileCity: undefined });
+    const fixture = setup();
+    fixture.componentInstance.cityModalOpen.set(true);
+
+    await fixture.componentInstance.onCityConfirmed({ area: RECOLETA_AREA, source: 'saved' });
+
+    expect(fixture.componentInstance.cityModalOpen()).toBe(false);
+  });
+
+  it('should stage a resolved current location without saving until it is confirmed', async () => {
+    currentUser = mockUser({ profileCity: undefined });
+    const fixture = setup();
+    resolveCurrentAreaSpy.mockResolvedValue(RECOLETA_AREA);
+
+    await fixture.componentInstance.onUseCurrentCity();
+
+    expect(fixture.componentInstance.cityResolvedCurrentArea()).toEqual(RECOLETA_AREA);
+    expect(updateProfileSpy).not.toHaveBeenCalled();
+
+    await fixture.componentInstance.onCityConfirmed({
+      area: RECOLETA_AREA,
+      source: 'browser-geolocation',
+    });
+
+    expect(fixture.componentInstance.cityResolvedCurrentArea()).toBeNull();
+    expect(updateProfileSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        profileCity: {
+          displayName: 'Recoleta, Buenos Aires',
+          countryCode: 'AR',
+          region: 'Buenos Aires',
+          city: 'Buenos Aires',
+        },
+      }),
+    );
+  });
+
+  it('should toast an error when resolving the current location fails', async () => {
+    currentUser = mockUser({ profileCity: undefined });
+    const fixture = setup();
+    const toastService = TestBed.inject(ToastService);
+    const errorSpy = vi.spyOn(toastService, 'error');
+
+    await fixture.componentInstance.onUseCurrentCity();
+
+    expect(errorSpy).toHaveBeenCalled();
+    expect(fixture.componentInstance.cityResolvedCurrentArea()).toBeNull();
   });
 
   describe('search-location suggestion', () => {
@@ -219,16 +282,7 @@ describe('SettingsAccountProfileComponent', () => {
     const toastService = TestBed.inject(ToastService);
     const errorSpy = vi.spyOn(toastService, 'error');
 
-    await fixture.componentInstance.onCityPicked({
-      id: 'place.1',
-      displayName: 'Recoleta, Buenos Aires',
-      countryCode: 'AR',
-      region: 'Buenos Aires',
-      city: 'Buenos Aires',
-      neighborhood: 'Recoleta',
-      latitude: -34.5875,
-      longitude: -58.3974,
-    });
+    await fixture.componentInstance.onCityConfirmed({ area: RECOLETA_AREA, source: 'saved' });
 
     expect(errorSpy).toHaveBeenCalled();
   });

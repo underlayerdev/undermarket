@@ -23,20 +23,26 @@
     }
   </div>
 
-  @if (confirmMode()) {
+  @if (showMap()) {
     @if (pendingArea(); as area) {
-      <um-map [locationGeoPoints]="area" [alt]="area.displayName" [radiusKm]="pendingRadiusKm()" />
-    }
-
-    @if (radiusOptions().length) {
-      <ul-select
-        [label]="t('location.searchRadiusLabel')"
-        [options]="radiusOptions()"
-        [value]="radiusValue()"
-        (valueChange)="onRadiusChange($event)"
+      <um-map
+        [locationGeoPoints]="area"
+        [alt]="area.displayName"
+        [radiusKm]="showRadius() && radiusOptions().length ? pendingRadiusKm() : null"
       />
     }
+  }
 
+  @if (radiusOptions().length) {
+    <ul-select
+      [label]="t('location.searchRadiusLabel')"
+      [options]="radiusOptions()"
+      [value]="radiusValue()"
+      (valueChange)="onRadiusChange($event)"
+    />
+  }
+
+  @if (showConfirmButton()) {
     <ul-button
       class="um-location-picker__confirm-button"
       type="button"

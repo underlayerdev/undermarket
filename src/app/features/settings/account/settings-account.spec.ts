@@ -221,7 +221,10 @@ describe('SettingsAccountComponent', () => {
       await fixture.componentInstance.onSaveDisplayName();
 
       expect(errorSpy).toHaveBeenCalled();
-      expect(fixture.componentInstance.isSavingDisplayName()).toBe(false);
+      // isSavingDisplayName lives on SettingsProfileStore now (see
+      // settings-profile.store.ts), not a local signal — the button must
+      // not get stuck showing "Saving..." after a failed save.
+      expect(fixture.componentInstance.saveDisplayNameButtonLabel()).toBe('Save');
     });
   });
 });

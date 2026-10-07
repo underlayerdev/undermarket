@@ -1,14 +1,22 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
-import { ButtonComponent, ToastService, ToggleComponent } from '@underlayerdev/ui';
+import {
+  ButtonComponent,
+  IconComponent,
+  ModalComponent,
+  ToastService,
+  ToggleComponent,
+} from '@underlayerdev/ui';
 import { LocationPickerComponent } from '../../../../shared/location';
+import type { LocationPickerConfirmedEvent } from '../../../../shared/location';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
-import { LocationSuggestion } from '../../../../domain/location/location.model';
+import { LocationArea, LocationSuggestion } from '../../../../domain/location/location.model';
 import { toLocationErrorMessage } from '../../../../application/services/location-error.util';
 import { LocationService } from '../../../../application/services/location.service';
 import { SearchLocationService } from '../../../../application/services/search-location.service';
 import { PublicCityInfo } from '../../../../domain/user/user.model';
 import { UserService } from '../../../../application/services/user.service';
 import { ErrorService } from '../../../../application/services/error.service';
+import { SettingsProfileStore } from '../settings-profile.store';
 
 /**
  * Narrows anything city-shaped down to exactly the four fields that go on the
@@ -28,10 +36,19 @@ function toPublicCityInfo({
 @Component({
   selector: 'um-settings-account-profile',
   templateUrl: './settings-account-profile.html',
-  imports: [TranslocoDirective, ToggleComponent, ButtonComponent, LocationPickerComponent],
+  styleUrl: './settings-account-profile.scss',
+  imports: [
+    TranslocoDirective,
+    ToggleComponent,
+    ButtonComponent,
+    IconComponent,
+    ModalComponent,
+    LocationPickerComponent,
+  ],
 })
 export class SettingsAccountProfileComponent {
   protected readonly userService = inject(UserService);
+  private readonly profileStore = inject(SettingsProfileStore);
   private readonly errorService = inject(ErrorService);
   private readonly locationService = inject(LocationService);
   private readonly searchLocationService = inject(SearchLocationService);
@@ -43,8 +60,13 @@ export class SettingsAccountProfileComponent {
   // immediately, it doesn't wait for a separate save action.
   readonly showCity = signal(false);
   readonly selectedCity = signal<PublicCityInfo | null>(null);
+  readonly cityModalOpen = signal(false);
   readonly citySuggestions = signal<LocationSuggestion[]>([]);
   readonly isResolvingCurrentCity = signal(false);
+  // Fed into the picker's resolvedCurrentArea input once a current-location
+  // resolve succeeds — the picker only previews it; nothing is saved until
+  // "Set location" is clicked (onCityConfirmed), same as search-location-bar.
+  readonly cityResolvedCurrentArea = signal<LocationArea | null>(null);
   private cityFieldsInitialized = false;
 
   /**
@@ -98,8 +120,9 @@ export class SettingsAccountProfileComponent {
     }
   }
 
-  async onCityPicked(suggestion: LocationSuggestion): Promise<void> {
-    await this.setProfileCity(toPublicCityInfo(suggestion));
+  async onCityConfirmed(event: LocationPickerConfirmedEvent): Promise<void> {
+    this.cityResolvedCurrentArea.set(null);
+    await this.setProfileCity(toPublicCityInfo(event.area));
   }
 
   async onUseSuggestedCity(city: PublicCityInfo): Promise<void> {
@@ -109,8 +132,7 @@ export class SettingsAccountProfileComponent {
   async onUseCurrentCity(): Promise<void> {
     this.isResolvingCurrentCity.set(true);
     try {
-      const area = await this.locationService.resolveCurrentArea();
-      await this.onCityPicked({ id: '', ...area });
+      this.cityResolvedCurrentArea.set(await this.locationService.resolveCurrentArea());
     } catch (err) {
       this.toastService.error(toLocationErrorMessage(err, this.transloco));
     } finally {
@@ -120,15 +142,15 @@ export class SettingsAccountProfileComponent {
 
   private async setProfileCity(city: PublicCityInfo): Promise<void> {
     this.selectedCity.set(city);
+    this.cityModalOpen.set(false);
     await this.saveProfileCity(city);
   }
 
   private async saveProfileCity(profileCity: PublicCityInfo | null): Promise<void> {
-    const profile = this.userService.profile();
-    if (!profile) return;
+    if (!this.userService.profile()) return;
 
     try {
-      await this.userService.updateProfile({ ...profile, profileCity: profileCity ?? undefined });
+      await this.profileStore.saveProfileCity(profileCity);
       this.toastService.success(this.transloco.translate('settings.profileCityUpdated'));
     } catch (err) {
       this.toastService.error(this.errorService.toUserMessage(err));

@@ -10,6 +10,7 @@ import { ButtonComponent, InputComponent, ModalComponent, ToastService } from '@
 import { validateDisplayName } from '../../../domain/user/user-display.validator';
 import { SettingsLayoutComponent } from '../shared/settings-layout/settings-layout';
 import { SettingsAccountProfileComponent } from './settings-account-profile/settings-account-profile';
+import { SettingsProfileStore } from './settings-profile.store';
 
 @Component({
   selector: 'um-settings-account',
@@ -22,12 +23,14 @@ import { SettingsAccountProfileComponent } from './settings-account-profile/sett
     SettingsLayoutComponent,
     TranslocoDirective,
   ],
+  providers: [SettingsProfileStore],
   templateUrl: './settings-account.html',
   styleUrl: './settings-account.scss',
 })
 export class SettingsAccountComponent implements OnInit {
   protected readonly userService = inject(UserService);
   protected readonly authService = inject(AuthService);
+  protected readonly profileStore = inject(SettingsProfileStore);
   private readonly errorService = inject(ErrorService);
   private readonly transloco = inject(TranslocoService);
   private readonly toastService = inject(ToastService);
@@ -86,7 +89,6 @@ export class SettingsAccountComponent implements OnInit {
   // than persisting per keystroke.
   readonly displayNameValue = signal('');
   readonly displayNameTouched = signal(false);
-  readonly isSavingDisplayName = signal(false);
   private profileFieldsInitialized = false;
 
   readonly displayNameError = computed(() => {
@@ -96,7 +98,7 @@ export class SettingsAccountComponent implements OnInit {
 
   readonly saveDisplayNameButtonLabel = computed(() => {
     this.transloco.activeLang();
-    return this.isSavingDisplayName()
+    return this.profileStore.isSavingDisplayName()
       ? this.transloco.translate('settings.saving')
       : this.transloco.translate('settings.saveButton');
   });
@@ -127,21 +129,13 @@ export class SettingsAccountComponent implements OnInit {
     if (!profile) return;
 
     const trimmed = this.displayNameValue().trim();
-    this.isSavingDisplayName.set(true);
     try {
-      // Firestore is the source of truth read everywhere else in the app
-      // (profile pages, seller info on listings); Auth is updated too so
-      // authService.currentUser() — read directly on this page and in the
-      // navbar/dock — doesn't show a stale name until the next full reload.
-      await this.userService.updateProfile({ ...profile, displayName: trimmed });
-      await this.authService.updateDisplayName(trimmed);
+      await this.profileStore.saveDisplayName(trimmed);
       this.displayNameValue.set(trimmed);
       this.displayNameTouched.set(false);
       this.toastService.success(this.transloco.translate('settings.displayNameUpdated'));
     } catch (err) {
       this.toastService.error(this.errorService.toUserMessage(err));
-    } finally {
-      this.isSavingDisplayName.set(false);
     }
   }
 

@@ -1,0 +1,17 @@
+@use 'pkg:@underlayerdev/ui/design-tokens' as tokens;
+
+.settings-account-profile {
+  &__city-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: tokens.$spacing-spacing-3;
+    flex-wrap: wrap;
+
+    &__display {
+      display: flex;
+      align-items: center;
+      gap: tokens.$spacing-spacing-1;
+    }
+  }
+}

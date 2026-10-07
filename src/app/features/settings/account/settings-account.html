@@ -15,7 +15,12 @@
           [error]="!!displayNameError()"
           [errorText]="displayNameError()"
         />
-        <ul-button type="submit" theme="fill-purple" size="md" [disabled]="isSavingDisplayName()">
+        <ul-button
+          type="submit"
+          theme="fill-purple"
+          size="md"
+          [disabled]="profileStore.isSavingDisplayName()"
+        >
           {{ saveDisplayNameButtonLabel() }}
         </ul-button>
       </form>
