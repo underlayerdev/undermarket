@@ -2,7 +2,6 @@ import { Component, computed, inject, input, model, output } from '@angular/core
 import { IconComponent, ListItemComponent, SidebarComponent, SidebarItem } from '@underlayerdev/ui';
 import { Router } from '@angular/router';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
-import { User } from '../../../domain/user/user.model';
 import { AppSidebarItem, PRIVATE_SIDEBAR_ITEMS, PUBLIC_SIDEBAR_ITEMS } from './sidebar-items';
 @Component({
   selector: 'um-sidebar-layout',
@@ -11,7 +10,7 @@ import { AppSidebarItem, PRIVATE_SIDEBAR_ITEMS, PUBLIC_SIDEBAR_ITEMS } from './s
 })
 export class SidebarLayoutComponent {
   readonly sidebarOpen = model(false);
-  readonly currentUser = input<User | null>();
+  readonly isSignedIn = input(false);
   readonly currentUrl = input('');
   readonly logout = output<void>();
   readonly login = output<void>();
@@ -26,7 +25,7 @@ export class SidebarLayoutComponent {
   });
 
   readonly sidebarItems = computed((): AppSidebarItem[] => {
-    const sidebarItems = this.currentUser() ? PRIVATE_SIDEBAR_ITEMS : PUBLIC_SIDEBAR_ITEMS;
+    const sidebarItems = this.isSignedIn() ? PRIVATE_SIDEBAR_ITEMS : PUBLIC_SIDEBAR_ITEMS;
     return sidebarItems.map(({ translationKey, ...item }) => ({
       ...item,
       label: this.translocoService.translate(translationKey),

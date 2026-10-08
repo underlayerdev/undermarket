@@ -17,8 +17,6 @@ function createAuthProviderMock(): AuthProvider & { emitAuthState: (user: User |
     sendPasswordResetEmail: async () => undefined,
     confirmPasswordReset: async () => undefined,
     changePassword: async () => undefined,
-    updateDisplayName: async () => undefined,
-    updatePhotoUrl: async () => undefined,
     deleteAccount: async () => undefined,
     logout: async () => undefined,
     currentUser: () => null,
@@ -84,39 +82,5 @@ describe('AuthService', () => {
     await service.logout();
 
     expect(service.currentUser()).toBeNull();
-  });
-
-  it('should patch currentUser with the new display name after updateDisplayName', async () => {
-    const service = setup();
-    authProviderMock.emitAuthState(testUser);
-    await service.ready;
-    const updateDisplayNameSpy = vi.spyOn(authProviderMock, 'updateDisplayName');
-
-    await service.updateDisplayName('New Name');
-
-    expect(updateDisplayNameSpy).toHaveBeenCalledWith('New Name');
-    expect(service.currentUser()?.displayName).toBe('New Name');
-  });
-
-  it('should do nothing to currentUser when updateDisplayName is called while signed out', async () => {
-    const service = setup();
-    authProviderMock.emitAuthState(null);
-    await service.ready;
-
-    await service.updateDisplayName('New Name');
-
-    expect(service.currentUser()).toBeNull();
-  });
-
-  it('should patch currentUser with the new photo url after updatePhotoUrl', async () => {
-    const service = setup();
-    authProviderMock.emitAuthState(testUser);
-    await service.ready;
-    const updatePhotoUrlSpy = vi.spyOn(authProviderMock, 'updatePhotoUrl');
-
-    await service.updatePhotoUrl('https://example.com/new.jpg');
-
-    expect(updatePhotoUrlSpy).toHaveBeenCalledWith('https://example.com/new.jpg');
-    expect(service.currentUser()?.photoUrl).toBe('https://example.com/new.jpg');
   });
 });

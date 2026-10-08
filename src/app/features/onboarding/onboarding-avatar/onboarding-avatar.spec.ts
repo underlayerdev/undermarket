@@ -1,6 +1,5 @@
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
-import { AuthService } from '../../../application/services/auth.service';
 import { ErrorService } from '../../../application/services/error.service';
 import { UserService } from '../../../application/services/user.service';
 import { mockUser } from '../../../domain/user/user.mock';
@@ -17,7 +16,6 @@ describe('OnboardingAvatarComponent', () => {
   let retryUploadSpy: ReturnType<typeof vi.fn>;
   let navigateByUrlSpy: ReturnType<typeof vi.fn>;
   let updateProfileSpy: ReturnType<typeof vi.fn>;
-  let updatePhotoUrlSpy: ReturnType<typeof vi.fn>;
   let avatarUploadedUrl: string | null;
   let profile: User | null;
 
@@ -28,7 +26,6 @@ describe('OnboardingAvatarComponent', () => {
     retryUploadSpy = vi.fn();
     navigateByUrlSpy = vi.fn().mockResolvedValue(true);
     updateProfileSpy = vi.fn().mockResolvedValue(undefined);
-    updatePhotoUrlSpy = vi.fn().mockResolvedValue(undefined);
 
     TestBed.configureTestingModule({
       imports: [OnboardingAvatarComponent, getTranslocoTestingModule()],
@@ -37,14 +34,6 @@ describe('OnboardingAvatarComponent', () => {
         {
           provide: UserService,
           useValue: { profile: () => profile, updateProfile: updateProfileSpy },
-        },
-        {
-          provide: AuthService,
-          useValue: {
-            currentUser: () => profile,
-            updateDisplayName: vi.fn(),
-            updatePhotoUrl: updatePhotoUrlSpy,
-          },
         },
         { provide: ErrorService, useValue: { toUserMessage: () => 'Something went wrong.' } },
         {
@@ -123,7 +112,7 @@ describe('OnboardingAvatarComponent', () => {
     expect(navigateByUrlSpy).toHaveBeenCalledWith('onboarding/location');
   });
 
-  it('should save the uploaded photo to Firestore and Auth, then advance', async () => {
+  it('should save the uploaded photo to the profile, then advance', async () => {
     avatarUploadedUrl = 'https://res.cloudinary.com/avatar.jpg';
     const { onboardingService } = setup();
 
@@ -133,7 +122,6 @@ describe('OnboardingAvatarComponent', () => {
       ...profile,
       photoUrl: 'https://res.cloudinary.com/avatar.jpg',
     });
-    expect(updatePhotoUrlSpy).toHaveBeenCalledWith('https://res.cloudinary.com/avatar.jpg');
     expect(navigateByUrlSpy).toHaveBeenCalledWith('onboarding/location');
   });
 

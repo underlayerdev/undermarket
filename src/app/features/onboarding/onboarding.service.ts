@@ -2,7 +2,6 @@ import { computed, inject, Service, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import { TranslocoService } from '@jsverse/transloco';
-import { AuthService } from '../../application/services/auth.service';
 import { ErrorService } from '../../application/services/error.service';
 import { UserService } from '../../application/services/user.service';
 import {
@@ -51,7 +50,6 @@ export class OnboardingService {
   private readonly transloco = inject(TranslocoService);
   private readonly router = inject(Router);
   private readonly userService = inject(UserService);
-  private readonly authService = inject(AuthService);
   private readonly errorService = inject(ErrorService);
 
   private readonly stepId = signal<OnboardingStepId>('welcome');
@@ -170,16 +168,6 @@ export class OnboardingService {
     // A whole User, not just the patch — FirestoreUserRepository.update()
     // writes a fixed field set and would blank the rest.
     await this.userService.updateProfile({ ...profile, ...changes });
-
-    // Firebase Auth keeps its own copy of these two and nothing syncs it from
-    // Firestore; the navbar and avatar read AuthService.currentUser(), so they
-    // would show stale values until the next sign-in without this.
-    if (changes.displayName !== undefined) {
-      await this.authService.updateDisplayName(changes.displayName);
-    }
-    if (changes.photoUrl !== undefined) {
-      await this.authService.updatePhotoUrl(changes.photoUrl);
-    }
   }
 
   private async navigateTo(destination: OnboardingDestination): Promise<void> {

@@ -13,7 +13,7 @@ const user = mockUser({
 });
 
 describe('DockLayout', () => {
-  function setup(currentUser: User = user) {
+  function setup(profile: User | null = user) {
     TestBed.configureTestingModule({
       imports: [DockLayout, getTranslocoTestingModule()],
       providers: [
@@ -30,7 +30,7 @@ describe('DockLayout', () => {
     });
 
     const fixture = TestBed.createComponent(DockLayout);
-    fixture.componentRef.setInput('currentUser', currentUser);
+    fixture.componentRef.setInput('profile', profile);
     fixture.detectChanges();
     return fixture;
   }
@@ -53,6 +53,13 @@ describe('DockLayout', () => {
   it('should expose the current user photo as the avatar image', () => {
     const fixture = setup();
     expect(fixture.componentInstance.userImage()).toBe('https://example.com/avatar.png');
+  });
+
+  it('should render without initials or image while the profile is still loading', () => {
+    const fixture = setup(null);
+
+    expect(fixture.componentInstance.avatarInitials()).toBeUndefined();
+    expect(fixture.componentInstance.userImage()).toBeUndefined();
   });
 
   it('should render a dock item per navigation destination', () => {

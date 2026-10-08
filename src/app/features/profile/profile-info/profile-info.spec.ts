@@ -29,6 +29,12 @@ describe('ProfileInfoComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('test@example.com');
   });
 
+  it('should display the @handle', () => {
+    const fixture = setup(mockUser({ username: 'jane.doe' }));
+
+    expect(fixture.nativeElement.textContent).toContain('@jane.doe');
+  });
+
   it('should pass the initials and photo url to the avatar', () => {
     const fixture = setup(mockUser({ photoUrl: 'https://example.com/photo.png' }));
 

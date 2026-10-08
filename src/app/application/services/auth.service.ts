@@ -1,13 +1,14 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { AUTH_PROVIDER } from '../../core/configuration/tokens';
 import type { OAuthProvider } from '../../domain/auth/oauth-provider';
-import type { User } from '../../domain/user/user.model';
+import type { AuthUser } from '../../domain/user/user.model';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly authProvider = inject(AUTH_PROVIDER);
 
-  readonly currentUser = signal<User | null>(null);
+  readonly currentUser = signal<AuthUser | null>(null);
+
 
   /** Resolves once the first auth-state emission (including a session restored from storage) has been applied. Guards should await this before reading currentUser(). */
   readonly ready: Promise<void>;
@@ -51,21 +52,6 @@ export class AuthService {
 
   async changePassword(newPassword: string, currentPassword?: string): Promise<void> {
     await this.authProvider.changePassword(newPassword, currentPassword);
-  }
-
-  // Firebase Auth's own updateProfile() doesn't trigger onAuthStateChange, so
-  // currentUser() is patched locally here rather than waiting for an event
-  // that never comes.
-  async updateDisplayName(displayName: string): Promise<void> {
-    await this.authProvider.updateDisplayName(displayName);
-    this.currentUser.update((user) => (user ? { ...user, displayName } : user));
-  }
-
-  // Same reasoning as updateDisplayName — updateProfile() doesn't trigger
-  // onAuthStateChange either.
-  async updatePhotoUrl(photoUrl: string): Promise<void> {
-    await this.authProvider.updatePhotoUrl(photoUrl);
-    this.currentUser.update((user) => (user ? { ...user, photoUrl } : user));
   }
 
   async deleteAccount(currentPassword?: string): Promise<void> {

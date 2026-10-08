@@ -27,14 +27,14 @@ describe('NavbarLayoutComponent', () => {
     expect(fixture.componentInstance).toBeTruthy();
   });
 
-  it('should derive avatar initials from the current user display name', () => {
+  it('should derive avatar initials from the profile display name', () => {
     const fixture = TestBed.createComponent(NavbarLayoutComponent);
-    fixture.componentRef.setInput('currentUser', user);
+    fixture.componentRef.setInput('profile', user);
 
     expect(fixture.componentInstance.avatarInitials()).toBe('L');
   });
 
-  it('should not render notifications or the user menu when there is no current user', () => {
+  it('should not render notifications or the user menu when signed out', () => {
     const fixture = TestBed.createComponent(NavbarLayoutComponent);
     fixture.detectChanges();
 
@@ -42,13 +42,24 @@ describe('NavbarLayoutComponent', () => {
     expect(fixture.nativeElement.querySelector('um-user-menu')).toBeNull();
   });
 
-  it('should render notifications and the user menu when there is a current user', () => {
+  it('should render notifications and the user menu for a signed-in user', () => {
     const fixture = TestBed.createComponent(NavbarLayoutComponent);
-    fixture.componentRef.setInput('currentUser', user);
+    fixture.componentRef.setInput('isSignedIn', true);
+    fixture.componentRef.setInput('profile', user);
     fixture.detectChanges();
 
     expect(fixture.nativeElement.querySelector('um-notifications')).toBeTruthy();
     expect(fixture.nativeElement.querySelector('um-user-menu')).toBeTruthy();
+  });
+
+  it('should keep the signed-in navigation, without initials, while the profile is still loading', () => {
+    const fixture = TestBed.createComponent(NavbarLayoutComponent);
+    fixture.componentRef.setInput('isSignedIn', true);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('um-user-menu')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('[routerLink="/login"]')).toBeNull();
+    expect(fixture.componentInstance.avatarInitials()).toBeUndefined();
   });
 
   it('should emit toggleSidebar when the navbar requests it', () => {

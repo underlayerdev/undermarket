@@ -1,6 +1,5 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { AuthService } from '../../application/services/auth.service';
 import { ErrorService } from '../../application/services/error.service';
 import { UserService } from '../../application/services/user.service';
 import { mockUser } from '../../domain/user/user.mock';
@@ -17,14 +16,6 @@ describe('OnboardingShellComponent', () => {
       providers: [
         provideRouter([]),
         { provide: UserService, useValue: { profile: () => profile, updateProfile: vi.fn() } },
-        {
-          provide: AuthService,
-          useValue: {
-            currentUser: () => profile,
-            updateDisplayName: vi.fn(),
-            updatePhotoUrl: vi.fn(),
-          },
-        },
         { provide: ErrorService, useValue: { toUserMessage: () => 'Something went wrong.' } },
       ],
     });

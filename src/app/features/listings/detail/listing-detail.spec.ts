@@ -57,8 +57,6 @@ function createAuthProviderMock(): AuthProvider & { emitAuthState: (user: User |
     sendPasswordResetEmail: async () => undefined,
     confirmPasswordReset: async () => undefined,
     changePassword: async () => undefined,
-    updateDisplayName: async () => undefined,
-    updatePhotoUrl: async () => undefined,
     deleteAccount: async () => undefined,
     logout: async () => undefined,
     currentUser: () => null,
@@ -324,6 +322,23 @@ describe('ListingDetailComponent', () => {
       fixture.detectChanges();
 
       expect(fixture.componentInstance.conditionLabel()).toBeNull();
+    });
+  });
+
+  describe('seller block', () => {
+    async function renderSeller(seller: ReturnType<typeof mockUser>): Promise<HTMLAnchorElement> {
+      const { fixture } = await setup({ getOwnerById: vi.fn(async () => seller) });
+      fixture.detectChanges();
+      await flushAsync();
+      fixture.detectChanges();
+      return fixture.nativeElement.querySelector('.listing-detail__seller');
+    }
+
+    it('should link to the /u/<handle> profile and show the handle', async () => {
+      const link = await renderSeller(mockUser({ id: 'owner-1', username: 'owner.person' }));
+
+      expect(link.getAttribute('href')).toBe('/u/owner.person');
+      expect(link.textContent).toContain('@owner.person');
     });
   });
 

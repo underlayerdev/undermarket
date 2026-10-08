@@ -1,11 +1,13 @@
+import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, provideRouter, Router } from '@angular/router';
 import { Subject } from 'rxjs';
 import { AppLayoutComponent } from './app-layout';
 import { AuthService } from '../../application/services/auth.service';
+import { UserService } from '../../application/services/user.service';
 import { NOTIFICATION_PROVIDER } from '../../core/configuration/tokens';
 import { mockUser } from '../../domain/user/user.mock';
-import type { User } from '../../domain/user/user.model';
+import type { AuthUser, User } from '../../domain/user/user.model';
 import { getTranslocoTestingModule } from '../../../testing/transloco-testing';
 
 const user = mockUser();
@@ -24,6 +26,7 @@ describe('AppLayoutComponent', () => {
       imports: [AppLayoutComponent, getTranslocoTestingModule()],
       providers: [
         { provide: AuthService, useValue: { currentUser: () => null, logout: logoutSpy } },
+        { provide: UserService, useValue: { profile: signal<User | null>(null) } },
         {
           provide: Router,
           useValue: {
@@ -81,13 +84,14 @@ describe('AppLayoutComponent', () => {
     // Needs a real Router (routerLink/routerLinkActive on every ul-dock-item
     // call into it during rendering) rather than the plain-object mock the
     // tests above use just to spy on navigate/navigateByUrl calls.
-    function setupRendered(currentUser: User | null) {
+    function setupRendered(currentUser: AuthUser | null, profile: User | null = null) {
       TestBed.resetTestingModule();
       TestBed.configureTestingModule({
         imports: [AppLayoutComponent, getTranslocoTestingModule()],
         providers: [
           provideRouter([]),
           { provide: AuthService, useValue: { currentUser: () => currentUser, logout: logoutSpy } },
+          { provide: UserService, useValue: { profile: signal(profile) } },
           { provide: NOTIFICATION_PROVIDER, useValue: { observe: () => () => {} } },
         ],
       });
@@ -104,9 +108,22 @@ describe('AppLayoutComponent', () => {
     });
 
     it('should render the dock for a signed-in user', () => {
-      const fixture = setupRendered(user);
+      const fixture = setupRendered({ id: user.id, providerId: user.providerId }, user);
 
       expect(fixture.nativeElement.querySelector('um-dock-layout')).toBeTruthy();
+    });
+
+    it('should already render the signed-in layout while the profile is still loading', () => {
+      const fixture = setupRendered({ id: user.id, providerId: user.providerId });
+
+      expect(fixture.nativeElement.querySelector('um-dock-layout')).toBeTruthy();
+      expect(fixture.nativeElement.querySelector('um-user-menu')).toBeTruthy();
+    });
+
+    it('should hand the loaded profile to the navbar for the avatar', () => {
+      const fixture = setupRendered({ id: user.id, providerId: user.providerId }, user);
+
+      expect(fixture.componentInstance.profile()).toBe(user);
     });
   });
 });

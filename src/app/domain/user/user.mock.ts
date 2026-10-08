@@ -9,6 +9,7 @@ export function mockUser(overrides: Partial<User> = {}): User {
     providerId: 'password',
     createdAt: new Date(),
     onboarded: true,
+    username: 'underseller',
     ...overrides,
   };
 }

@@ -63,6 +63,15 @@ export const routes: Routes = [
           ),
       },
       {
+        // Same page, keyed by the user's unique @handle — the shareable
+        // link. Old handles redirect to the current one inside the component.
+        path: 'u/:username',
+        loadComponent: () =>
+          import('./features/profile/public-profile/public-profile').then(
+            (m) => m.PublicProfileComponent,
+          ),
+      },
+      {
         path: 'settings',
         canActivate: [authGuard],
         loadChildren: () =>

@@ -42,10 +42,13 @@ import { UserMenuComponent } from '../user-menu/user-menu';
 })
 export class NavbarLayoutComponent {
   readonly sidebarOpen = input(false);
-  readonly currentUser = input<User | null>();
+  readonly isSignedIn = input(false);
+  // Null while a signed-in user's profile is still loading — the avatar
+  // simply renders without initials/photo until it arrives.
+  readonly profile = input<User | null>(null);
   readonly toggleSidebar = output();
   readonly submitSearch = output<string>();
 
-  readonly avatarInitials = computed(() => getInitials(this.currentUser()));
+  readonly avatarInitials = computed(() => getInitials(this.profile()));
   readonly searchQuery = signal('');
 }

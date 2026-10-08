@@ -6,7 +6,7 @@
   [(open)]="sidebarOpen"
   (itemSelected)="onItemSelected($event)"
 >
-  @if (!!currentUser()) {
+  @if (isSignedIn()) {
     <ul-list-item ul-sidebar-footer [hideFocusOutline]="true" (click)="onSignOut()">
       <ng-container ul-list-item-before-label>
         <ul-icon size="5" icon="log_out" />

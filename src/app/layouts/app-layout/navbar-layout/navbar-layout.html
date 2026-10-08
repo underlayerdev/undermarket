@@ -31,11 +31,11 @@
     >
       <ul-icon icon="search" size="6" />
     </ul-button>
-    @if (!!currentUser()) {
+    @if (isSignedIn()) {
       <um-notifications class="app-navbar__desktop-only" />
       <um-user-menu
         [avatarInitials]="avatarInitials()"
-        [avatarSrc]="currentUser()?.photoUrl"
+        [avatarSrc]="profile()?.photoUrl"
         class="app-navbar__desktop-only"
       />
     } @else {

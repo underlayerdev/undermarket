@@ -33,7 +33,6 @@ describe('SettingsAccountComponent', () => {
           useValue: {
             currentUser: () => currentUser,
             changePassword: changePasswordSpy,
-            updateDisplayName: vi.fn().mockResolvedValue(undefined),
             deleteAccount: deleteAccountSpy,
             logout: logoutSpy,
           },

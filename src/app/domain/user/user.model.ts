@@ -45,4 +45,27 @@ export interface User {
    * readable. Set/cleared together as one toggle in settings.
    */
   profileCity?: PublicCityInfo;
+  /**
+   * Unique public @handle, stored lowercase (see normalizeUsername()).
+   * Server-owned: assigned by onUserCreate and only ever changed through the
+   * claimUsername callable, which holds the `usernames/{username}` index
+   * that makes it unique — firestore.rules rejects client writes to it.
+   * Always present on a stored profile; Firebase Auth knows nothing about
+   * it, which is why AuthProvider returns AuthUser instead.
+   */
+  username: string;
+  /**
+   * When the user last picked a handle themselves — drives the change
+   * cooldown. Absent until they do: the handle generated at sign-up isn't a
+   * choice, so changing it for the first time is never rate-limited.
+   */
+  usernameChangedAt?: Date;
 }
+
+/**
+ * What the session itself knows: who is signed in and how. Everything the UI
+ * displays about them (name, photo, email, handle…) comes from the Firestore
+ * profile, `User`, via UserService.profile() — Auth is deliberately not a
+ * second copy of it. Every `User` is an `AuthUser`.
+ */
+export type AuthUser = Pick<User, 'id' | 'providerId'>;

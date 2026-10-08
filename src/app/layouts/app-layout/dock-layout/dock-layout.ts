@@ -26,7 +26,8 @@ import { getInitials } from '../../../domain/user/user-display';
   ],
 })
 export class DockLayout {
-  readonly currentUser = input.required<User>();
-  readonly avatarInitials = computed(() => getInitials(this.currentUser()));
-  readonly userImage = computed(() => this.currentUser()?.photoUrl);
+  // Null while the profile is still loading — see NavbarLayoutComponent.
+  readonly profile = input<User | null>(null);
+  readonly avatarInitials = computed(() => getInitials(this.profile()));
+  readonly userImage = computed(() => this.profile()?.photoUrl);
 }

@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { OnboardingAvatarService } from './onboarding-avatar.service';
-import { AuthService } from '../../../application/services/auth.service';
+import { UserService } from '../../../application/services/user.service';
 import { IMAGE_STORAGE } from '../../../core/configuration/tokens';
 import { mockUser } from '../../../domain/user/user.mock';
 import { getTranslocoTestingModule } from '../../../../testing/transloco-testing';
@@ -14,7 +14,7 @@ describe('OnboardingAvatarService', () => {
     TestBed.configureTestingModule({
       imports: [getTranslocoTestingModule()],
       providers: [
-        { provide: AuthService, useValue: { currentUser: () => mockUser({ photoUrl }) } },
+        { provide: UserService, useValue: { profile: () => mockUser({ photoUrl }) } },
         { provide: IMAGE_STORAGE, useValue: { upload: uploadSpy } },
       ],
     });
@@ -28,7 +28,7 @@ describe('OnboardingAvatarService', () => {
     return { target: input } as unknown as Event;
   }
 
-  it('should seed the preview from the current Auth photo, if any', () => {
+  it('should seed the preview from the profile photo, if any', () => {
     const service = setup('https://example.com/existing.jpg');
 
     expect(service.avatarPreviewUrl()).toBe('https://example.com/existing.jpg');

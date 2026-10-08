@@ -1,13 +1,12 @@
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { SidebarLayoutComponent } from './sidebar-layout';
-import type { User } from '../../../domain/user/user.model';
 import { getTranslocoTestingModule } from '../../../../testing/transloco-testing';
 
 describe('SidebarLayoutComponent', () => {
   let navigateByUrlSpy: ReturnType<typeof vi.fn>;
 
-  function setup(currentUser: User | null = null) {
+  function setup(isSignedIn = false) {
     navigateByUrlSpy = vi.fn().mockResolvedValue(true);
 
     TestBed.configureTestingModule({
@@ -16,7 +15,7 @@ describe('SidebarLayoutComponent', () => {
     });
 
     const fixture = TestBed.createComponent(SidebarLayoutComponent);
-    fixture.componentRef.setInput('currentUser', currentUser);
+    fixture.componentRef.setInput('isSignedIn', isSignedIn);
     fixture.detectChanges();
     return fixture;
   }
@@ -27,13 +26,13 @@ describe('SidebarLayoutComponent', () => {
   });
 
   it('should offer only Home for a signed-out visitor', () => {
-    const fixture = setup(null);
+    const fixture = setup(false);
 
     expect(fixture.componentInstance.sidebarItems().map((item) => item.label)).toEqual(['Home']);
   });
 
   it('should offer Home and Settings for a signed-in user', () => {
-    const fixture = setup({ id: 'user-1' } as User);
+    const fixture = setup(true);
 
     expect(fixture.componentInstance.sidebarItems().map((item) => item.label)).toEqual([
       'Home',
@@ -42,14 +41,14 @@ describe('SidebarLayoutComponent', () => {
   });
 
   it('should select the item matching the current url', () => {
-    const fixture = setup({ id: 'user-1' } as User);
+    const fixture = setup(true);
     fixture.componentRef.setInput('currentUrl', '/settings/account');
 
     expect(fixture.componentInstance.selectedIndex()).toBe(1);
   });
 
   it('should default to the first item for an unrecognized url', () => {
-    const fixture = setup({ id: 'user-1' } as User);
+    const fixture = setup(true);
     fixture.componentRef.setInput('currentUrl', '/discover');
 
     expect(fixture.componentInstance.selectedIndex()).toBe(0);

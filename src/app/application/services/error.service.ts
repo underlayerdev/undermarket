@@ -8,6 +8,11 @@ const ERROR_KEYS: Record<string, string> = {
   'auth/invalid-credential': 'errors.invalidCredential',
   'auth/weak-password': 'errors.weakPassword',
   'auth/invalid-email': 'auth.emailInvalid',
+  // Only the claimUsername callable throws these today — revisit the
+  // wording if another callable starts using the same codes.
+  'functions/already-exists': 'errors.usernameTaken',
+  'functions/invalid-argument': 'errors.usernameInvalid',
+  'functions/failed-precondition': 'errors.usernameCooldown',
   'permission-denied': 'errors.permissionDenied',
   'not-found': 'errors.notFound',
 };

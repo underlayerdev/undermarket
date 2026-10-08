@@ -12,6 +12,7 @@ import type { GeocodingProvider } from '../../domain/location/geocoding.provider
 import type { GeolocationProvider } from '../../domain/location/geolocation.provider';
 import type { SearchLocationRepository } from '../../domain/location/search-location.repository';
 import type { UserRepository } from '../../domain/user/user.repository';
+import type { UsernameProvider } from '../../domain/user/username.provider';
 import type { ListingRepository } from '../../domain/listing/listing.repository';
 
 export const FIREBASE_APP = new InjectionToken<FirebaseApp>('FIREBASE_APP');
@@ -20,6 +21,7 @@ export const FIREBASE_FIRESTORE = new InjectionToken<Firestore>('FIREBASE_FIREST
 export const FIREBASE_FUNCTIONS = new InjectionToken<Functions>('FIREBASE_FUNCTIONS');
 export const AUTH_PROVIDER = new InjectionToken<AuthProvider>('AUTH_PROVIDER');
 export const USER_REPOSITORY = new InjectionToken<UserRepository>('USER_REPOSITORY');
+export const USERNAME_PROVIDER = new InjectionToken<UsernameProvider>('USERNAME_PROVIDER');
 export const LISTING_REPOSITORY = new InjectionToken<ListingRepository>('LISTING_REPOSITORY');
 export const CATEGORY_NODE_REPOSITORY = new InjectionToken<CategoryNodeRepository>(
   'CATEGORY_NODE_REPOSITORY',

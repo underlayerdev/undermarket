@@ -3,7 +3,6 @@ import { TestBed } from '@angular/core/testing';
 import { ToastService } from '@underlayerdev/ui';
 import { SettingsAccountDisplayNameComponent } from './settings-account-display-name';
 import { SettingsAccountStore } from '../settings-account.store';
-import { AuthService } from '../../../../application/services/auth.service';
 import { UserService } from '../../../../application/services/user.service';
 import { getTranslocoTestingModule } from '../../../../../testing/transloco-testing';
 import { mockUser } from '../../../../domain/user/user.mock';
@@ -11,19 +10,16 @@ import type { User } from '../../../../domain/user/user.model';
 
 describe('SettingsAccountDisplayNameComponent', () => {
   let updateProfileSpy: ReturnType<typeof vi.fn>;
-  let updateDisplayNameSpy: ReturnType<typeof vi.fn>;
 
   function setup(initialProfile: User | null = mockUser()) {
     const profile = signal<User | null>(initialProfile);
     updateProfileSpy = vi.fn(async (user: User) => profile.set(user));
-    updateDisplayNameSpy = vi.fn().mockResolvedValue(undefined);
 
     TestBed.configureTestingModule({
       imports: [SettingsAccountDisplayNameComponent, getTranslocoTestingModule()],
       providers: [
         SettingsAccountStore,
         { provide: UserService, useValue: { profile, updateProfile: updateProfileSpy } },
-        { provide: AuthService, useValue: { updateDisplayName: updateDisplayNameSpy } },
       ],
     });
 
@@ -59,7 +55,6 @@ describe('SettingsAccountDisplayNameComponent', () => {
 
     expect(component.displayNameError()).toBe('Display name is required.');
     expect(updateProfileSpy).not.toHaveBeenCalled();
-    expect(updateDisplayNameSpy).not.toHaveBeenCalled();
   });
 
   it('should reject a display name under the min length', async () => {
@@ -82,7 +77,7 @@ describe('SettingsAccountDisplayNameComponent', () => {
     expect(updateProfileSpy).not.toHaveBeenCalled();
   });
 
-  it('should save the trimmed display name to both Firestore and Firebase Auth', async () => {
+  it('should save the trimmed display name to the profile', async () => {
     const { component } = setup(mockUser({ id: 'user-1', displayName: 'Old Name' }));
     component.displayNameValue.set('  New Name  ');
 
@@ -91,7 +86,6 @@ describe('SettingsAccountDisplayNameComponent', () => {
     expect(updateProfileSpy).toHaveBeenCalledWith(
       expect.objectContaining({ id: 'user-1', displayName: 'New Name' }),
     );
-    expect(updateDisplayNameSpy).toHaveBeenCalledWith('New Name');
     expect(component.displayNameValue()).toBe('New Name');
     expect(component.displayNameTouched()).toBe(false);
   });

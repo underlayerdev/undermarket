@@ -1,0 +1,30 @@
+<div class="settings__panel ul-mt-6" *transloco="let t">
+  <h2 class="ul-typography-headline-s-extrabold ul-mb-4">
+    {{ t('settings.usernameLabel') }}
+  </h2>
+  <form
+    class="settings-account__form ul-gap-4"
+    (submit)="$event.preventDefault(); onSaveUsername()"
+  >
+    <ul-input
+      [label]="t('settings.usernameLabel')"
+      [required]="true"
+      [maxLength]="maxLength"
+      autocomplete="username"
+      [disabled]="!!nextChangeAt()"
+      [value]="usernameValue()"
+      (valueChange)="onUsernameInput($event)"
+      [helperText]="usernameHelperText()"
+      [error]="!!usernameError()"
+      [errorText]="usernameError()"
+    />
+    @if (nextChangeAt(); as nextChange) {
+      <p class="ul-typography-body-s-regular ul-text-secondary">
+        {{ t('settings.usernameCooldown', { date: (nextChange | localeDate) }) }}
+      </p>
+    }
+    <ul-button type="submit" theme="fill-purple" size="md" [disabled]="!canSave()">
+      {{ saveUsernameButtonLabel() }}
+    </ul-button>
+  </form>
+</div>

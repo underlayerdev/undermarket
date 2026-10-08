@@ -1,6 +1,5 @@
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
-import { AuthService } from '../../../application/services/auth.service';
 import { ErrorService } from '../../../application/services/error.service';
 import { UserService } from '../../../application/services/user.service';
 import { mockUser } from '../../../domain/user/user.mock';
@@ -13,14 +12,12 @@ describe('OnboardingNameComponent', () => {
   let profile: User | null;
   let navigateByUrlSpy: ReturnType<typeof vi.fn>;
   let updateProfileSpy: ReturnType<typeof vi.fn>;
-  let updateDisplayNameSpy: ReturnType<typeof vi.fn>;
 
   // The real OnboardingService, since what this step does on Continue is the
   // registration it hands over — mocking that away would test nothing.
   function setup() {
     navigateByUrlSpy = vi.fn().mockResolvedValue(true);
     updateProfileSpy = vi.fn().mockResolvedValue(undefined);
-    updateDisplayNameSpy = vi.fn().mockResolvedValue(undefined);
 
     TestBed.configureTestingModule({
       imports: [OnboardingNameComponent, getTranslocoTestingModule()],
@@ -29,14 +26,6 @@ describe('OnboardingNameComponent', () => {
         {
           provide: UserService,
           useValue: { profile: () => profile, updateProfile: updateProfileSpy },
-        },
-        {
-          provide: AuthService,
-          useValue: {
-            currentUser: () => profile,
-            updateDisplayName: updateDisplayNameSpy,
-            updatePhotoUrl: vi.fn(),
-          },
         },
         { provide: ErrorService, useValue: { toUserMessage: () => 'Something went wrong.' } },
       ],
@@ -61,6 +50,13 @@ describe('OnboardingNameComponent', () => {
 
     expect(onboardingService.step().id).toBe('name');
     expect(onboardingService.stepperPosition()).toBe(1);
+  });
+
+  it('should tell the user which handle they were given', () => {
+    profile = mockUser({ id: 'user-1', displayName: '', username: 'jane1234' });
+    const { fixture } = setup();
+
+    expect(fixture.nativeElement.textContent).toContain('Your username is @jane1234.');
   });
 
   it('should offer no back button — it is the first step of the flow', () => {
@@ -106,7 +102,6 @@ describe('OnboardingNameComponent', () => {
     await onboardingService.continue();
 
     expect(updateProfileSpy).toHaveBeenCalledWith({ ...profile, displayName: 'Jane Doe' });
-    expect(updateDisplayNameSpy).toHaveBeenCalledWith('Jane Doe');
     expect(navigateByUrlSpy).toHaveBeenCalledWith('onboarding/photo');
   });
 

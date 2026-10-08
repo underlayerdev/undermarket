@@ -6,3 +6,5 @@ export { getMercadoLibreStatus } from './mercado-libre/get-status';
 export { importMercadoLibreListings } from './mercado-libre/import-listings';
 export { onUserCreate } from './users/on-create';
 export { onUserProfileUpdated } from './users/on-update';
+export { onUserDeleted } from './users/on-delete';
+export { claimUsername } from './users/claim-username';

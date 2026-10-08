@@ -1,7 +1,6 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { SettingsAccountStore } from './settings-account.store';
-import { AuthService } from '../../../application/services/auth.service';
 import { UserService } from '../../../application/services/user.service';
 import { mockUser } from '../../../domain/user/user.mock';
 import type { User } from '../../../domain/user/user.model';
@@ -20,13 +19,24 @@ describe('SettingsAccountStore', () => {
     const updateProfileSpy = vi.fn(async (user: User) => {
       profile.set(user);
     });
-    const updateDisplayNameSpy = vi.fn().mockResolvedValue(undefined);
+    const changeUsernameSpy = vi.fn(async (username: string) => {
+      const current = profile();
+      if (current) profile.set({ ...current, username });
+    });
+    const isUsernameAvailableSpy = vi.fn().mockResolvedValue(true);
 
     TestBed.configureTestingModule({
       providers: [
         SettingsAccountStore,
-        { provide: UserService, useValue: { profile, updateProfile: updateProfileSpy } },
-        { provide: AuthService, useValue: { updateDisplayName: updateDisplayNameSpy } },
+        {
+          provide: UserService,
+          useValue: {
+            profile,
+            updateProfile: updateProfileSpy,
+            changeUsername: changeUsernameSpy,
+            isUsernameAvailable: isUsernameAvailableSpy,
+          },
+        },
       ],
     });
 
@@ -34,21 +44,19 @@ describe('SettingsAccountStore', () => {
       store: TestBed.inject(SettingsAccountStore),
       profile,
       updateProfileSpy,
-      updateDisplayNameSpy,
+      changeUsernameSpy,
+      isUsernameAvailableSpy,
     };
   }
 
-  it('should save a display name onto the current profile and update Auth too', async () => {
-    const { store, profile, updateProfileSpy, updateDisplayNameSpy } = setup(
-      mockUser({ displayName: 'Old Name' }),
-    );
+  it('should save a display name onto the current profile', async () => {
+    const { store, profile, updateProfileSpy } = setup(mockUser({ displayName: 'Old Name' }));
 
     await store.saveDisplayName('New Name');
 
     expect(updateProfileSpy).toHaveBeenCalledWith(
       expect.objectContaining({ displayName: 'New Name' }),
     );
-    expect(updateDisplayNameSpy).toHaveBeenCalledWith('New Name');
     expect(profile()?.displayName).toBe('New Name');
   });
 
@@ -170,5 +178,119 @@ describe('SettingsAccountStore', () => {
     expect(calls[1]).toEqual(
       expect.objectContaining({ displayName: 'New Name', profileCity: city }),
     );
+  });
+
+  describe('saveUsername', () => {
+    it('should claim the handle and flag isSavingUsername while in flight', async () => {
+      const { store, changeUsernameSpy } = setup();
+      const gate = deferred<void>();
+      changeUsernameSpy.mockImplementationOnce(() => gate.promise);
+
+      const save = store.saveUsername('jane.doe');
+      await Promise.resolve();
+      expect(store.isSavingUsername()).toBe(true);
+
+      gate.resolve();
+      await save;
+
+      expect(changeUsernameSpy).toHaveBeenCalledWith('jane.doe');
+      expect(store.isSavingUsername()).toBe(false);
+    });
+
+    it('should not let an earlier display-name save restore the old handle', async () => {
+      const { store, profile, updateProfileSpy } = setup(mockUser({ username: 'old.handle' }));
+      const gate = deferred<void>();
+      updateProfileSpy.mockImplementationOnce(async (user: User) => {
+        await gate.promise;
+        profile.set(user);
+      });
+
+      const displayNameSave = store.saveDisplayName('New Name');
+      const usernameSave = store.saveUsername('new.handle');
+      gate.resolve();
+      await displayNameSave;
+      await usernameSave;
+
+      expect(profile()).toEqual(
+        expect.objectContaining({ displayName: 'New Name', username: 'new.handle' }),
+      );
+    });
+
+    it('should rethrow a failed claim', async () => {
+      const { store, changeUsernameSpy } = setup();
+      changeUsernameSpy.mockRejectedValueOnce({ code: 'functions/already-exists' });
+
+      await expect(store.saveUsername('taken')).rejects.toEqual({
+        code: 'functions/already-exists',
+      });
+    });
+  });
+
+  describe('checkUsernameAvailability', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    async function check(store: SettingsAccountStore, username: string): Promise<void> {
+      store.checkUsernameAvailability(username);
+      await vi.advanceTimersByTimeAsync(400);
+    }
+
+    it('should go checking → available after the debounce', async () => {
+      const { store, isUsernameAvailableSpy } = setup(mockUser({ username: 'old.handle' }));
+
+      store.checkUsernameAvailability('jane.doe');
+      expect(store.usernameAvailability()).toBe('checking');
+      await vi.advanceTimersByTimeAsync(400);
+
+      expect(isUsernameAvailableSpy).toHaveBeenCalledWith('jane.doe');
+      expect(store.usernameAvailability()).toBe('available');
+    });
+
+    it('should report a taken handle', async () => {
+      const { store, isUsernameAvailableSpy } = setup(mockUser({ username: 'old.handle' }));
+      isUsernameAvailableSpy.mockResolvedValue(false);
+
+      await check(store, 'jane.doe');
+
+      expect(store.usernameAvailability()).toBe('taken');
+    });
+
+    it('should only look up the last value typed within the debounce window', async () => {
+      const { store, isUsernameAvailableSpy } = setup(mockUser({ username: 'old.handle' }));
+
+      store.checkUsernameAvailability('jan');
+      store.checkUsernameAvailability('jane');
+      await vi.advanceTimersByTimeAsync(400);
+
+      expect(isUsernameAvailableSpy).toHaveBeenCalledTimes(1);
+      expect(isUsernameAvailableSpy).toHaveBeenCalledWith('jane');
+    });
+
+    it.each([
+      ['unchanged', 'old.handle'],
+      ['badly formatted', 'a..b'],
+      ['reserved', 'admin'],
+    ])('should stay idle without a lookup for a %s handle', async (_label, username) => {
+      const { store, isUsernameAvailableSpy } = setup(mockUser({ username: 'old.handle' }));
+
+      await check(store, username);
+
+      expect(store.usernameAvailability()).toBe('idle');
+      expect(isUsernameAvailableSpy).not.toHaveBeenCalled();
+    });
+
+    it('should fall back to idle when the lookup fails', async () => {
+      const { store, isUsernameAvailableSpy } = setup(mockUser({ username: 'old.handle' }));
+      isUsernameAvailableSpy.mockRejectedValue(new Error('offline'));
+
+      await check(store, 'jane.doe');
+
+      expect(store.usernameAvailability()).toBe('idle');
+    });
   });
 });

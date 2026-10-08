@@ -16,4 +16,7 @@
     [errorText]="displayNameError()"
     (inputBlur)="markTouched()"
   />
+  <p class="ul-typography-body-s-regular ul-text-secondary">
+    {{ t('onboarding.name.usernameHint', { username: username() }) }}
+  </p>
 </ng-container>

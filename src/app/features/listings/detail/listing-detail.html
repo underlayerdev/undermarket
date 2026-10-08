@@ -49,11 +49,14 @@
               </p>
             }
             @if (store.owner(); as seller) {
-              <a [routerLink]="['/profile', seller.id]" class="listing-detail__seller ul-gap-3">
+              <a [routerLink]="['/u', seller.username]" class="listing-detail__seller ul-gap-3">
                 <ul-avatar [initials]="getInitials(seller)" [src]="seller.photoUrl" size="sm" />
                 <div>
                   <p class="ul-typography-body-m-extrabold ul-text-primary">
                     {{ t('listingDetail.soldBy', { value: seller.displayName }) }}
+                  </p>
+                  <p class="ul-typography-caption-l-regular ul-text-secondary">
+                    &#64;{{ seller.username }}
                   </p>
                   @if (seller.profileCity; as city) {
                     <p class="ul-typography-caption-l-regular ul-text-secondary">

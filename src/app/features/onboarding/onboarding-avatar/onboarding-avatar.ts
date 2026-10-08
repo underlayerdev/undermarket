@@ -1,7 +1,6 @@
 import { Component, computed, inject } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { AvatarComponent, ButtonComponent, ImageCropperComponent } from '@underlayerdev/ui';
-import { AuthService } from '../../../application/services/auth.service';
 import { UserService } from '../../../application/services/user.service';
 import { OnboardingService } from '../onboarding.service';
 import { OnboardingAvatarService } from './onboarding-avatar.service';
@@ -16,15 +15,13 @@ import { OnboardingAvatarService } from './onboarding-avatar.service';
 })
 export class OnboardingAvatarComponent {
   private readonly userService = inject(UserService);
-  private readonly authService = inject(AuthService);
   readonly onboardingAvatarService = inject(OnboardingAvatarService);
 
   // Placeholder for an avatar with no image yet. The name step persisted the
   // display name before this step could be reached, so it's read back from the
   // profile rather than held in a service spanning both steps.
   readonly initials = computed(() => {
-    const displayName =
-      this.userService.profile()?.displayName ?? this.authService.currentUser()?.displayName ?? '';
+    const displayName = this.userService.profile()?.displayName ?? '';
     return displayName.trim().charAt(0).toUpperCase() || undefined;
   });
 

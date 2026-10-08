@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { Location } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { PublicProfileComponent } from './public-profile';
 import { AuthService } from '../../../application/services/auth.service';
@@ -12,14 +13,22 @@ function flushAsync(): Promise<void> {
 
 describe('PublicProfileComponent', () => {
   let getByIdSpy: ReturnType<typeof vi.fn>;
+  let getByUsernameSpy: ReturnType<typeof vi.fn>;
   let navigateByUrlSpy: ReturnType<typeof vi.fn>;
+  let replaceStateSpy: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     getByIdSpy = vi.fn();
+    getByUsernameSpy = vi.fn();
     navigateByUrlSpy = vi.fn().mockResolvedValue(true);
+    replaceStateSpy = vi.fn();
   });
 
-  function setup(currentUser: { id: string } | null, userId = 'other-user') {
+  function setup(
+    currentUser: { id: string } | null,
+    userId = 'other-user',
+    inputName: 'userId' | 'username' = 'userId',
+  ) {
     TestBed.configureTestingModule({
       imports: [PublicProfileComponent, getTranslocoTestingModule()],
       providers: [
@@ -30,7 +39,11 @@ describe('PublicProfileComponent', () => {
             ready: Promise.resolve(),
           },
         },
-        { provide: USER_REPOSITORY, useValue: { getById: getByIdSpy } },
+        {
+          provide: USER_REPOSITORY,
+          useValue: { getById: getByIdSpy, getByUsername: getByUsernameSpy },
+        },
+        { provide: Location, useValue: { replaceState: replaceStateSpy } },
         {
           provide: LISTING_REPOSITORY,
           useValue: { getPublicByOwner: vi.fn().mockResolvedValue([]) },
@@ -41,7 +54,7 @@ describe('PublicProfileComponent', () => {
     });
 
     const fixture = TestBed.createComponent(PublicProfileComponent);
-    fixture.componentRef.setInput('userId', userId);
+    fixture.componentRef.setInput(inputName, userId);
     fixture.detectChanges();
     return fixture;
   }
@@ -99,5 +112,45 @@ describe('PublicProfileComponent', () => {
 
     expect(navigateByUrlSpy).not.toHaveBeenCalled();
     expect(fixture.componentInstance.profileUser()).not.toBeNull();
+  });
+
+  describe('via /u/:username', () => {
+    it('should resolve the handle (normalized) and show its owner', async () => {
+      getByUsernameSpy.mockResolvedValue(
+        mockUser({ id: 'other-user', username: 'jane.doe', displayName: 'Jane Seller' }),
+      );
+      const fixture = setup(null, 'Jane.Doe', 'username');
+      await flushAsync();
+
+      expect(getByUsernameSpy).toHaveBeenCalledWith('jane.doe');
+      expect(getByIdSpy).not.toHaveBeenCalled();
+      expect(fixture.componentInstance.profileUser()?.displayName).toBe('Jane Seller');
+      expect(replaceStateSpy).not.toHaveBeenCalled();
+    });
+
+    it('should show the profile under its current handle when an old one was used', async () => {
+      getByUsernameSpy.mockResolvedValue(mockUser({ id: 'other-user', username: 'jane.new' }));
+      const fixture = setup(null, 'jane.old', 'username');
+      await flushAsync();
+
+      expect(replaceStateSpy).toHaveBeenCalledWith('/u/jane.new');
+      expect(fixture.componentInstance.profileUser()?.username).toBe('jane.new');
+    });
+
+    it('should redirect to /profile when the handle is your own', async () => {
+      getByUsernameSpy.mockResolvedValue(mockUser({ id: 'own-id', username: 'me' }));
+      setup({ id: 'own-id' }, 'me', 'username');
+      await flushAsync();
+
+      expect(navigateByUrlSpy).toHaveBeenCalledWith('/profile');
+    });
+
+    it('should show not-found for an unknown handle', async () => {
+      getByUsernameSpy.mockResolvedValue(null);
+      const fixture = setup(null, 'nobody', 'username');
+      await flushAsync();
+
+      expect(fixture.componentInstance.notFound()).toBe(true);
+    });
   });
 });

@@ -1,7 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { InputComponent } from '@underlayerdev/ui';
-import { AuthService } from '../../../application/services/auth.service';
+import { UserService } from '../../../application/services/user.service';
 import { validateDisplayName } from '../../../domain/user/user-display.validator';
 import { OnboardingService } from '../onboarding.service';
 
@@ -19,10 +19,14 @@ import { OnboardingService } from '../onboarding.service';
   imports: [InputComponent, TranslocoDirective],
 })
 export class OnboardingNameComponent {
-  private readonly authService = inject(AuthService);
   private readonly transloco = inject(TranslocoService);
+  private readonly userService = inject(UserService);
 
-  readonly displayNameValue = signal(this.authService.currentUser()?.displayName ?? '');
+  // Assigned automatically at sign-up (onUserCreate) — shown here so it
+  // isn't a surprise later, but changed from settings, not in this flow.
+  readonly username = computed(() => this.userService.profile()?.username ?? '');
+
+  readonly displayNameValue = signal(this.userService.profile()?.displayName ?? '');
   readonly displayNameTouched = signal(false);
 
   // Withheld until blur so a half-typed name isn't flagged mid-keystroke; the

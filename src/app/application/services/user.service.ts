@@ -1,18 +1,65 @@
-import { inject, Injectable, signal } from '@angular/core';
-import { USER_REPOSITORY } from '../../core/configuration/tokens';
+import { effect, inject, Injectable, signal, untracked } from '@angular/core';
+import { USER_REPOSITORY, USERNAME_PROVIDER } from '../../core/configuration/tokens';
+import { AuthService } from './auth.service';
 import type { User, UserId, UserSettings } from '../../domain/user/user.model';
 
 @Injectable({ providedIn: 'root' })
 export class UserService {
   private readonly userRepository = inject(USER_REPOSITORY);
+  private readonly usernameProvider = inject(USERNAME_PROVIDER);
+  private readonly authService = inject(AuthService);
+  private readonly pendingLoads = new Map<UserId, Promise<void>>();
 
+  /**
+   * The signed-in user's Firestore profile — the one source of truth for
+   * everything the UI shows about them (Firebase Auth only carries the
+   * session, see AuthUser). Follows the session by itself: cleared the moment
+   * the user signs out or a different one signs in, and loaded on sign-in
+   * even when no navigation (and so no guard) happens.
+   */
   readonly profile = signal<User | null>(null);
 
   /** True only while waitForProfile is actually polling — never on its cached fast path. */
   readonly isCheckingProfile = signal(false);
 
-  async loadProfile(id: UserId): Promise<void> {
-    const user = await this.userRepository.getById(id);
+  constructor() {
+    effect(() => {
+      const id = this.authService.currentUser()?.id ?? null;
+      untracked(() => {
+        // Already holds this user (a guard got there first), or nobody to load.
+        if (id === (this.profile()?.id ?? null)) return;
+        // Cleared first so the previous user's name/avatar never shows
+        // while the new profile is on its way.
+        this.profile.set(null);
+        if (id) void this.loadProfile(id).catch(() => undefined);
+      });
+    });
+  }
+
+  /**
+   * Concurrent calls for the same id share one read — on sign-in the session
+   * effect above, LanguageService and the guards all ask at about the same
+   * time.
+   */
+  loadProfile(id: UserId): Promise<void> {
+    const pending = this.pendingLoads.get(id);
+    if (pending) return pending;
+
+    const load = this.userRepository
+      .getById(id)
+      .then((user) => this.applyLoaded(id, user))
+      .finally(() => this.pendingLoads.delete(id));
+    this.pendingLoads.set(id, load);
+    return load;
+  }
+
+  private applyLoaded(id: UserId, user: User | null): void {
+    // Signed out, or a different user signed in, while this was in flight.
+    if (this.authService.currentUser()?.id !== id) return;
+    // A brand-new account's doc is created by a Cloud Function a moment
+    // after sign-up, so an early read can come back empty — never let that
+    // overwrite a profile waitForProfile() has found in the meantime.
+    if (!user && this.profile()?.id === id) return;
     this.profile.set(user);
   }
 
@@ -60,6 +107,25 @@ export class UserService {
   async updateProfile(user: User): Promise<void> {
     await this.userRepository.update(user);
     this.profile.set(user);
+  }
+
+  /**
+   * Goes through the claimUsername callable rather than update() — the
+   * handle is server-owned (see User.username). Throws the callable's error
+   * as-is; ErrorService maps its code to a message.
+   */
+  async changeUsername(username: string): Promise<void> {
+    const result = await this.usernameProvider.claim(username);
+    const current = this.profile();
+    if (current) {
+      this.profile.set({ ...current, ...result });
+    }
+  }
+
+  async isUsernameAvailable(username: string): Promise<boolean> {
+    const current = this.profile();
+    if (!current) return false;
+    return this.userRepository.isUsernameAvailable(username, current.id);
   }
 
   /**

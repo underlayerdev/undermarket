@@ -1,6 +1,5 @@
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
-import { AuthService } from '../../application/services/auth.service';
 import { ErrorService } from '../../application/services/error.service';
 import { UserService } from '../../application/services/user.service';
 import { mockUser } from '../../domain/user/user.mock';
@@ -14,18 +13,12 @@ describe('OnboardingService', () => {
   function setup() {
     const navigateByUrl = vi.fn().mockResolvedValue(true);
     const updateProfile = vi.fn().mockResolvedValue(undefined);
-    const updateDisplayName = vi.fn().mockResolvedValue(undefined);
-    const updatePhotoUrl = vi.fn().mockResolvedValue(undefined);
 
     TestBed.configureTestingModule({
       imports: [getTranslocoTestingModule()],
       providers: [
         { provide: Router, useValue: { navigateByUrl } },
         { provide: UserService, useValue: { profile: () => profile, updateProfile } },
-        {
-          provide: AuthService,
-          useValue: { updateDisplayName, updatePhotoUrl, currentUser: () => profile },
-        },
         { provide: ErrorService, useValue: { toUserMessage: () => 'Something went wrong.' } },
       ],
     });
@@ -34,8 +27,6 @@ describe('OnboardingService', () => {
       service: TestBed.inject(OnboardingService),
       navigateByUrl,
       updateProfile,
-      updateDisplayName,
-      updatePhotoUrl,
     };
   }
 
@@ -101,8 +92,8 @@ describe('OnboardingService', () => {
       expect(updateProfile).not.toHaveBeenCalled();
     });
 
-    it('should save a changed field to Firestore and Auth, then advance', async () => {
-      const { service, navigateByUrl, updateProfile, updateDisplayName } = setup();
+    it('should save a changed field to the profile, then advance', async () => {
+      const { service, navigateByUrl, updateProfile } = setup();
       service.startStep({ id: 'name', changes: () => ({ displayName: 'Jane Doe' }) });
 
       await service.continue();
@@ -110,19 +101,17 @@ describe('OnboardingService', () => {
       // Exact equality, not objectContaining: proves no other field of the
       // profile was touched — `onboarded` in particular.
       expect(updateProfile).toHaveBeenCalledWith({ ...profile, displayName: 'Jane Doe' });
-      expect(updateDisplayName).toHaveBeenCalledWith('Jane Doe');
       expect(navigateByUrl).toHaveBeenCalledWith('onboarding/photo');
     });
 
     it('should write nothing when the step collected a value that already matches the profile', async () => {
-      const { service, navigateByUrl, updateProfile, updateDisplayName } = setup();
+      const { service, navigateByUrl, updateProfile } = setup();
       // 'Jane' is what the profile already holds.
       service.startStep({ id: 'name', changes: () => ({ displayName: 'Jane' }) });
 
       await service.continue();
 
       expect(updateProfile).not.toHaveBeenCalled();
-      expect(updateDisplayName).not.toHaveBeenCalled();
       expect(navigateByUrl).toHaveBeenCalledWith('onboarding/photo');
     });
 
@@ -137,7 +126,7 @@ describe('OnboardingService', () => {
     });
 
     it('should save only the field that actually changed', async () => {
-      const { service, updateProfile, updateDisplayName, updatePhotoUrl } = setup();
+      const { service, updateProfile } = setup();
       service.startStep({
         id: 'photo',
         changes: () => ({ displayName: 'Jane', photoUrl: 'https://cdn/a.jpg' }),
@@ -146,8 +135,6 @@ describe('OnboardingService', () => {
       await service.continue();
 
       expect(updateProfile).toHaveBeenCalledWith({ ...profile, photoUrl: 'https://cdn/a.jpg' });
-      expect(updatePhotoUrl).toHaveBeenCalledWith('https://cdn/a.jpg');
-      expect(updateDisplayName).not.toHaveBeenCalled();
     });
 
     it('should leave the flow out of the last route entirely to the config', async () => {

@@ -1,7 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { ToastService } from '@underlayerdev/ui';
 import { SettingsAccountProfileComponent } from './settings-account-profile';
-import { AuthService } from '../../../../application/services/auth.service';
 import { SearchLocationService } from '../../../../application/services/search-location.service';
 import { UserService } from '../../../../application/services/user.service';
 import { getTranslocoTestingModule } from '../../../../../testing/transloco-testing';
@@ -60,10 +59,6 @@ describe('SettingsAccountProfileComponent', () => {
             profile: () => currentUser,
             updateProfile: updateProfileSpy,
           },
-        },
-        {
-          provide: AuthService,
-          useValue: { updateDisplayName: vi.fn().mockResolvedValue(undefined) },
         },
         { provide: SearchLocationService, useValue: { searchLocation: () => searchLocation } },
         {

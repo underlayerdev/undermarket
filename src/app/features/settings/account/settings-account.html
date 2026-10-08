@@ -1,12 +1,14 @@
 <um-settings-layout [title]="t('settings.account')" *transloco="let t">
   <um-settings-account-display-name />
 
+  <um-settings-account-username />
+
   <div class="settings__panel ul-mt-6">
     <div class="settings-account__info">
       <p class="ul-typography-body-m-regular ul-text-secondary settings-account__email">
-        {{ t('settings.emailLabel') }}: {{ authService.currentUser()?.email }}
+        {{ t('settings.emailLabel') }}: {{ userService.profile()?.email }}
       </p>
-      @if (authService.currentUser()?.createdAt; as createdAt) {
+      @if (userService.profile()?.createdAt; as createdAt) {
         <p class="ul-typography-body-m-regular ul-text-secondary">
           {{ t('settings.memberSinceLabel') }}: {{ createdAt | localeDate }}
         </p>

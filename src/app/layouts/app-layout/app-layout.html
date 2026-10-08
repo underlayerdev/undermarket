@@ -1,7 +1,7 @@
 <div class="app-shell" *transloco="let t">
   <um-sidebar-layout
     [currentUrl]="currentUrl()"
-    [currentUser]="currentUser()"
+    [isSignedIn]="isSignedIn()"
     [(sidebarOpen)]="sidebarOpen"
     (logout)="onSignOut()"
     (login)="navigateToLogin()"
@@ -11,12 +11,13 @@
     <um-navbar-layout
       class="app-shell__navbar"
       [sidebarOpen]="sidebarOpen()"
-      [currentUser]="currentUser()"
+      [isSignedIn]="isSignedIn()"
+      [profile]="profile()"
       (toggleSidebar)="sidebarOpen.update((open) => !open)"
       (submitSearch)="onSearchSubmit($event)"
     />
-    @if(currentUser()){
-      <um-dock-layout [currentUser]="currentUser()!" />
+    @if (isSignedIn()) {
+      <um-dock-layout [profile]="profile()" />
     }
     <main class="app-shell__main">
       <div class="app-shell__content ul-content">

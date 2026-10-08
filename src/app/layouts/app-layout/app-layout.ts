@@ -4,6 +4,7 @@ import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { filter, map, startWith } from 'rxjs';
 import { AuthService } from '../../application/services/auth.service';
+import { UserService } from '../../application/services/user.service';
 import { ToastContainerComponent, ToastService } from '@underlayerdev/ui';
 import { SiteFooterComponent } from '../../shared/footer/footer';
 import { NavbarLayoutComponent } from './navbar-layout/navbar-layout';
@@ -26,9 +27,14 @@ import { DockLayout } from './dock-layout/dock-layout';
 })
 export class AppLayoutComponent {
   protected readonly authService = inject(AuthService);
+  private readonly userService = inject(UserService);
   private readonly router = inject(Router);
 
-  readonly currentUser = computed(() => this.authService.currentUser());
+  // Two inputs on purpose: being signed in is known from the session straight
+  // away, while the profile (name, photo) arrives a moment later. Deciding
+  // "signed in?" from the profile would flash the guest navigation on load.
+  readonly isSignedIn = computed(() => !!this.authService.currentUser());
+  readonly profile = this.userService.profile.asReadonly();
 
   readonly sidebarOpen = signal(false);
 

@@ -17,14 +17,12 @@ import {
   signInWithPopup,
   signOut,
   updatePassword,
-  updateProfile,
 } from 'firebase/auth';
 import type { User as FirebaseUser } from 'firebase/auth';
 import { FIREBASE_AUTH } from '../../../core/configuration/tokens';
-import { DEFAULT_LANGUAGE } from '../../../core/i18n/languages';
 import type { AuthProvider } from '../../../domain/auth/auth.provider';
 import type { OAuthProvider } from '../../../domain/auth/oauth-provider';
-import type { AuthProviderId, User } from '../../../domain/user/user.model';
+import type { AuthProviderId, AuthUser } from '../../../domain/user/user.model';
 
 const oauthProviderMap = {
   google: () => new GoogleAuthProvider(),
@@ -47,22 +45,22 @@ const providerIdToOAuthProvider: Partial<
 export class FirebaseAuthProvider implements AuthProvider {
   private readonly auth: Auth = inject(FIREBASE_AUTH);
 
-  async login(email: string, password: string): Promise<User> {
+  async login(email: string, password: string): Promise<AuthUser> {
     const { user } = await signInWithEmailAndPassword(this.auth, email, password);
     return this.mapUser(user);
   }
 
-  async register(email: string, password: string): Promise<User> {
+  async register(email: string, password: string): Promise<AuthUser> {
     const { user } = await createUserWithEmailAndPassword(this.auth, email, password);
     return this.mapUser(user);
   }
 
-  async loginWithOAuth(provider: OAuthProvider): Promise<User> {
+  async loginWithOAuth(provider: OAuthProvider): Promise<AuthUser> {
     const { user } = await signInWithPopup(this.auth, oauthProviderMap[provider]());
     return this.mapUser(user);
   }
 
-  async loginAnonymously(): Promise<User> {
+  async loginAnonymously(): Promise<AuthUser> {
     const { user } = await signInAnonymously(this.auth);
     return this.mapUser(user);
   }
@@ -81,16 +79,6 @@ export class FirebaseAuthProvider implements AuthProvider {
     await updatePassword(user, newPassword);
   }
 
-  async updateDisplayName(displayName: string): Promise<void> {
-    const user = this.requireCurrentFirebaseUser();
-    await updateProfile(user, { displayName });
-  }
-
-  async updatePhotoUrl(photoUrl: string): Promise<void> {
-    const user = this.requireCurrentFirebaseUser();
-    await updateProfile(user, { photoURL: photoUrl });
-  }
-
   async deleteAccount(currentPassword?: string): Promise<void> {
     const user = this.requireCurrentFirebaseUser();
     await this.reauthenticate(user, currentPassword);
@@ -101,12 +89,12 @@ export class FirebaseAuthProvider implements AuthProvider {
     await signOut(this.auth);
   }
 
-  currentUser(): User | null {
+  currentUser(): AuthUser | null {
     const user = this.auth.currentUser;
     return user ? this.mapUser(user) : null;
   }
 
-  onAuthStateChange(callback: (user: User | null) => void): () => void {
+  onAuthStateChange(callback: (user: AuthUser | null) => void): () => void {
     return onAuthStateChanged(this.auth, (firebaseUser) => {
       callback(firebaseUser ? this.mapUser(firebaseUser) : null);
     });
@@ -135,20 +123,12 @@ export class FirebaseAuthProvider implements AuthProvider {
     await reauthenticateWithPopup(user, oauthProvider());
   }
 
-  private mapUser(firebaseUser: FirebaseUser): User {
+  private mapUser(firebaseUser: FirebaseUser): AuthUser {
     return {
       id: firebaseUser.uid,
-      email: firebaseUser.email ?? '',
-      displayName: firebaseUser.displayName ?? firebaseUser.email?.split('@')[0] ?? 'Anonymous',
-      photoUrl: firebaseUser.photoURL ?? undefined,
-      // Auth carries no preferences — the stored language lives on the
-      // Firestore profile, which LanguageService reads once a session exists.
-      // This is only the value a brand-new profile is seeded with.
-      settings: { language: DEFAULT_LANGUAGE },
       providerId: firebaseUser.isAnonymous
         ? 'anonymous'
         : ((firebaseUser.providerData[0]?.providerId as AuthProviderId) ?? 'password'),
-      createdAt: new Date(firebaseUser.metadata.creationTime ?? Date.now()),
     };
   }
 }

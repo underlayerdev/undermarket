@@ -1,5 +1,5 @@
 import { inject, Service, signal } from '@angular/core';
-import { AuthService } from '../../../application/services/auth.service';
+import { UserService } from '../../../application/services/user.service';
 import { ErrorService } from '../../../application/services/error.service';
 import { IMAGE_STORAGE } from '../../../core/configuration/tokens';
 
@@ -7,11 +7,11 @@ import { IMAGE_STORAGE } from '../../../core/configuration/tokens';
 // retry, rather than at the very end of onboarding.
 @Service()
 export class OnboardingAvatarService {
-  private readonly authService = inject(AuthService);
+  private readonly userService = inject(UserService);
   private readonly errorService = inject(ErrorService);
   private readonly imageStorage = inject(IMAGE_STORAGE);
 
-  readonly avatarPreviewUrl = signal(this.authService.currentUser()?.photoUrl);
+  readonly avatarPreviewUrl = signal(this.userService.profile()?.photoUrl);
   readonly avatarUploadedUrl = signal<string | null>(null);
   readonly isUploadingAvatar = signal(false);
   readonly avatarError = signal<string | null>(null);
