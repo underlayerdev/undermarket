@@ -16,7 +16,7 @@
           {{ t('listingDetail.browseListings') }}
         </ul-button>
       } @else if (profileUser(); as user) {
-        <um-profile-info [user]="user" [showEmail]="false" />
+        <um-profile-info [user]="user" />
         <um-profile-listings [ownerId]="user.id" [publicView]="true" />
       }
     </div>

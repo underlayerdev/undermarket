@@ -22,11 +22,9 @@ describe('ProfileInfoComponent', () => {
     expect(fixture.componentInstance).toBeTruthy();
   });
 
-  it('should display the display name and email', () => {
+  it('should display the display name', () => {
     const fixture = setup(mockUser());
-
     expect(fixture.nativeElement.textContent).toContain('Test User');
-    expect(fixture.nativeElement.textContent).toContain('test@example.com');
   });
 
   it('should display the @handle', () => {
@@ -48,14 +46,6 @@ describe('ProfileInfoComponent', () => {
 
     const avatar = fixture.debugElement.query(By.directive(AvatarComponent));
     expect(avatar.componentInstance.src()).toBeUndefined();
-  });
-
-  it('should hide the email when showEmail is false', () => {
-    const fixture = setup(mockUser());
-    fixture.componentRef.setInput('showEmail', false);
-    fixture.detectChanges();
-
-    expect(fixture.nativeElement.textContent).not.toContain('test@example.com');
   });
 
   it('should show just the city, not the full geocoded display name', () => {

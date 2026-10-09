@@ -85,15 +85,6 @@ describe('PublicProfileComponent', () => {
     expect(fixture.componentInstance.notFound()).toBe(false);
   });
 
-  it("should not show the requested user's email", async () => {
-    getByIdSpy.mockResolvedValue(mockUser({ email: 'secret@example.com' }));
-    const fixture = setup(null, 'other-user');
-    await flushAsync();
-    fixture.detectChanges();
-
-    expect(fixture.nativeElement.textContent).not.toContain('secret@example.com');
-  });
-
   it('should show a not-found state when the user does not exist', async () => {
     getByIdSpy.mockResolvedValue(null);
     const fixture = setup(null, 'missing-user');

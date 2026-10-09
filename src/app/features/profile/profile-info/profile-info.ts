@@ -10,10 +10,6 @@ import { User } from '../../../domain/user/user.model';
 })
 export class ProfileInfoComponent {
   readonly user = input.required<User>();
-  // Off for a public profile view — an email is never shown to anyone but
-  // the account owner, unlike the opt-in city below.
-  readonly showEmail = input(true);
-
   readonly avatarInitials = computed(() => getInitials(this.user()));
   readonly avatarSrc = computed(() => this.user()?.photoUrl);
 }

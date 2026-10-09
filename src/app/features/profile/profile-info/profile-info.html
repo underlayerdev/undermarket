@@ -3,9 +3,6 @@
   <div>
     <h1 class="ul-typography-headline-l-extrablack">{{ user().displayName }}</h1>
     <p class="ul-typography-body-m-regular ul-text-secondary">&#64;{{ user().username }}</p>
-    @if (showEmail()) {
-      <p class="ul-typography-body-m-regular ul-text-secondary">{{ user().email }}</p>
-    }
     @if (user().profileCity; as city) {
       <p
         class="ul-gap-1 ul-typography-body-m-regular ul-text-secondary"
