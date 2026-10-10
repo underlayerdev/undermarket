@@ -8,3 +8,4 @@ export { onUserCreate } from './users/on-create';
 export { onUserProfileUpdated } from './users/on-update';
 export { onUserDeleted } from './users/on-delete';
 export { claimUsername } from './users/claim-username';
+export { changeDisplayName } from './users/change-display-name';

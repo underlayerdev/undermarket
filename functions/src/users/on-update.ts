@@ -1,19 +1,18 @@
 import { onDocumentUpdated } from 'firebase-functions/v2/firestore';
 import { firestore } from '../admin';
+import { getDisplayNameFormatError, normalizeDisplayName } from './display-name';
 
 export type UserProfileData = Record<string, unknown>;
 
 const USERS_COLLECTION = 'users';
 
-// Keep in sync with src/app/domain/user/user-constraints.ts.
-const DISPLAY_NAME_MIN_LENGTH = 2;
-const DISPLAY_NAME_MAX_LENGTH = 50;
-
+// The same rule changeDisplayName enforces. Names written by Cloud Functions
+// (the Google name onUserCreate seeds) never went through that callable, so
+// this is what keeps an invalid one from completing onboarding.
 function isValidDisplayName(displayName: unknown): boolean {
   return (
     typeof displayName === 'string' &&
-    displayName.length >= DISPLAY_NAME_MIN_LENGTH &&
-    displayName.length <= DISPLAY_NAME_MAX_LENGTH
+    getDisplayNameFormatError(normalizeDisplayName(displayName)) === null
   );
 }
 
@@ -42,8 +41,11 @@ export async function handleUserProfileUpdate(
   await firestore.doc(`${USERS_COLLECTION}/${userId}`).update({ onboarded: true });
 }
 
-export const onUserProfileUpdated = onDocumentUpdated(`${USERS_COLLECTION}/{userId}`, async (event) => {
-  const after = event.data?.after.data();
-  if (!after) return;
-  await handleUserProfileUpdate(after, event.params.userId);
-});
+export const onUserProfileUpdated = onDocumentUpdated(
+  `${USERS_COLLECTION}/{userId}`,
+  async (event) => {
+    const after = event.data?.after.data();
+    if (!after) return;
+    await handleUserProfileUpdate(after, event.params.userId);
+  },
+);

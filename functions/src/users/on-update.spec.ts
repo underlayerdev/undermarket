@@ -41,16 +41,19 @@ describe('handleUserProfileUpdate', () => {
   });
 
   it('does nothing when the display name is over the maximum length', async () => {
-    await handleUserProfileUpdate(
-      { onboarded: false, displayName: 'a'.repeat(51) },
-      'uid-1',
-    );
+    await handleUserProfileUpdate({ onboarded: false, displayName: 'a'.repeat(51) }, 'uid-1');
 
     expect(updateMock).not.toHaveBeenCalled();
   });
 
   it('does nothing when onboarded is missing entirely', async () => {
     await handleUserProfileUpdate({ displayName: 'Jane Doe' }, 'uid-1');
+
+    expect(updateMock).not.toHaveBeenCalled();
+  });
+
+  it('does nothing when the display name breaks the format, even if it has a valid length', async () => {
+    await handleUserProfileUpdate({ onboarded: false, displayName: 'Jane 😀' }, 'uid-1');
 
     expect(updateMock).not.toHaveBeenCalled();
   });
