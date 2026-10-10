@@ -1,4 +1,4 @@
-import { inject, Injectable } from '@angular/core';
+import { inject, Service } from '@angular/core';
 import { TranslocoService } from '@jsverse/transloco';
 
 const ERROR_KEYS: Record<string, string> = {
@@ -13,13 +13,14 @@ const ERROR_KEYS: Record<string, string> = {
   'functions/already-exists': 'errors.usernameTaken',
   'functions/invalid-argument': 'errors.usernameInvalid',
   'functions/failed-precondition': 'errors.usernameCooldown',
+  'user/display-name-invalid': 'errors.displayNameInvalid',
   'permission-denied': 'errors.permissionDenied',
   'not-found': 'errors.notFound',
 };
 
 const FALLBACK_KEY = 'errors.fallback';
 
-@Injectable({ providedIn: 'root' })
+@Service()
 export class ErrorService {
   private readonly transloco = inject(TranslocoService);
 

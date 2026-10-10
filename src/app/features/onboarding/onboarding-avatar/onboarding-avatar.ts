@@ -1,56 +1,39 @@
 import { Component, computed, inject } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
-import { AvatarComponent, ButtonComponent, ImageCropperComponent } from '@underlayerdev/ui';
 import { UserService } from '../../../application/services/user.service';
+import { getInitials } from '../../../domain/user/user-display';
+import { AvatarUploadStore } from '../../../shared/avatar-upload/avatar-upload.store';
+import { AvatarUploaderComponent } from '../../../shared/avatar-upload/avatar-uploader';
 import { OnboardingService } from '../onboarding.service';
-import { OnboardingAvatarService } from './onboarding-avatar.service';
 
 // Collects User.photoUrl. Optional: with nothing uploaded the step reports no
-// changes, so continuing past it writes nothing at all.
+// changes, so continuing past it writes nothing at all. The picked photo lives
+// in the AvatarUploadStore the shell provides, so it survives going back and
+// forth between steps.
 @Component({
   selector: 'um-onboarding-avatar',
   templateUrl: './onboarding-avatar.html',
   styleUrl: './onboarding-avatar.scss',
-  imports: [AvatarComponent, ButtonComponent, ImageCropperComponent, TranslocoDirective],
+  imports: [AvatarUploaderComponent, TranslocoDirective],
 })
 export class OnboardingAvatarComponent {
-  private readonly userService = inject(UserService);
-  readonly onboardingAvatarService = inject(OnboardingAvatarService);
+  protected readonly userService = inject(UserService);
+  private readonly avatarUpload = inject(AvatarUploadStore);
 
-  // Placeholder for an avatar with no image yet. The name step persisted the
-  // display name before this step could be reached, so it's read back from the
-  // profile rather than held in a service spanning both steps.
-  readonly initials = computed(() => {
-    const displayName = this.userService.profile()?.displayName ?? '';
-    return displayName.trim().charAt(0).toUpperCase() || undefined;
-  });
+  // The name step persisted the display name before this step could be
+  // reached, so the placeholder is read back from the profile.
+  readonly initials = computed(() => getInitials(this.userService.profile()));
 
   constructor() {
     inject(OnboardingService).startStep({
       id: 'photo',
       // The upload itself already happened eagerly on crop (see
-      // OnboardingAvatarService) — all that's left for Continue is putting the
+      // AvatarUploadStore) — all that's left for Continue is putting the
       // resulting URL on the profile.
       changes: () => {
-        const photoUrl = this.onboardingAvatarService.avatarUploadedUrl();
+        const photoUrl = this.avatarUpload.uploadedUrl();
         return photoUrl ? { photoUrl } : {};
       },
     });
-  }
-
-  onFileSelected(event: Event): void {
-    this.onboardingAvatarService.onFileSelected(event);
-  }
-
-  onCropped(file: File): void {
-    this.onboardingAvatarService.onCropped(file);
-  }
-
-  onCropCancelled(): void {
-    this.onboardingAvatarService.onCropCancelled();
-  }
-
-  retryUpload(): void {
-    this.onboardingAvatarService.retryUpload();
   }
 }

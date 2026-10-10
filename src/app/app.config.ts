@@ -34,6 +34,7 @@ import {
   MERCADO_LIBRE_PROVIDER,
   NOTIFICATION_PROVIDER,
   SEARCH_LOCATION_REPOSITORY,
+  DISPLAY_NAME_PROVIDER,
   USER_REPOSITORY,
   USERNAME_PROVIDER,
 } from './core/configuration/tokens';
@@ -43,6 +44,7 @@ import { FirestoreListingRepository } from './infrastructure/firebase/firestore/
 import { FirestoreCategoryNodeRepository } from './infrastructure/firebase/firestore/firestore-category-node.repository';
 import { FirestoreSearchLocationRepository } from './infrastructure/firebase/firestore/firestore-search-location.repository';
 import { FirebaseMercadoLibreProvider } from './infrastructure/firebase/functions/firebase-mercado-libre.provider';
+import { FirebaseDisplayNameProvider } from './infrastructure/firebase/functions/firebase-display-name.provider';
 import { FirebaseUsernameProvider } from './infrastructure/firebase/functions/firebase-username.provider';
 import { CloudinaryImageStorage } from './infrastructure/cloudinary/cloudinary-image-storage';
 import { provideCloudinaryImageLoader } from './infrastructure/cloudinary/cloudinary-image-loader';
@@ -97,6 +99,7 @@ export const appConfig: ApplicationConfig = {
     { provide: FIREBASE_FUNCTIONS, useValue: getFunctions(firebaseApp, 'us-central1') },
     { provide: AUTH_PROVIDER, useClass: FirebaseAuthProvider },
     { provide: USER_REPOSITORY, useClass: FirestoreUserRepository },
+    { provide: DISPLAY_NAME_PROVIDER, useClass: FirebaseDisplayNameProvider },
     { provide: USERNAME_PROVIDER, useClass: FirebaseUsernameProvider },
     { provide: LISTING_REPOSITORY, useClass: FirestoreListingRepository },
     { provide: CATEGORY_NODE_REPOSITORY, useClass: FirestoreCategoryNodeRepository },

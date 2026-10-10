@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { NavbarComponent, StepperComponent } from '@underlayerdev/ui';
+import { AvatarUploadStore } from '../../shared/avatar-upload/avatar-upload.store';
 import { OnboardingService } from './onboarding.service';
 import { OnboardingFooterComponent } from './shared/onboarding-footer/onboarding-footer';
 
@@ -20,6 +21,9 @@ import { OnboardingFooterComponent } from './shared/onboarding-footer/onboarding
     TranslocoDirective,
     OnboardingFooterComponent,
   ],
+  // Outlives the individual steps, so a photo picked on the photo step is
+  // still there after going Back from the next one.
+  providers: [AvatarUploadStore],
 })
 export class OnboardingShellComponent {
   readonly onboardingService = inject(OnboardingService);

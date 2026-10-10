@@ -10,17 +10,17 @@ import {
   USERNAME_MIN_LENGTH,
 } from '../../../../domain/user/user-constraints';
 import { LocaleDatePipe } from '../../../../shared/pipes';
-import { SettingsAccountStore } from '../settings-account.store';
+import { SettingsProfileStore } from '../settings-profile.store';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 @Component({
-  selector: 'um-settings-account-username',
-  templateUrl: './settings-account-username.html',
+  selector: 'um-settings-profile-username',
+  templateUrl: './settings-profile-username.html',
   imports: [TranslocoDirective, InputComponent, ButtonComponent, LocaleDatePipe],
 })
-export class SettingsAccountUsernameComponent {
-  protected readonly store = inject(SettingsAccountStore);
+export class SettingsProfileUsernameComponent {
+  protected readonly store = inject(SettingsProfileStore);
   private readonly toastService = inject(ToastService);
   private readonly transloco = inject(TranslocoService);
   private readonly errorService = inject(ErrorService);

@@ -126,6 +126,15 @@ describe('FirestoreUserRepository', () => {
     expect('onboarded' in (payload as object)).toBe(false);
   });
 
+  it('should never write displayName — it changes only through the callable', async () => {
+    const repository = createRepository();
+
+    await repository.update({ ...testUser, displayName: 'Someone Else' });
+
+    const [, payload] = vi.mocked(firestoreModule.setDoc).mock.calls[0];
+    expect('displayName' in (payload as object)).toBe(false);
+  });
+
   describe('usernames', () => {
     function mockDocs(docs: Record<string, Record<string, unknown>>): void {
       vi.mocked(firestoreModule.doc).mockImplementation(

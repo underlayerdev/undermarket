@@ -27,7 +27,7 @@
     "@jsverse/transloco": "^8.4.0",
     "@ngrx/signals": "^22.0.1",
     "@splidejs/splide": "^4.1.4",
-    "@underlayerdev/ui": "^0.14.4",
+    "@underlayerdev/ui": "^0.14.5",
     "browser-image-compression": "^2.0.2",
     "date-fns": "^4.4.0",
     "firebase": "^12.16.0",

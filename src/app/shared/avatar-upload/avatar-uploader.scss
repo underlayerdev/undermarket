@@ -1,0 +1,24 @@
+@use 'pkg:@underlayerdev/ui/design-tokens' as tokens;
+
+:host {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: tokens.$spacing-spacing-3;
+}
+
+.avatar-uploader__button {
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  border-radius: tokens.$radius-radius-full;
+}
+
+.avatar-uploader__error-row {
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: tokens.$spacing-spacing-3;
+}

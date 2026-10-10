@@ -1,0 +1,14 @@
+<ng-container *transloco="let t">
+  <form class="settings__form ul-gap-4" (submit)="$event.preventDefault(); onSaveDisplayName()">
+    <ul-input
+      [label]="t('settings.displayNameLabel')"
+      [required]="true"
+      [(value)]="displayNameValue"
+      [error]="!!displayNameError()"
+      [errorText]="displayNameError()"
+    />
+    <ul-button type="submit" theme="fill-purple" size="md" [disabled]="!canSave()">
+      {{ saveDisplayNameButtonLabel() }}
+    </ul-button>
+  </form>
+</ng-container>

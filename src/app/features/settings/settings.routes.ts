@@ -13,6 +13,11 @@ export const settingsRoutes: Routes = [
           import('./settings-index/settings-index').then((m) => m.SettingsIndexComponent),
       },
       {
+        path: 'profile',
+        loadComponent: () =>
+          import('./profile/settings-profile').then((m) => m.SettingsProfileComponent),
+      },
+      {
         path: 'account',
         loadComponent: () =>
           import('./account/settings-account').then((m) => m.SettingsAccountComponent),

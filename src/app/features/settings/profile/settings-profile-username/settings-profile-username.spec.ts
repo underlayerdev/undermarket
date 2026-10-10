@@ -1,8 +1,8 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { ToastService } from '@underlayerdev/ui';
-import { SettingsAccountUsernameComponent } from './settings-account-username';
-import { SettingsAccountStore } from '../settings-account.store';
+import { SettingsProfileUsernameComponent } from './settings-profile-username';
+import { SettingsProfileStore } from '../settings-profile.store';
 import { UserService } from '../../../../application/services/user.service';
 import { getTranslocoTestingModule } from '../../../../../testing/transloco-testing';
 import { mockUser } from '../../../../domain/user/user.mock';
@@ -10,7 +10,7 @@ import type { User } from '../../../../domain/user/user.model';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-describe('SettingsAccountUsernameComponent', () => {
+describe('SettingsProfileUsernameComponent', () => {
   let changeUsernameSpy: ReturnType<typeof vi.fn>;
   let isUsernameAvailableSpy: ReturnType<typeof vi.fn>;
 
@@ -23,9 +23,9 @@ describe('SettingsAccountUsernameComponent', () => {
     isUsernameAvailableSpy = vi.fn().mockResolvedValue(true);
 
     TestBed.configureTestingModule({
-      imports: [SettingsAccountUsernameComponent, getTranslocoTestingModule()],
+      imports: [SettingsProfileUsernameComponent, getTranslocoTestingModule()],
       providers: [
-        SettingsAccountStore,
+        SettingsProfileStore,
         {
           provide: UserService,
           useValue: {
@@ -38,12 +38,12 @@ describe('SettingsAccountUsernameComponent', () => {
       ],
     });
 
-    const fixture = TestBed.createComponent(SettingsAccountUsernameComponent);
+    const fixture = TestBed.createComponent(SettingsProfileUsernameComponent);
     fixture.detectChanges();
     return {
       fixture,
       component: fixture.componentInstance,
-      store: TestBed.inject(SettingsAccountStore),
+      store: TestBed.inject(SettingsProfileStore),
       profile,
     };
   }

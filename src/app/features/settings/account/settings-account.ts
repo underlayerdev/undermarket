@@ -8,10 +8,6 @@ import { validateConfirmPassword, validatePassword } from '../../../shared/utils
 import { LocaleDatePipe } from '../../../shared/pipes';
 import { ButtonComponent, InputComponent, ModalComponent, ToastService } from '@underlayerdev/ui';
 import { SettingsLayoutComponent } from '../shared/settings-layout/settings-layout';
-import { SettingsAccountProfileComponent } from './settings-account-profile/settings-account-profile';
-import { SettingsAccountStore } from './settings-account.store';
-import { SettingsAccountDisplayNameComponent } from './settings-account-display-name/settings-account-display-name';
-import { SettingsAccountUsernameComponent } from './settings-account-username/settings-account-username';
 
 @Component({
   selector: 'um-settings-account',
@@ -20,14 +16,9 @@ import { SettingsAccountUsernameComponent } from './settings-account-username/se
     InputComponent,
     LocaleDatePipe,
     ModalComponent,
-    SettingsAccountProfileComponent,
     SettingsLayoutComponent,
     TranslocoDirective,
-    SettingsAccountDisplayNameComponent,
-    SettingsAccountUsernameComponent,
   ],
-  // Shared by every Account panel below (display name, username, public profile).
-  providers: [SettingsAccountStore],
   templateUrl: './settings-account.html',
   styleUrl: './settings-account.scss',
 })

@@ -1,11 +1,16 @@
 import { effect, inject, Injectable, signal, untracked } from '@angular/core';
-import { USER_REPOSITORY, USERNAME_PROVIDER } from '../../core/configuration/tokens';
+import {
+  DISPLAY_NAME_PROVIDER,
+  USER_REPOSITORY,
+  USERNAME_PROVIDER,
+} from '../../core/configuration/tokens';
 import { AuthService } from './auth.service';
 import type { User, UserId, UserSettings } from '../../domain/user/user.model';
 
 @Injectable({ providedIn: 'root' })
 export class UserService {
   private readonly userRepository = inject(USER_REPOSITORY);
+  private readonly displayNameProvider = inject(DISPLAY_NAME_PROVIDER);
   private readonly usernameProvider = inject(USERNAME_PROVIDER);
   private readonly authService = inject(AuthService);
   private readonly pendingLoads = new Map<UserId, Promise<void>>();
@@ -107,6 +112,20 @@ export class UserService {
   async updateProfile(user: User): Promise<void> {
     await this.userRepository.update(user);
     this.profile.set(user);
+  }
+
+  /**
+   * Goes through the changeDisplayName callable rather than update() — the
+   * name's format is checked server-side (see firestore.rules). The stored,
+   * normalized name replaces whatever was typed. Throws the callable's error
+   * as-is; ErrorService maps its code to a message.
+   */
+  async changeDisplayName(displayName: string): Promise<void> {
+    const result = await this.displayNameProvider.change(displayName);
+    const current = this.profile();
+    if (current) {
+      this.profile.set({ ...current, displayName: result.displayName });
+    }
   }
 
   /**

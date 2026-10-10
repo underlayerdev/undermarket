@@ -15,7 +15,7 @@ import { LocationService } from '../../../../application/services/location.servi
 import { SearchLocationService } from '../../../../application/services/search-location.service';
 import { PublicCityInfo } from '../../../../domain/user/user.model';
 import { ErrorService } from '../../../../application/services/error.service';
-import { SettingsAccountStore } from '../settings-account.store';
+import { SettingsProfileStore } from '../settings-profile.store';
 
 /**
  * Narrows anything city-shaped down to exactly the four fields that go on the
@@ -33,9 +33,9 @@ function toPublicCityInfo({
 }
 
 @Component({
-  selector: 'um-settings-account-profile',
-  templateUrl: './settings-account-profile.html',
-  styleUrl: './settings-account-profile.scss',
+  selector: 'um-settings-profile-city',
+  templateUrl: './settings-profile-city.html',
+  styleUrl: './settings-profile-city.scss',
   imports: [
     TranslocoDirective,
     ToggleComponent,
@@ -45,8 +45,8 @@ function toPublicCityInfo({
     LocationPickerComponent,
   ],
 })
-export class SettingsAccountProfileComponent {
-  private readonly store = inject(SettingsAccountStore);
+export class SettingsProfileCityComponent {
+  private readonly store = inject(SettingsProfileStore);
   private readonly errorService = inject(ErrorService);
   private readonly locationService = inject(LocationService);
   private readonly searchLocationService = inject(SearchLocationService);

@@ -1,11 +1,5 @@
-<div class="settings__panel ul-mt-6" *transloco="let t">
-  <h2 class="ul-typography-headline-s-extrabold ul-mb-4">
-    {{ t('settings.usernameLabel') }}
-  </h2>
-  <form
-    class="settings-account__form ul-gap-4"
-    (submit)="$event.preventDefault(); onSaveUsername()"
-  >
+<ng-container *transloco="let t">
+  <form class="settings__form ul-gap-4" (submit)="$event.preventDefault(); onSaveUsername()">
     <ul-input
       [label]="t('settings.usernameLabel')"
       [required]="true"
@@ -27,4 +21,4 @@
       {{ saveUsernameButtonLabel() }}
     </ul-button>
   </form>
-</div>
+</ng-container>

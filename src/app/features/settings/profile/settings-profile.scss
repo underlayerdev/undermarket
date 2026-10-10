@@ -1,0 +1,29 @@
+@use 'pkg:@underlayerdev/ui/design-tokens' as tokens;
+@use 'pkg:@underlayerdev/ui/breakpoints' as bp;
+
+// One panel for the three things that identify a user: the photo beside the
+// fields on desktop (the layout profile editors like GitHub's and Instagram's
+// use), stacked with the photo on top on mobile. Each field keeps its own
+// Save (the handle goes through a separate, rate-limited callable), so the
+// panel only arranges them.
+.settings-profile__identity {
+  display: grid;
+  gap: tokens.$spacing-spacing-6;
+
+  @include bp.up('md') {
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: tokens.$spacing-spacing-8;
+    align-items: start;
+  }
+}
+
+.settings-profile__avatar {
+  display: flex;
+  justify-content: center;
+}
+
+.settings-profile__fields {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}

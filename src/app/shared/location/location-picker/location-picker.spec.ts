@@ -119,7 +119,7 @@ describe('LocationPickerComponent', () => {
   it('should not render a map from a searchLocation with no coordinates, but should once a real pick is made', () => {
     const fixture = setup();
     fixture.componentRef.setInput('showConfirmButton', true);
-    // Shaped like settings-account-profile's PublicCityInfo: a real place
+    // Shaped like settings-profile-city's PublicCityInfo: a real place
     // name, but no latitude/longitude to plot.
     fixture.componentRef.setInput('searchLocation', { displayName: 'La Lucila, Buenos Aires' });
     fixture.componentRef.setInput('suggestions', [suggestion()]);

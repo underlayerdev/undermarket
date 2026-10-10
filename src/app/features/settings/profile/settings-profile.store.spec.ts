@@ -1,6 +1,6 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { SettingsAccountStore } from './settings-account.store';
+import { SettingsProfileStore } from './settings-profile.store';
 import { UserService } from '../../../application/services/user.service';
 import { mockUser } from '../../../domain/user/user.mock';
 import type { User } from '../../../domain/user/user.model';
@@ -13,11 +13,15 @@ function deferred<T>() {
   return { promise, resolve };
 }
 
-describe('SettingsAccountStore', () => {
+describe('SettingsProfileStore', () => {
   function setup(initialProfile: User | null = mockUser()) {
     const profile = signal<User | null>(initialProfile);
     const updateProfileSpy = vi.fn(async (user: User) => {
       profile.set(user);
+    });
+    const changeDisplayNameSpy = vi.fn(async (displayName: string) => {
+      const current = profile();
+      if (current) profile.set({ ...current, displayName });
     });
     const changeUsernameSpy = vi.fn(async (username: string) => {
       const current = profile();
@@ -27,12 +31,13 @@ describe('SettingsAccountStore', () => {
 
     TestBed.configureTestingModule({
       providers: [
-        SettingsAccountStore,
+        SettingsProfileStore,
         {
           provide: UserService,
           useValue: {
             profile,
             updateProfile: updateProfileSpy,
+            changeDisplayName: changeDisplayNameSpy,
             changeUsername: changeUsernameSpy,
             isUsernameAvailable: isUsernameAvailableSpy,
           },
@@ -41,22 +46,24 @@ describe('SettingsAccountStore', () => {
     });
 
     return {
-      store: TestBed.inject(SettingsAccountStore),
+      store: TestBed.inject(SettingsProfileStore),
       profile,
       updateProfileSpy,
+      changeDisplayNameSpy,
       changeUsernameSpy,
       isUsernameAvailableSpy,
     };
   }
 
-  it('should save a display name onto the current profile', async () => {
-    const { store, profile, updateProfileSpy } = setup(mockUser({ displayName: 'Old Name' }));
+  it('should change the display name through the callable, not a profile write', async () => {
+    const { store, profile, updateProfileSpy, changeDisplayNameSpy } = setup(
+      mockUser({ displayName: 'Old Name' }),
+    );
 
     await store.saveDisplayName('New Name');
 
-    expect(updateProfileSpy).toHaveBeenCalledWith(
-      expect.objectContaining({ displayName: 'New Name' }),
-    );
+    expect(changeDisplayNameSpy).toHaveBeenCalledWith('New Name');
+    expect(updateProfileSpy).not.toHaveBeenCalled();
     expect(profile()?.displayName).toBe('New Name');
   });
 
@@ -90,9 +97,9 @@ describe('SettingsAccountStore', () => {
   });
 
   it('should toggle isSavingDisplayName while the save is in flight', async () => {
-    const { store, updateProfileSpy } = setup();
+    const { store, changeDisplayNameSpy } = setup();
     const gate = deferred<void>();
-    updateProfileSpy.mockImplementationOnce(() => gate.promise);
+    changeDisplayNameSpy.mockImplementationOnce(() => gate.promise);
 
     expect(store.isSavingDisplayName()).toBe(false);
     const save = store.saveDisplayName('New Name');
@@ -120,16 +127,18 @@ describe('SettingsAccountStore', () => {
   });
 
   it('should do nothing when there is no profile loaded yet', async () => {
-    const { store, updateProfileSpy } = setup(null);
+    const { store, updateProfileSpy, changeDisplayNameSpy } = setup(null);
 
     await store.saveDisplayName('New Name');
+    await store.saveProfileCity(null);
 
+    expect(changeDisplayNameSpy).not.toHaveBeenCalled();
     expect(updateProfileSpy).not.toHaveBeenCalled();
   });
 
   it('should propagate a rejected save to the caller and still reset the loading flag', async () => {
-    const { store, updateProfileSpy } = setup();
-    updateProfileSpy.mockRejectedValueOnce(new Error('network down'));
+    const { store, changeDisplayNameSpy } = setup();
+    changeDisplayNameSpy.mockRejectedValueOnce(new Error('network down'));
 
     await expect(store.saveDisplayName('New Name')).rejects.toThrow('network down');
 
@@ -137,25 +146,24 @@ describe('SettingsAccountStore', () => {
   });
 
   it('should not let a failed save jam the queue for the next one', async () => {
-    const { store, updateProfileSpy } = setup();
-    updateProfileSpy.mockRejectedValueOnce(new Error('network down'));
+    const { store, updateProfileSpy, changeDisplayNameSpy } = setup();
+    changeDisplayNameSpy.mockRejectedValueOnce(new Error('network down'));
 
     await expect(store.saveDisplayName('New Name')).rejects.toThrow('network down');
     await store.saveProfileCity(null);
 
-    expect(updateProfileSpy).toHaveBeenCalledTimes(2);
+    expect(changeDisplayNameSpy).toHaveBeenCalledTimes(1);
+    expect(updateProfileSpy).toHaveBeenCalledTimes(1);
   });
 
-  it('should serialize concurrent saves so the second one never overwrites the first with a stale snapshot', async () => {
-    const { store, profile, updateProfileSpy } = setup(mockUser({ displayName: 'Old Name' }));
-    const calls: User[] = [];
+  it('should serialize concurrent saves so a profile write never starts from before the rename', async () => {
+    const { store, profile, updateProfileSpy, changeDisplayNameSpy } = setup(
+      mockUser({ displayName: 'Old Name' }),
+    );
     const gate = deferred<void>();
-    let callCount = 0;
-    updateProfileSpy.mockImplementation(async (user: User) => {
-      calls.push(user);
-      callCount++;
-      if (callCount === 1) await gate.promise;
-      profile.set(user);
+    changeDisplayNameSpy.mockImplementationOnce(async (displayName: string) => {
+      await gate.promise;
+      profile.set({ ...profile()!, displayName });
     });
 
     const displayNameSave = store.saveDisplayName('New Name');
@@ -167,17 +175,70 @@ describe('SettingsAccountStore', () => {
     };
     const citySave = store.saveProfileCity(city);
 
+    // The city write is queued behind the rename, not racing it.
+    expect(updateProfileSpy).not.toHaveBeenCalled();
+
     gate.resolve();
     await displayNameSave;
     await citySave;
 
-    expect(calls).toHaveLength(2);
-    expect(calls[0]).toEqual(expect.objectContaining({ displayName: 'New Name' }));
-    // The second write must have started from the FIRST write's result, not
-    // the pre-save snapshot — otherwise it would silently drop displayName.
-    expect(calls[1]).toEqual(
+    // It started from the renamed profile, so it can't put the old name back.
+    expect(updateProfileSpy).toHaveBeenCalledTimes(1);
+    expect(updateProfileSpy).toHaveBeenCalledWith(
       expect.objectContaining({ displayName: 'New Name', profileCity: city }),
     );
+  });
+
+  describe('saveAvatar', () => {
+    it('should save the photo url onto the current profile', async () => {
+      const { store, profile, updateProfileSpy } = setup(mockUser({ photoUrl: undefined }));
+
+      await store.saveAvatar('https://res.cloudinary.com/new.jpg');
+
+      expect(updateProfileSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ photoUrl: 'https://res.cloudinary.com/new.jpg' }),
+      );
+      expect(profile()?.photoUrl).toBe('https://res.cloudinary.com/new.jpg');
+    });
+
+    it('should flag isSavingAvatar while in flight', async () => {
+      const { store, updateProfileSpy } = setup();
+      const gate = deferred<void>();
+      updateProfileSpy.mockImplementationOnce(() => gate.promise);
+
+      const save = store.saveAvatar('https://res.cloudinary.com/new.jpg');
+      expect(store.isSavingAvatar()).toBe(true);
+
+      gate.resolve();
+      await save;
+      expect(store.isSavingAvatar()).toBe(false);
+    });
+
+    it('should not lose a display name saved at the same time', async () => {
+      const { store, profile } = setup(mockUser({ displayName: 'Old Name' }));
+
+      await Promise.all([
+        store.saveDisplayName('New Name'),
+        store.saveAvatar('https://res.cloudinary.com/new.jpg'),
+      ]);
+
+      expect(profile()).toEqual(
+        expect.objectContaining({
+          displayName: 'New Name',
+          photoUrl: 'https://res.cloudinary.com/new.jpg',
+        }),
+      );
+    });
+
+    it('should rethrow a failed save', async () => {
+      const { store, updateProfileSpy } = setup();
+      updateProfileSpy.mockRejectedValueOnce(new Error('network down'));
+
+      await expect(store.saveAvatar('https://res.cloudinary.com/new.jpg')).rejects.toThrow(
+        'network down',
+      );
+      expect(store.isSavingAvatar()).toBe(false);
+    });
   });
 
   describe('saveUsername', () => {
@@ -235,7 +296,7 @@ describe('SettingsAccountStore', () => {
       vi.useRealTimers();
     });
 
-    async function check(store: SettingsAccountStore, username: string): Promise<void> {
+    async function check(store: SettingsProfileStore, username: string): Promise<void> {
       store.checkUsernameAvailability(username);
       await vi.advanceTimersByTimeAsync(400);
     }

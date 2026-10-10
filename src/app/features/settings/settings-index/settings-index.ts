@@ -10,6 +10,7 @@ interface SettingsIndexItem {
 }
 
 const SETTINGS_INDEX_ITEMS: SettingsIndexItem[] = [
+  { path: 'profile', labelKey: 'settings.profile', subtitleKey: 'settings.profileSubtitle' },
   { path: 'account', labelKey: 'settings.account', subtitleKey: 'settings.accountSubtitle' },
   { path: 'display', labelKey: 'settings.display', subtitleKey: 'settings.displaySubtitle' },
   {

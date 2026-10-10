@@ -12,12 +12,14 @@ describe('OnboardingNameComponent', () => {
   let profile: User | null;
   let navigateByUrlSpy: ReturnType<typeof vi.fn>;
   let updateProfileSpy: ReturnType<typeof vi.fn>;
+  let changeDisplayNameSpy: ReturnType<typeof vi.fn>;
 
   // The real OnboardingService, since what this step does on Continue is the
   // registration it hands over — mocking that away would test nothing.
   function setup() {
     navigateByUrlSpy = vi.fn().mockResolvedValue(true);
     updateProfileSpy = vi.fn().mockResolvedValue(undefined);
+    changeDisplayNameSpy = vi.fn().mockResolvedValue(undefined);
 
     TestBed.configureTestingModule({
       imports: [OnboardingNameComponent, getTranslocoTestingModule()],
@@ -25,7 +27,11 @@ describe('OnboardingNameComponent', () => {
         { provide: Router, useValue: { navigateByUrl: navigateByUrlSpy } },
         {
           provide: UserService,
-          useValue: { profile: () => profile, updateProfile: updateProfileSpy },
+          useValue: {
+            profile: () => profile,
+            updateProfile: updateProfileSpy,
+            changeDisplayName: changeDisplayNameSpy,
+          },
         },
         { provide: ErrorService, useValue: { toUserMessage: () => 'Something went wrong.' } },
       ],
@@ -95,13 +101,14 @@ describe('OnboardingNameComponent', () => {
     expect(onboardingService.canContinue()).toBe(expected);
   });
 
-  it('should save the trimmed name and advance to the photo step on continue', async () => {
+  it('should save the normalized name through the callable and advance to the photo step on continue', async () => {
     const { fixture, onboardingService } = setup();
     fixture.componentInstance.displayNameValue.set('  Jane Doe  ');
 
     await onboardingService.continue();
 
-    expect(updateProfileSpy).toHaveBeenCalledWith({ ...profile, displayName: 'Jane Doe' });
+    expect(changeDisplayNameSpy).toHaveBeenCalledWith('Jane Doe');
+    expect(updateProfileSpy).not.toHaveBeenCalled();
     expect(navigateByUrlSpy).toHaveBeenCalledWith('onboarding/photo');
   });
 
@@ -112,6 +119,7 @@ describe('OnboardingNameComponent', () => {
     await onboardingService.continue();
 
     expect(updateProfileSpy).not.toHaveBeenCalled();
+    expect(changeDisplayNameSpy).not.toHaveBeenCalled();
     expect(navigateByUrlSpy).not.toHaveBeenCalled();
   });
 
@@ -122,6 +130,7 @@ describe('OnboardingNameComponent', () => {
     await onboardingService.continue();
 
     expect(updateProfileSpy).not.toHaveBeenCalled();
+    expect(changeDisplayNameSpy).not.toHaveBeenCalled();
     expect(navigateByUrlSpy).toHaveBeenCalledWith('onboarding/photo');
   });
 });

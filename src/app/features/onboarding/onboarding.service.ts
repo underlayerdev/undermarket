@@ -162,12 +162,19 @@ export class OnboardingService {
   }
 
   private async persist(changes: OnboardingProfilePatch): Promise<void> {
+    // The name goes through its own callable (the server owns its format);
+    // that updates the profile in place, so the photo write below spreads
+    // the already-renamed profile.
+    if (changes.displayName !== undefined) {
+      await this.userService.changeDisplayName(changes.displayName);
+    }
+
     const profile = this.userService.profile();
-    if (!profile) return;
+    if (!profile || changes.photoUrl === undefined) return;
 
     // A whole User, not just the patch — FirestoreUserRepository.update()
     // writes a fixed field set and would blank the rest.
-    await this.userService.updateProfile({ ...profile, ...changes });
+    await this.userService.updateProfile({ ...profile, photoUrl: changes.photoUrl });
   }
 
   private async navigateTo(destination: OnboardingDestination): Promise<void> {

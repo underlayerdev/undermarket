@@ -14,7 +14,7 @@ import type { PublicCityInfo, User } from '../../../domain/user/user.model';
 import { getUsernameFormatError } from '../../../domain/user/username';
 import { withPendingOperations } from '../../../shared/state/with-pending-operations';
 
-type SettingsAccountOperation = 'displayName' | 'profileCity' | 'username';
+type SettingsProfileOperation = 'displayName' | 'profileCity' | 'username' | 'avatar';
 
 /**
  * Availability of the handle currently typed in the username panel.
@@ -22,11 +22,11 @@ type SettingsAccountOperation = 'displayName' | 'profileCity' | 'username';
  */
 export type UsernameAvailability = 'idle' | 'checking' | 'available' | 'taken';
 
-interface SettingsAccountState {
+interface SettingsProfileState {
   usernameAvailability: UsernameAvailability;
 }
 
-const initialState: SettingsAccountState = {
+const initialState: SettingsProfileState = {
   usernameAvailability: 'idle',
 };
 
@@ -34,8 +34,8 @@ const initialState: SettingsAccountState = {
 const USERNAME_AVAILABILITY_DEBOUNCE_MS = 400;
 
 /**
- * Profile-doc writes for the Account tab, provided on
- * `SettingsAccountComponent` so every panel under it shares one instance.
+ * Profile-doc writes for the Profile tab, provided on
+ * `SettingsProfileComponent` so every panel under it shares one instance.
  *
  * Every write goes through one queue and starts from the *latest* profile,
  * not the snapshot the caller saw. Without it, saving the display name and
@@ -44,17 +44,18 @@ const USERNAME_AVAILABILITY_DEBOUNCE_MS = 400;
  *
  * Commands throw on failure; the calling component decides how to show it.
  */
-export const SettingsAccountStore = signalStore(
+export const SettingsProfileStore = signalStore(
   withState(initialState),
   withProps(() => ({
     _userService: inject(UserService),
   })),
-  withPendingOperations<SettingsAccountOperation>(),
+  withPendingOperations<SettingsProfileOperation>(),
   withComputed((store) => ({
     profile: computed(() => store._userService.profile()),
     isSavingDisplayName: computed(() => store.isPending('displayName')),
     isSavingProfileCity: computed(() => store.isPending('profileCity')),
     isSavingUsername: computed(() => store.isPending('username')),
+    isSavingAvatar: computed(() => store.isPending('avatar')),
   })),
   withMethods((store) => {
     // Swallowed here (not on the Promise handed back to the caller) so one
@@ -77,7 +78,19 @@ export const SettingsAccountStore = signalStore(
 
     return {
       saveDisplayName(displayName: string): Promise<void> {
-        return store.track('displayName', () => updateProfile({ displayName }));
+        return store.track('displayName', () =>
+          // Queued with the other writes (not through updateProfile): the
+          // callable returns a new profile, which must not be overwritten by
+          // an earlier profile save that finishes after it.
+          enqueue(async () => {
+            if (!store._userService.profile()) return;
+            await store._userService.changeDisplayName(displayName);
+          }),
+        );
+      },
+
+      saveAvatar(photoUrl: string): Promise<void> {
+        return store.track('avatar', () => updateProfile({ photoUrl }));
       },
 
       saveProfileCity(profileCity: PublicCityInfo | null): Promise<void> {
@@ -127,4 +140,4 @@ export const SettingsAccountStore = signalStore(
   }),
 );
 
-export type SettingsAccountStore = InstanceType<typeof SettingsAccountStore>;
+export type SettingsProfileStore = InstanceType<typeof SettingsProfileStore>;

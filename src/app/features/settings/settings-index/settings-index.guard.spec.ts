@@ -22,12 +22,12 @@ describe('settingsIndexGuard', () => {
     return TestBed.runInInjectionContext(() => settingsIndexGuard({} as never, {} as never));
   }
 
-  it('should redirect to /settings/account on desktop widths', () => {
+  it('should redirect to /settings/profile on desktop widths', () => {
     Object.defineProperty(window, 'innerWidth', { value: 1280, configurable: true });
 
     const result = runGuard();
 
-    expect(createUrlTreeSpy).toHaveBeenCalledWith(['/settings/account']);
+    expect(createUrlTreeSpy).toHaveBeenCalledWith(['/settings/profile']);
     expect(result).toBe('url-tree');
   });
 

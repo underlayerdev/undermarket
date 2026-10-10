@@ -30,17 +30,28 @@ describe('validateDisplayName', () => {
   });
 
   it('should accept a name at exactly the minimum length', () => {
-    const name = 'a'.repeat(DISPLAY_NAME_MIN_LENGTH);
+    const name = 'ab'.repeat(DISPLAY_NAME_MIN_LENGTH / 2);
     expect(validateDisplayName(name, transloco)).toBeNull();
   });
 
   it('should reject a name over the maximum length', () => {
-    const name = 'a'.repeat(DISPLAY_NAME_MAX_LENGTH + 1);
+    const name = 'ab'.repeat(DISPLAY_NAME_MAX_LENGTH / 2 + 1);
     expect(validateDisplayName(name, transloco)).toContain('at most');
   });
 
   it('should accept a name at exactly the maximum length', () => {
-    const name = 'a'.repeat(DISPLAY_NAME_MAX_LENGTH);
+    const name = 'ab'.repeat(DISPLAY_NAME_MAX_LENGTH / 2);
     expect(validateDisplayName(name, transloco)).toBeNull();
+  });
+
+  it('should accept the same name however it is typed', () => {
+    expect(validateDisplayName('  José   María ', transloco)).toBeNull();
+  });
+
+  it('should explain why a name was rejected, not just that it was', () => {
+    expect(validateDisplayName('Jane 😀', transloco)).toContain('letters, numbers');
+    expect(validateDisplayName('mary.smith', transloco)).toContain('web address');
+    expect(validateDisplayName('Admin', transloco)).toContain('available');
+    expect(validateDisplayName('Jaaaane', transloco)).toContain('3 times');
   });
 });

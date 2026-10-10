@@ -2,6 +2,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { InputComponent } from '@underlayerdev/ui';
 import { UserService } from '../../../application/services/user.service';
+import { normalizeDisplayName } from '../../../domain/user/display-name';
 import { validateDisplayName } from '../../../domain/user/user-display.validator';
 import { OnboardingService } from '../onboarding.service';
 
@@ -39,7 +40,7 @@ export class OnboardingNameComponent {
       // The only required step — the photo and location screens are skippable,
       // which is what having no Skip button means here.
       canContinue: () => !this.validate(),
-      changes: () => ({ displayName: this.displayNameValue().trim() }),
+      changes: () => ({ displayName: normalizeDisplayName(this.displayNameValue()) }),
     });
   }
 

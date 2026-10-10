@@ -20,9 +20,10 @@ describe('SettingsIndexComponent', () => {
     expect(fixture.componentInstance).toBeTruthy();
   });
 
-  it('should expose account, display, and integrations nav items', () => {
+  it('should expose profile, account, display, and integrations nav items', () => {
     const fixture = setup();
     expect(fixture.componentInstance.navItems.map((item) => item.path)).toEqual([
+      'profile',
       'account',
       'display',
       'integrations',

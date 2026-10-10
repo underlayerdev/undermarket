@@ -50,7 +50,7 @@ function hasCoordinates(location: SearchLocationLike): location is LocationArea 
  * - Search input + current-location button: always rendered.
  * - Map (`showMap`, default `true`): shown whenever there's a pending area
  *   with real coordinates to plot, nothing else. A `searchLocation` with no
- *   coordinates (e.g. settings-account-profile's public-profile city, which
+ *   coordinates (e.g. settings-profile-city's public-profile city, which
  *   only ever has `displayName`/`city`/`region`/`countryCode`) is never used
  *   to seed the map — it just starts blank until an actual pick/resolve
  *   gives it a real `LocationArea`. `showMap="false"` still fully suppresses
@@ -63,7 +63,7 @@ function hasCoordinates(location: SearchLocationLike): location is LocationArea 
  *   location fed back via `resolvedCurrentArea` — only stages a pending
  *   preview (`pendingArea`/`pendingRadiusKm`); the caller only hears about
  *   it once the user clicks "Set location", via `confirmed`. `search-
- *   location-bar` and `settings-account-profile` both set this (they're
+ *   location-bar` and `settings-profile-city` both set this (they're
  *   modal usages); `onboarding-location` leaves it at the `false` default
  *   and keeps firing `suggestionSelected`/`useCurrentLocationRequested`
  *   immediately as before.
@@ -122,7 +122,7 @@ export class LocationPickerComponent {
   readonly confirmed = output<LocationPickerConfirmedEvent>();
 
   // linkedSignal because searchLocation can arrive/change after
-  // this component already exists — e.g. settings-account seeds it from the
+  // this component already exists — e.g. settings-profile-city seeds it from the
   // profile, which loads asynchronously — so it must keep tracking it until
   // the user actually types something themselves.
   readonly query = linkedSignal(() => this.searchLocation()?.displayName ?? '');
@@ -156,7 +156,7 @@ export class LocationPickerComponent {
     if (resolved) return resolved;
     const current = this.searchLocation();
     // Only seed the map from a value that actually has coordinates to plot —
-    // a lighter SearchLocationLike (e.g. settings-account-profile's
+    // a lighter SearchLocationLike (e.g. settings-profile-city's
     // coordinate-less profileCity) leaves pendingArea null instead of
     // feeding um-map an undefined lat/lng.
     return current && hasCoordinates(current) ? current : null;

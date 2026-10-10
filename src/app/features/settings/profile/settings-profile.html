@@ -1,0 +1,11 @@
+<um-settings-layout [title]="t('settings.profile')" *transloco="let t">
+  <div class="settings__panel settings-profile__identity ul-mt-6">
+    <um-settings-profile-avatar class="settings-profile__avatar" />
+    <div class="settings-profile__fields ul-gap-6">
+      <um-settings-profile-display-name />
+      <um-settings-profile-username />
+    </div>
+  </div>
+
+  <um-settings-profile-city />
+</um-settings-layout>

@@ -1,17 +1,16 @@
 <div class="um-settings">
   <div class="ul-content ul-pt-8">
     <ng-container *transloco="let t">
-      <h1 class="ul-typography-headline-m-extrablack settings__title">
-        {{ t('settings.title') }}
-      </h1>
-
       <div class="ul-row ul-gap-6">
         <div class="ul-col-12 ul-col-md-3">
+          <h1 class="ul-typography-headline-m-extrablack settings__title">
+            {{ t('settings.title') }}
+          </h1>
           <ul-sidebar
             class="settings__sidebar"
             [items]="sidebarItems()"
             [selectedIndex]="selectedIndex()"
-            theme="ghost-white"
+            theme="transparent-white"
             (itemSelected)="onItemSelected($event)"
           />
         </div>

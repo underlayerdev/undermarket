@@ -1,17 +1,18 @@
 import { Component, computed, inject, linkedSignal, signal } from '@angular/core';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { ButtonComponent, InputComponent, ToastService } from '@underlayerdev/ui';
+import { normalizeDisplayName } from '../../../../domain/user/display-name';
 import { validateDisplayName } from '../../../../domain/user/user-display.validator';
 import { ErrorService } from '../../../../application/services/error.service';
-import { SettingsAccountStore } from '../settings-account.store';
+import { SettingsProfileStore } from '../settings-profile.store';
 
 @Component({
-  selector: 'um-settings-account-display-name',
-  templateUrl: './settings-account-display-name.html',
+  selector: 'um-settings-profile-display-name',
+  templateUrl: './settings-profile-display-name.html',
   imports: [TranslocoDirective, InputComponent, ButtonComponent],
 })
-export class SettingsAccountDisplayNameComponent {
-  protected readonly store = inject(SettingsAccountStore);
+export class SettingsProfileDisplayNameComponent {
+  protected readonly store = inject(SettingsProfileStore);
   private readonly toastService = inject(ToastService);
   private readonly transloco = inject(TranslocoService);
   private readonly errorService = inject(ErrorService);
@@ -26,6 +27,14 @@ export class SettingsAccountDisplayNameComponent {
     return validateDisplayName(this.displayNameValue(), this.transloco);
   });
 
+  // Compared normalized, so extra spaces around the saved name don't count as
+  // an edit.
+  readonly isUnchanged = computed(
+    () => normalizeDisplayName(this.displayNameValue()) === this.store.profile()?.displayName,
+  );
+
+  readonly canSave = computed(() => !this.isUnchanged() && !this.store.isSavingDisplayName());
+
   readonly saveDisplayNameButtonLabel = computed(() => {
     this.transloco.activeLang();
     return this.store.isSavingDisplayName()
@@ -35,12 +44,12 @@ export class SettingsAccountDisplayNameComponent {
 
   async onSaveDisplayName(): Promise<void> {
     this.displayNameTouched.set(true);
-    if (this.displayNameError() || !this.store.profile()) return;
+    if (this.displayNameError() || !this.canSave() || !this.store.profile()) return;
 
-    const trimmed = this.displayNameValue().trim();
+    const displayName = normalizeDisplayName(this.displayNameValue());
     try {
-      await this.store.saveDisplayName(trimmed);
-      this.displayNameValue.set(trimmed);
+      await this.store.saveDisplayName(displayName);
+      this.displayNameValue.set(displayName);
       this.displayNameTouched.set(false);
       this.toastService.success(this.transloco.translate('settings.displayNameUpdated'));
     } catch (err) {

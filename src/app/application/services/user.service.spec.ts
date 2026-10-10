@@ -3,7 +3,11 @@ import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { AuthService } from './auth.service';
 import { UserService } from './user.service';
-import { USER_REPOSITORY, USERNAME_PROVIDER } from '../../core/configuration/tokens';
+import {
+  DISPLAY_NAME_PROVIDER,
+  USER_REPOSITORY,
+  USERNAME_PROVIDER,
+} from '../../core/configuration/tokens';
 import type { UserRepository } from '../../domain/user/user.repository';
 import { mockUser } from '../../domain/user/user.mock';
 import type { AuthUser, User } from '../../domain/user/user.model';
@@ -34,6 +38,7 @@ describe('UserService', () => {
     isUsernameAvailable: ReturnType<typeof vi.fn>;
   };
   let usernameProvider: { claim: ReturnType<typeof vi.fn> };
+  let displayNameProvider: { change: ReturnType<typeof vi.fn> };
   let authUser: WritableSignal<AuthUser | null>;
 
   beforeEach(() => {
@@ -50,11 +55,13 @@ describe('UserService', () => {
       isUsernameAvailable: vi.fn().mockResolvedValue(true),
     };
     usernameProvider = { claim: vi.fn() };
+    displayNameProvider = { change: vi.fn() };
 
     TestBed.configureTestingModule({
       providers: [
         { provide: USER_REPOSITORY, useValue: repository as UserRepository },
         { provide: USERNAME_PROVIDER, useValue: usernameProvider },
+        { provide: DISPLAY_NAME_PROVIDER, useValue: displayNameProvider },
         { provide: AuthService, useValue: { currentUser: authUser } },
       ],
     });
@@ -95,6 +102,7 @@ describe('UserService', () => {
         providers: [
           { provide: USER_REPOSITORY, useValue: repository as UserRepository },
           { provide: USERNAME_PROVIDER, useValue: usernameProvider },
+          { provide: DISPLAY_NAME_PROVIDER, useValue: displayNameProvider },
           { provide: AuthService, useValue: { currentUser: authUser } },
         ],
       });
@@ -143,6 +151,7 @@ describe('UserService', () => {
         providers: [
           { provide: USER_REPOSITORY, useValue: repository as UserRepository },
           { provide: USERNAME_PROVIDER, useValue: usernameProvider },
+          { provide: DISPLAY_NAME_PROVIDER, useValue: displayNameProvider },
           { provide: AuthService, useValue: { currentUser: authUser } },
         ],
       });
@@ -182,6 +191,7 @@ describe('UserService', () => {
         providers: [
           { provide: USER_REPOSITORY, useValue: repository as UserRepository },
           { provide: USERNAME_PROVIDER, useValue: usernameProvider },
+          { provide: DISPLAY_NAME_PROVIDER, useValue: displayNameProvider },
           { provide: AuthService, useValue: { currentUser: authUser } },
         ],
       });
@@ -250,6 +260,31 @@ describe('UserService', () => {
 
     expect(repository.delete).toHaveBeenCalledWith('user-1');
     expect(service.profile()).toBeNull();
+  });
+
+  describe('changeDisplayName', () => {
+    it('should change through the provider and store the normalized name', async () => {
+      const service = setup();
+      service.profile.set(mockUser({ displayName: 'Old Name' }));
+      displayNameProvider.change.mockResolvedValue({ displayName: 'José María' });
+
+      await service.changeDisplayName('  José   María ');
+
+      expect(displayNameProvider.change).toHaveBeenCalledWith('  José   María ');
+      expect(service.profile()?.displayName).toBe('José María');
+      expect(repository.update).not.toHaveBeenCalled();
+    });
+
+    it('should leave the profile untouched when the name is refused', async () => {
+      const service = setup();
+      service.profile.set(mockUser({ displayName: 'Old Name' }));
+      displayNameProvider.change.mockRejectedValue({ code: 'user/display-name-invalid' });
+
+      await expect(service.changeDisplayName('Admin')).rejects.toEqual({
+        code: 'user/display-name-invalid',
+      });
+      expect(service.profile()?.displayName).toBe('Old Name');
+    });
   });
 
   describe('changeUsername', () => {

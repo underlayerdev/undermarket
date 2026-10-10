@@ -12,8 +12,8 @@
     />
 
     @if (showCity()) {
-      <div class="settings-account-profile__city-row ul-mt-4">
-        <div class="settings-account-profile__city-row__display">
+      <div class="settings-profile-city__city-row ul-mt-4">
+        <div class="settings-profile-city__city-row__display">
           @if (selectedCity(); as city) {
             <ul-icon icon="map_pin" size="5" />
             <span class="ul-typography-body-m-extrabold">{{ city.displayName }}</span>

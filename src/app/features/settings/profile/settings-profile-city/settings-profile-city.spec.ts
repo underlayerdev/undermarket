@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { ToastService } from '@underlayerdev/ui';
-import { SettingsAccountProfileComponent } from './settings-account-profile';
+import { SettingsProfileCityComponent } from './settings-profile-city';
 import { SearchLocationService } from '../../../../application/services/search-location.service';
 import { UserService } from '../../../../application/services/user.service';
 import { getTranslocoTestingModule } from '../../../../../testing/transloco-testing';
@@ -8,7 +8,7 @@ import { LocationService } from '../../../../application/services/location.servi
 import type { LocationArea, SearchLocation } from '../../../../domain/location/location.model';
 import { mockUser } from '../../../../domain/user/user.mock';
 import type { User } from '../../../../domain/user/user.model';
-import { SettingsAccountStore } from '../settings-account.store';
+import { SettingsProfileStore } from '../settings-profile.store';
 
 const PALERMO_SEARCH_LOCATION: SearchLocation = {
   displayName: 'Palermo, Buenos Aires',
@@ -35,7 +35,7 @@ const RECOLETA_AREA: LocationArea = {
   geohash: '6ex2tnvjd',
 };
 
-describe('SettingsAccountProfileComponent', () => {
+describe('SettingsProfileCityComponent', () => {
   let currentUser: User | null;
   let searchLocation: SearchLocation | null;
   let updateProfileSpy: ReturnType<typeof vi.fn>;
@@ -50,9 +50,9 @@ describe('SettingsAccountProfileComponent', () => {
     resolveCurrentAreaSpy = vi.fn().mockRejectedValue(new Error('not mocked for this test'));
 
     TestBed.configureTestingModule({
-      imports: [SettingsAccountProfileComponent, getTranslocoTestingModule()],
+      imports: [SettingsProfileCityComponent, getTranslocoTestingModule()],
       providers: [
-        SettingsAccountStore,
+        SettingsProfileStore,
         {
           provide: UserService,
           useValue: {
@@ -68,7 +68,7 @@ describe('SettingsAccountProfileComponent', () => {
       ],
     });
 
-    const fixture = TestBed.createComponent(SettingsAccountProfileComponent);
+    const fixture = TestBed.createComponent(SettingsProfileCityComponent);
     fixture.detectChanges();
     return fixture;
   }

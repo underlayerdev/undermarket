@@ -1,0 +1,44 @@
+<ng-container *transloco="let t">
+  <!-- A pointer shortcut only: the "Change photo" button below is the one
+       control assistive tech and the keyboard reach, so this doesn't repeat it. -->
+  <button
+    type="button"
+    class="avatar-uploader__button"
+    tabindex="-1"
+    aria-hidden="true"
+    (click)="avatarFileInput.click()"
+  >
+    <ul-avatar size="3xl" [editable]="true" [src]="displaySrc()" [initials]="initials()" />
+  </button>
+  <ul-button theme="outline-white" size="sm" (buttonClick)="avatarFileInput.click()">
+    {{ t('avatarUpload.changePhoto') }}
+  </ul-button>
+  <input #avatarFileInput type="file" accept="image/*" hidden (change)="onFileSelected($event)" />
+
+  <ul-image-cropper
+    [open]="store.cropperOpen()"
+    (openChange)="store.setCropperOpen($event)"
+    [imageFile]="store.pendingFile()"
+    shape="round"
+    [aspectRatio]="1"
+    [maxOutputSize]="512"
+    [title]="t('avatarUpload.cropTitle')"
+    [confirmLabel]="t('avatarUpload.cropSave')"
+    [zoomLabel]="t('avatarUpload.cropZoom')"
+    (cropped)="onCropped($event)"
+    (cancelled)="store.cancelCrop()"
+  />
+
+  @if (store.isUploading()) {
+    <p class="ul-typography-caption-l-regular ul-text-secondary">
+      {{ t('avatarUpload.uploading') }}
+    </p>
+  } @else if (store.error()) {
+    <div class="avatar-uploader__error-row">
+      <p class="ul-typography-caption-l-regular ul-text-red">{{ store.error() }}</p>
+      <ul-button theme="ghost-white" size="sm" (buttonClick)="onRetry()">
+        {{ t('avatarUpload.retry') }}
+      </ul-button>
+    </div>
+  }
+</ng-container>

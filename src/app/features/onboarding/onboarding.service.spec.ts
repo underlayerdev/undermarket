@@ -13,12 +13,16 @@ describe('OnboardingService', () => {
   function setup() {
     const navigateByUrl = vi.fn().mockResolvedValue(true);
     const updateProfile = vi.fn().mockResolvedValue(undefined);
+    const changeDisplayName = vi.fn().mockResolvedValue(undefined);
 
     TestBed.configureTestingModule({
       imports: [getTranslocoTestingModule()],
       providers: [
         { provide: Router, useValue: { navigateByUrl } },
-        { provide: UserService, useValue: { profile: () => profile, updateProfile } },
+        {
+          provide: UserService,
+          useValue: { profile: () => profile, updateProfile, changeDisplayName },
+        },
         { provide: ErrorService, useValue: { toUserMessage: () => 'Something went wrong.' } },
       ],
     });
@@ -27,6 +31,7 @@ describe('OnboardingService', () => {
       service: TestBed.inject(OnboardingService),
       navigateByUrl,
       updateProfile,
+      changeDisplayName,
     };
   }
 
@@ -92,26 +97,40 @@ describe('OnboardingService', () => {
       expect(updateProfile).not.toHaveBeenCalled();
     });
 
-    it('should save a changed field to the profile, then advance', async () => {
-      const { service, navigateByUrl, updateProfile } = setup();
+    it('should send a changed name through the display name callable, then advance', async () => {
+      const { service, navigateByUrl, updateProfile, changeDisplayName } = setup();
       service.startStep({ id: 'name', changes: () => ({ displayName: 'Jane Doe' }) });
+
+      await service.continue();
+
+      expect(changeDisplayName).toHaveBeenCalledWith('Jane Doe');
+      // The name is server-owned: it must not also ride along in a profile write.
+      expect(updateProfile).not.toHaveBeenCalled();
+      expect(navigateByUrl).toHaveBeenCalledWith('onboarding/photo');
+    });
+
+    it('should save a changed photo to the profile, then advance', async () => {
+      const { service, navigateByUrl, updateProfile, changeDisplayName } = setup();
+      service.startStep({ id: 'photo', changes: () => ({ photoUrl: 'https://cdn/a.jpg' }) });
 
       await service.continue();
 
       // Exact equality, not objectContaining: proves no other field of the
       // profile was touched — `onboarded` in particular.
-      expect(updateProfile).toHaveBeenCalledWith({ ...profile, displayName: 'Jane Doe' });
-      expect(navigateByUrl).toHaveBeenCalledWith('onboarding/photo');
+      expect(updateProfile).toHaveBeenCalledWith({ ...profile, photoUrl: 'https://cdn/a.jpg' });
+      expect(changeDisplayName).not.toHaveBeenCalled();
+      expect(navigateByUrl).toHaveBeenCalledWith('onboarding/location');
     });
 
     it('should write nothing when the step collected a value that already matches the profile', async () => {
-      const { service, navigateByUrl, updateProfile } = setup();
+      const { service, navigateByUrl, updateProfile, changeDisplayName } = setup();
       // 'Jane' is what the profile already holds.
       service.startStep({ id: 'name', changes: () => ({ displayName: 'Jane' }) });
 
       await service.continue();
 
       expect(updateProfile).not.toHaveBeenCalled();
+      expect(changeDisplayName).not.toHaveBeenCalled();
       expect(navigateByUrl).toHaveBeenCalledWith('onboarding/photo');
     });
 
@@ -161,8 +180,8 @@ describe('OnboardingService', () => {
     });
 
     it('should stay on the step and surface a message when the save fails', async () => {
-      const { service, navigateByUrl, updateProfile } = setup();
-      updateProfile.mockRejectedValueOnce(new Error('network down'));
+      const { service, navigateByUrl, changeDisplayName } = setup();
+      changeDisplayName.mockRejectedValueOnce(new Error('network down'));
       service.startStep({ id: 'name', changes: () => ({ displayName: 'Jane Doe' }) });
 
       await service.continue();
@@ -173,8 +192,8 @@ describe('OnboardingService', () => {
     });
 
     it('should clear a previous step‘s error when the next step starts', async () => {
-      const { service, updateProfile } = setup();
-      updateProfile.mockRejectedValueOnce(new Error('network down'));
+      const { service, changeDisplayName } = setup();
+      changeDisplayName.mockRejectedValueOnce(new Error('network down'));
       service.startStep({ id: 'name', changes: () => ({ displayName: 'Jane Doe' }) });
       await service.continue();
       expect(service.errorMessage()).not.toBeNull();
@@ -185,9 +204,9 @@ describe('OnboardingService', () => {
     });
 
     it('should report loading while the save is in flight', async () => {
-      const { service, updateProfile } = setup();
+      const { service, changeDisplayName } = setup();
       let finishSave!: () => void;
-      updateProfile.mockReturnValueOnce(
+      changeDisplayName.mockReturnValueOnce(
         new Promise<void>((resolve) => {
           finishSave = () => resolve();
         }),

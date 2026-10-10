@@ -1,0 +1,5 @@
+<um-avatar-uploader
+  [src]="store.profile()?.photoUrl"
+  [initials]="initials()"
+  (uploaded)="onUploaded($event)"
+/>

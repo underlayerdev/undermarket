@@ -40,10 +40,6 @@
 // only hide from a breakpoint up), so this direction stays a manual query.
 .settings__title {
   display: block;
-
-  @include bp.up('md') {
-    display: block;
-  }
 }
 
 .settings__sidebar {

@@ -42,17 +42,20 @@ export class FirestoreUserRepository implements UserRepository {
   // denies client create entirely.
   //
   // `onboarded` is deliberately never part of this payload — it's a
-  // server-only field. The client just writes a valid displayName as each
-  // onboarding step completes; a Firestore trigger
+  // server-only field. Each onboarding step saves its field as it completes
+  // (the name through the callable); a Firestore trigger
   // (functions/src/users/on-update.ts) is what flips onboarded to true once
   // it sees one, and firestore.rules rejects any client write that tries to
   // change it itself.
+  //
+  // Likewise `displayName` is never written here: it changes only through
+  // the changeDisplayName callable (see UserService.changeDisplayName), and
+  // leaving it out means a stale copy of the profile can't trip the rules.
   async update(user: User): Promise<void> {
     await setDoc(
       doc(this.firestore, 'users', user.id),
       {
         email: user.email,
-        displayName: user.displayName,
         photoUrl: user.photoUrl ?? null,
         settings: user.settings,
         providerId: user.providerId,

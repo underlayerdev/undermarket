@@ -24,6 +24,11 @@ export class SettingsComponent implements OnInit {
     this.transloco.activeLang();
     return [
       {
+        label: this.transloco.translate('settings.profile'),
+        path: 'profile',
+        leftIcons: ['user_profile'],
+      },
+      {
         label: this.transloco.translate('settings.account'),
         path: 'account',
         leftIcons: ['user'],
