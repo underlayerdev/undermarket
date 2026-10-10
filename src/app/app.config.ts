@@ -38,6 +38,7 @@ import {
   USER_REPOSITORY,
   USERNAME_PROVIDER,
 } from './core/configuration/tokens';
+import { SessionRedirectService } from './core/session/session-redirect.service';
 import { FirebaseAuthProvider } from './infrastructure/firebase/auth/firebase-auth.provider';
 import { FirestoreUserRepository } from './infrastructure/firebase/firestore/firestore-user.repository';
 import { FirestoreListingRepository } from './infrastructure/firebase/firestore/firestore-listing.repository';
@@ -82,6 +83,10 @@ export const appConfig: ApplicationConfig = {
     // without this the stored preference would never be applied on startup.
     provideAppInitializer(() => {
       inject(LanguageService);
+    }),
+    // Nothing else injects it: it only watches the session and redirects.
+    provideAppInitializer(() => {
+      inject(SessionRedirectService);
     }),
     { provide: FIREBASE_APP, useValue: firebaseApp },
     {
