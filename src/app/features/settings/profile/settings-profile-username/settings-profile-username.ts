@@ -1,6 +1,6 @@
 import { Component, computed, inject, linkedSignal, signal } from '@angular/core';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
-import { ButtonComponent, InputComponent, ToastService } from '@underlayerdev/ui';
+import { ButtonComponent, IconComponent, InputComponent, ToastService } from '@underlayerdev/ui';
 import { ErrorService } from '../../../../application/services/error.service';
 import { normalizeUsername } from '../../../../domain/user/username';
 import { validateUsername } from '../../../../domain/user/username.validator';
@@ -17,7 +17,7 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 @Component({
   selector: 'um-settings-profile-username',
   templateUrl: './settings-profile-username.html',
-  imports: [TranslocoDirective, InputComponent, ButtonComponent, LocaleDatePipe],
+  imports: [TranslocoDirective, InputComponent, IconComponent, ButtonComponent, LocaleDatePipe],
 })
 export class SettingsProfileUsernameComponent {
   protected readonly store = inject(SettingsProfileStore);

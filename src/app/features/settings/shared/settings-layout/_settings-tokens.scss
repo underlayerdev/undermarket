@@ -1,0 +1,8 @@
+// Local design values for the settings pages. The base library has no token
+// for a form-field width, and this one is specific to these forms, so it lives
+// here, in one place, rather than as a literal in each stylesheet.
+
+// Widest a settings text field (and so its form) grows on desktop. Wide
+// enough for a 50-character display name or a password, narrow enough that
+// the panel doesn't read as one giant input.
+$settings-form-max-width: 400px;

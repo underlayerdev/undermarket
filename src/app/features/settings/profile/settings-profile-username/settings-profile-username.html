@@ -11,14 +11,17 @@
       [helperText]="usernameHelperText()"
       [error]="!!usernameError()"
       [errorText]="usernameError()"
-    />
+    >
+      <ul-icon icon="at_sign" ul-input-left-elements />
+    </ul-input>
     @if (nextChangeAt(); as nextChange) {
       <p class="ul-typography-body-s-regular ul-text-secondary">
         {{ t('settings.usernameCooldown', { date: (nextChange | localeDate) }) }}
       </p>
-    }
+    } @else {
     <ul-button type="submit" theme="fill-purple" size="md" [disabled]="!canSave()">
       {{ saveUsernameButtonLabel() }}
     </ul-button>
+  }
   </form>
 </ng-container>

@@ -18,10 +18,6 @@
 // viewport.
 .um-settings {
   @include containers.container-fluid;
-
-  @include bp.up('md') {
-    @include containers.container-form;
-  }
 }
 
 .um-settings,

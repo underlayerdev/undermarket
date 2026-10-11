@@ -1,5 +1,6 @@
 @use 'pkg:@underlayerdev/ui/design-tokens' as tokens;
 @use 'pkg:@underlayerdev/ui/breakpoints' as bp;
+@use 'settings-tokens' as settings;
 
 .settings-layout {
   &__mobile-header {
@@ -33,4 +34,16 @@
 .settings__form {
   display: flex;
   flex-direction: column;
+
+  // On desktop the fields stop at a readable width and the submit button hugs
+  // its label on the left, instead of both stretching across the whole panel.
+  // Below md the form fills the screen and the button stays full width, which
+  // is what a touch target wants.
+  @include bp.up('md') {
+    max-width: settings.$settings-form-max-width;
+
+    > ul-button {
+      align-self: flex-start;
+    }
+  }
 }
